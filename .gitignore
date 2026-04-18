@@ -29,6 +29,9 @@ htmlcov/
 .env
 .env.local
 
+# Node.js
+frontend/node_modules/
+
 # IDE
 .idea/
 .vscode/
