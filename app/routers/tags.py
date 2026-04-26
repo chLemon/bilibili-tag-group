@@ -1,16 +1,26 @@
 """标签路由：标签列表与标签下未看视频。"""
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
-from app.schemas.tag import TagRead
+from app.schemas.tag import TagCreate, TagRead
 from app.schemas.video import VideoRead
 from app.services.tag_service import TagService
 
 router = APIRouter(prefix="/api/tags", tags=["tags"])
 _tag_svc = TagService()
+
+
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=TagRead)
+def create_tag(
+    payload: TagCreate,
+    db: Annotated[Session, Depends(get_db)],
+) -> TagRead:
+    """创建新标签。"""
+    tag = _tag_svc.create_tag(db, payload.name)
+    return TagRead(id=tag.id, name=tag.name)
 
 
 @router.get("", response_model=list[TagRead])

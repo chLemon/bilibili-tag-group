@@ -42,6 +42,10 @@ beforeEach(() => {
     creator_id: 1,
     new_videos: 3,
   });
+  vi.mocked(client.createTag).mockResolvedValue({
+    id: 2,
+    name: "游戏",
+  });
 });
 
 describe("CreatorsPage", () => {
@@ -123,5 +127,22 @@ describe("CreatorsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("科技")).toBeInTheDocument();
     });
+  });
+
+  it("在添加表单中创建新标签后自动选中", async () => {
+    render(
+      <MemoryRouter>
+        <CreatorsPage />
+      </MemoryRouter>
+    );
+    await waitFor(() => screen.getByText("测试UP主"));
+    await userEvent.click(screen.getByRole("button", { name: /添加 UP 主/ }));
+    await userEvent.type(screen.getByPlaceholderText("输入新标签名"), "游戏");
+    await userEvent.click(screen.getByRole("button", { name: "创建并选中" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("checkbox", { name: "游戏" })).toBeInTheDocument();
+    });
+    expect(screen.getByRole("checkbox", { name: "游戏" })).toBeChecked();
   });
 });

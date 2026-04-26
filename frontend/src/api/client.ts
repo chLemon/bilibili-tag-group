@@ -95,6 +95,14 @@ export function fetchTagVideos(tagId: number): Promise<Video[]> {
   return request<Video[]>(`/api/tags/${tagId}/videos`);
 }
 
+/** 创建标签 */
+export function createTag(payload: { name: string }): Promise<Tag> {
+  return request<Tag>("/api/tags", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 // ---- UP 主 API ----
 
 /** 获取所有 UP 主 */

@@ -140,6 +140,24 @@ class TestListTags:
         assert response.json()[0]["id"] == seeded_data.tag_id
 
 
+class TestCreateTag:
+    """POST /api/tags 测试。"""
+
+    def test_create_tag_returns_201(self, client):
+        response = client.post("/api/tags", json={"name": "科技"})
+        assert response.status_code == 201
+
+    def test_create_tag_response_fields(self, client):
+        response = client.post("/api/tags", json={"name": "生活"})
+        body = response.json()
+        assert body["name"] == "生活"
+        assert "id" in body
+
+    def test_create_tag_rejects_blank_name(self, client):
+        response = client.post("/api/tags", json={"name": "   "})
+        assert response.status_code == 422
+
+
 class TestTagVideos:
     """GET /api/tags/{tag_id}/videos 测试。"""
 

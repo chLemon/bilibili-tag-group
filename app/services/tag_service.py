@@ -14,6 +14,13 @@ from app.schemas.video import VideoRead
 class TagService:
     """标签业务逻辑：聚合标签与未看视频信息。"""
 
+    def create_tag(self, db: Session, name: str) -> Tag:
+        """创建新标签。"""
+        tag = Tag(name=name.strip())
+        db.add(tag)
+        db.flush()
+        return tag
+
     def list_tags(self, db: Session) -> list[Tag]:
         """返回所有标签（按 id 升序）。"""
         return db.query(Tag).order_by(Tag.id).all()

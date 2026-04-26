@@ -2,8 +2,8 @@
  * CreatorForm：添加或编辑 UP 主的表单组件。
  * 支持名称、主页 URL、是否启用、关联标签的编辑。
  */
-import { useState } from "react";
-import { Tag } from "../api/client";
+import { useEffect, useState } from "react";
+import { Tag, createTag } from "../api/client";
 
 interface FormValues {
   name: string;
@@ -40,12 +40,40 @@ export default function CreatorForm({
   const [tagIds, setTagIds] = useState<number[]>(
     initialValues?.tag_ids ?? []
   );
+  const [localTags, setLocalTags] = useState<Tag[]>(tags);
+  const [newTagName, setNewTagName] = useState("");
+  const [tagCreating, setTagCreating] = useState(false);
+  const [tagCreateError, setTagCreateError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLocalTags(tags);
+  }, [tags]);
 
   /** 切换标签选中状态 */
   function toggleTag(id: number) {
     setTagIds((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
     );
+  }
+
+  async function handleCreateTag() {
+    const trimmed = newTagName.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    setTagCreating(true);
+    setTagCreateError(null);
+    try {
+      const createdTag = await createTag({ name: trimmed });
+      setLocalTags((prev) => [...prev, createdTag]);
+      setTagIds((prev) => [...prev, createdTag.id]);
+      setNewTagName("");
+    } catch (error) {
+      setTagCreateError(error instanceof Error ? error.message : "创建失败");
+    } finally {
+      setTagCreating(false);
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -94,11 +122,11 @@ export default function CreatorForm({
         <span>启用同步</span>
       </label>
 
-      {tags.length > 0 && (
-        <div style={{ marginBottom: 12 }}>
-          <span style={{ fontSize: 14 }}>关联标签</span>
+      <div style={{ marginBottom: 12 }}>
+        <span style={{ fontSize: 14 }}>关联标签</span>
+        {localTags.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
-            {tags.map((tag) => (
+            {localTags.map((tag) => (
               <label
                 key={tag.id}
                 style={{
@@ -118,8 +146,28 @@ export default function CreatorForm({
               </label>
             ))}
           </div>
+        )}
+
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <input
+            value={newTagName}
+            onChange={(e) => setNewTagName(e.target.value)}
+            placeholder="输入新标签名"
+            style={{ display: "block", flex: 1 }}
+          />
+          <button
+            type="button"
+            onClick={handleCreateTag}
+            disabled={!newTagName.trim() || tagCreating}
+          >
+            {tagCreating ? "创建中…" : "创建并选中"}
+          </button>
         </div>
-      )}
+
+        {tagCreateError && (
+          <p style={{ color: "red", fontSize: 12, marginTop: 6 }}>{tagCreateError}</p>
+        )}
+      </div>
 
       <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
         <button type="submit" disabled={submitting}>
