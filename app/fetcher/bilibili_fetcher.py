@@ -1,9 +1,16 @@
 """B 站视频抓取器：调用 B 站开放接口获取 UP 主的视频列表。"""
+from __future__ import annotations
+
 from datetime import datetime, timezone
+from typing import Any
 
 import httpx
 
 from app.fetcher.models import FetchedVideo
+from app.fetcher.wbi import BASE_HEADERS, sign_params
+
+# B 站登录 Cookie 环境变量名
+_BILIBILI_COOKIE_ENV = "BILIBILI_COOKIE"
 
 
 class FetchError(Exception):
@@ -15,6 +22,31 @@ class BilibiliFetcher:
 
     API_URL = "https://api.bilibili.com/x/space/wbi/arc/search"
 
+    def __init__(self, cookie: str | None = None) -> None:
+        """初始化抓取器。
+
+        参数：
+            cookie: B 站登录 Cookie 字符串（可选）。
+                    如果不传，会尝试读取环境变量 BILIBILI_COOKIE。
+                    提供有效的 Cookie 可以提高反爬成功率。
+        """
+        self._cookie = cookie
+
+    @property
+    def _headers(self) -> dict[str, str]:
+        """构建请求头，包含浏览器 UA、Referer 和可选的 Cookie。"""
+        headers = dict(BASE_HEADERS)
+        cookie = self._cookie or self._read_cookie_from_env()
+        if cookie:
+            headers["Cookie"] = cookie
+        return headers
+
+    @staticmethod
+    def _read_cookie_from_env() -> str | None:
+        """从环境变量 BILIBILI_COOKIE 读取 Cookie。"""
+        import os
+        return os.environ.get(_BILIBILI_COOKIE_ENV)
+
     def fetch_videos(self, uid: str) -> list[FetchedVideo]:
         """抓取指定 UP 主（uid）的最新视频列表。
 
@@ -25,11 +57,16 @@ class BilibiliFetcher:
             FetchedVideo 列表，字段已标准化
 
         异常：
-            FetchError: 接口返回非 200 状态码时抛出
+            FetchError: 接口返回非 200 状态码或业务错误时抛出
         """
+        # WBI 签名：对原始参数添加 w_rid 和 wts
+        raw_params: dict[str, str | int] = {"mid": uid, "pn": 1, "ps": 30}
+        signed_params: dict[str, str] = sign_params(raw_params)
+
         response = httpx.get(
             self.API_URL,
-            params={"mid": uid, "pn": 1, "ps": 30},
+            params=signed_params,
+            headers=self._headers,
             timeout=10,
         )
         if response.status_code != 200:
@@ -40,10 +77,11 @@ class BilibiliFetcher:
         data = response.json()
         if data.get("code") != 0:
             raise FetchError(
-                f"B 站接口返回业务错误 code={data.get('code')}，uid={uid}，message={data.get('message', '')}"
+                f"B 站接口返回业务错误 code={data.get('code')}，"
+                f"uid={uid}，message={data.get('message', '')}"
             )
 
-        vlist = data["data"]["list"]["vlist"]
+        vlist: list[dict[str, Any]] = data["data"]["list"]["vlist"]
         return [self._parse_video(item) for item in vlist]
 
     def _parse_video(self, item: dict) -> FetchedVideo:

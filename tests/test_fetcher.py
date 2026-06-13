@@ -9,6 +9,28 @@ import httpx
 from app.fetcher.models import FetchedVideo
 from app.fetcher.bilibili_fetcher import BilibiliFetcher, FetchError
 
+# 固定 WBI 签名返回值，避免测试中调用真实的 nav 接口
+_FIXED_WTS = "1700000000"
+_FIXED_WRID = "0123456789abcdef0123456789abcdef"
+
+
+def _stub_sign_params(params: dict) -> dict[str, str]:
+    """stub 版 sign_params：将原参数全转字符串并追加固定 wts/w_rid。"""
+    result = {k: str(v) for k, v in params.items()}
+    result["wts"] = _FIXED_WTS
+    result["w_rid"] = _FIXED_WRID
+    return result
+
+
+@pytest.fixture(autouse=True)
+def mock_sign_params():
+    """全局 mock sign_params，避免测试中访问真实 B 站 nav 接口。"""
+    with patch(
+        "app.fetcher.bilibili_fetcher.sign_params",
+        side_effect=_stub_sign_params,
+    ) as mock:
+        yield mock
+
 
 # 模拟 B 站接口返回的典型 payload
 MOCK_RESPONSE = {
