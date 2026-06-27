@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: "127.0.0.1",
     // 开发时将 /api 请求代理到后端
     proxy: {
       "/api": {
