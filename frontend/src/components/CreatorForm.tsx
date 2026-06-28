@@ -3,7 +3,7 @@
  * 支持名称、主页 URL、是否启用、关联标签的编辑。
  */
 import { useEffect, useState } from "react";
-import { Tag, createTag } from "../api/client";
+import { Tag, createTag, resolveCreatorName } from "../api/client";
 
 interface FormValues {
   name: string;
@@ -44,6 +44,8 @@ export default function CreatorForm({
   const [newTagName, setNewTagName] = useState("");
   const [tagCreating, setTagCreating] = useState(false);
   const [tagCreateError, setTagCreateError] = useState<string | null>(null);
+  const [nameResolving, setNameResolving] = useState(false);
+  const [nameResolveError, setNameResolveError] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalTags(tags);
@@ -76,6 +78,26 @@ export default function CreatorForm({
     }
   }
 
+  async function handleProfileUrlBlur() {
+    const trimmed = profileUrl.trim();
+    if (!trimmed) return;
+    // 编辑时如果已有名称且 URL 未变，不重复获取
+    if (initialValues?.name && name) return;
+
+    setNameResolving(true);
+    setNameResolveError(null);
+    try {
+      const result = await resolveCreatorName(trimmed);
+      setName(result.name);
+    } catch (error) {
+      setNameResolveError(
+        error instanceof Error ? error.message : "获取昵称失败，请手动输入"
+      );
+    } finally {
+      setNameResolving(false);
+    }
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSubmit({ name, profile_url: profileUrl, enabled, tag_ids: tagIds });
@@ -96,15 +118,25 @@ export default function CreatorForm({
           onChange={(e) => setName(e.target.value)}
           required
           style={{ display: "block", width: "100%", marginTop: 4 }}
-          placeholder="UP 主昵称"
+          placeholder={nameResolving ? "正在从 B 站获取…" : "UP 主昵称"}
+          disabled={nameResolving}
         />
+        {nameResolveError && (
+          <p style={{ color: "red", fontSize: 12, marginTop: 4 }}>{nameResolveError}</p>
+        )}
       </label>
 
       <label style={labelStyle}>
         <span>主页 URL</span>
         <input
           value={profileUrl}
-          onChange={(e) => setProfileUrl(e.target.value)}
+          onChange={(e) => {
+            setProfileUrl(e.target.value);
+            // URL 变化时清除之前的解析错误和自动填充的名称
+            setNameResolveError(null);
+            if (!initialValues?.name) setName("");
+          }}
+          onBlur={handleProfileUrlBlur}
           required
           style={{ display: "block", width: "100%", marginTop: 4 }}
           placeholder="https://space.bilibili.com/..."

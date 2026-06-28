@@ -1,5 +1,5 @@
 """视频相关的 Pydantic Schema。"""
-from datetime import datetime
+from app.schemas._datetime import BeijingDateTime
 
 from pydantic import BaseModel
 
@@ -22,7 +22,7 @@ class VideoRead(BaseModel):
     creator_id: int
     creator_name: str
     video_url: str
-    published_at: datetime
+    published_at: BeijingDateTime
     duration_seconds: int
 
     model_config = {"from_attributes": True}

@@ -4,14 +4,22 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.dependencies import get_db
+from app.fetcher.playwright_fetcher import PlaywrightBilibiliFetcher, FetchError
 from app.schemas.creator import CreatorCreate, CreatorRead, CreatorUpdate
 from app.services.creator_service import CreatorService
 from app.services.sync_service import SyncService
 
 router = APIRouter(prefix="/api/creators", tags=["creators"])
 _creator_svc = CreatorService()
-_sync_svc = SyncService()
+_fetcher = PlaywrightBilibiliFetcher(cookie=settings.bilibili_cookie or None)
+_sync_svc = SyncService(fetcher=_fetcher)
+
+
+def _uid_from_profile_url(profile_url: str) -> str:
+    """从 B 站主页 URL 中提取 uid。"""
+    return profile_url.rstrip("/").split("/")[-1]
 
 
 def _to_creator_read(creator) -> CreatorRead:
@@ -38,6 +46,20 @@ def create_creator(
         tag_ids=payload.tag_ids,
     )
     return _to_creator_read(creator)
+
+
+@router.get("/resolve-name", response_model=dict)
+def resolve_creator_name(profile_url: str) -> dict:
+    """根据主页 URL 从 B 站获取 UP 主昵称。"""
+    uid = _uid_from_profile_url(profile_url)
+    try:
+        name = _fetcher.fetch_creator_name(uid)
+    except FetchError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
+    return {"name": name}
 
 
 @router.get("", response_model=list[CreatorRead])

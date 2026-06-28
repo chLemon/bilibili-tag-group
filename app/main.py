@@ -12,12 +12,12 @@ from app.routers.sync import router as sync_router, set_scheduler_context
 from app.routers.tags import router as tags_router
 from app.routers.videos import router as videos_router
 from app.scheduler import build_scheduler
-from app.fetcher.bilibili_fetcher import BilibiliFetcher
+from app.fetcher.playwright_fetcher import PlaywrightBilibiliFetcher
 from app.services.sync_service import SyncService
 
 logger = logging.getLogger(__name__)
 
-_fetcher = BilibiliFetcher(
+_fetcher = PlaywrightBilibiliFetcher(
     cookie=settings.bilibili_cookie if settings.bilibili_cookie else None
 )
 _sync_svc = SyncService(fetcher=_fetcher)

@@ -1,6 +1,7 @@
 """同步相关的 Pydantic Schema。"""
-from datetime import datetime
 from typing import Optional
+
+from app.schemas._datetime import BeijingDateTime
 
 from pydantic import BaseModel
 
@@ -13,7 +14,7 @@ class SyncLogRead(BaseModel):
     status: str
     new_videos: int
     error_message: Optional[str]
-    started_at: datetime
-    finished_at: Optional[datetime]
+    started_at: BeijingDateTime
+    finished_at: Optional[BeijingDateTime]
 
     model_config = {"from_attributes": True}

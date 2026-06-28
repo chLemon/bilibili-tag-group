@@ -4,13 +4,15 @@ from typing import Annotated, Any, Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.dependencies import get_db
+from app.fetcher.playwright_fetcher import PlaywrightBilibiliFetcher
 from app.models.sync_log import SyncLog
 from app.schemas.sync import SyncLogRead
 from app.services.sync_service import SyncService
 
 router = APIRouter(prefix="/api/sync", tags=["sync"])
-_sync_svc = SyncService()
+_sync_svc = SyncService(fetcher=PlaywrightBilibiliFetcher(cookie=settings.bilibili_cookie or None))
 
 # 由 main.py 的 lifespan 在应用启动后注入，供 /settings 接口读取
 _scheduler: Any = None

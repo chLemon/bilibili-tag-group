@@ -110,6 +110,15 @@ export function fetchCreators(): Promise<Creator[]> {
   return request<Creator[]>("/api/creators");
 }
 
+/** 根据主页 URL 从 B 站获取 UP 主昵称 */
+export function resolveCreatorName(
+  profileUrl: string
+): Promise<{ name: string }> {
+  return request<{ name: string }>(
+    `/api/creators/resolve-name?profile_url=${encodeURIComponent(profileUrl)}`
+  );
+}
+
 /** 添加 UP 主 */
 export function createCreator(payload: CreatorCreate): Promise<Creator> {
   return request<Creator>("/api/creators", {

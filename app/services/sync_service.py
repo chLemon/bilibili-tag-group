@@ -1,12 +1,13 @@
 """同步核心服务：将 B 站抓取结果写入本地数据库。"""
 from __future__ import annotations
 
+import time as _time
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from app.fetcher.bilibili_fetcher import BilibiliFetcher
 from app.fetcher.models import FetchedVideo
+from app.fetcher.playwright_fetcher import PlaywrightBilibiliFetcher
 from app.models.creator import Creator
 from app.models.sync_log import SyncLog
 from app.models.video import Video
@@ -31,13 +32,13 @@ def _uid_from_profile_url(profile_url: str) -> str:
 class SyncService:
     """同步服务：协调抓取与数据库写入，保持本地视频数据与 B 站同步。"""
 
-    def __init__(self, fetcher: BilibiliFetcher | None = None) -> None:
+    def __init__(self, fetcher: PlaywrightBilibiliFetcher | None = None) -> None:
         """初始化同步服务。
 
         参数：
-            fetcher: 可注入自定义 fetcher，默认使用 BilibiliFetcher()
+            fetcher: 可注入自定义 fetcher，默认使用 PlaywrightBilibiliFetcher()
         """
-        self._fetcher = fetcher if fetcher is not None else BilibiliFetcher()
+        self._fetcher = fetcher if fetcher is not None else PlaywrightBilibiliFetcher()
 
     def sync_creator(self, db_session: Session, creator: Creator) -> int:
         """同步单个 Creator 的视频列表。
@@ -121,7 +122,9 @@ class SyncService:
             creators = db_session.query(Creator).filter_by(enabled=True).all()
             total_new = 0
             errors: list[str] = []
-            for creator in creators:
+            for idx, creator in enumerate(creators):
+                if idx > 0:
+                    _time.sleep(1)  # 不同 UP 主之间等待 1 秒，减少风控
                 try:
                     total_new += self.sync_creator(db_session, creator)
                 except Exception as exc:

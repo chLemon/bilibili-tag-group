@@ -54,7 +54,7 @@ cd frontend && npm run dev
 │   ├── dependencies.py           # FastAPI 依赖注入
 │   ├── scheduler.py              # APScheduler 定时任务调度
 │   ├── fetcher/                  # B 站视频抓取
-│   │   ├── bilibili_fetcher.py   # 抓取 B 站公开视频 API
+│   │   ├── playwright_fetcher.py # 抓取 B 站公开视频 API
 │   │   └── models.py             # 抓取数据模型
 │   ├── models/                   # SQLAlchemy ORM 模型
 │   │   ├── creator.py            # UP 主

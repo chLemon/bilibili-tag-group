@@ -1,72 +1,47 @@
 $ErrorActionPreference = "Continue"
-
 Set-Location $PSScriptRoot
 
 $LogDir = Join-Path $PSScriptRoot "logs"
+$BackendPidFile = Join-Path $LogDir "backend.pid"
+$FrontendPidFile = Join-Path $LogDir "frontend.pid"
+$BackendPort = 8000
+$FrontendPort = 5173
+
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
-Remove-Item (Join-Path $LogDir "*.log") -Force -ErrorAction SilentlyContinue
-
-$LauncherLog    = Join-Path $LogDir "launcher.log"
-$BackendStdout  = Join-Path $LogDir "backend-stdout.log"
-$BackendStderr  = Join-Path $LogDir "backend-stderr.log"
-$FrontendStdout = Join-Path $LogDir "frontend-stdout.log"
-$FrontendStderr = Join-Path $LogDir "frontend-stderr.log"
-$MigrationLog   = Join-Path $LogDir "migration.log"
-
-Start-Transcript -Path $LauncherLog -Append | Out-Null
-
-Write-Host "============================================"
-Write-Host "  Bilibili Tag Group Launcher"
-Write-Host "============================================"
 
 # ============================================================
 # 检查是否已经启动
 # ============================================================
 $alreadyRunning = $false
-foreach ($port in @(8000, 5173)) {
-    $lines = netstat -ano 2>$null | Select-String ":$port.*LISTENING"
-    foreach ($line in $lines) {
-        if ($line -match "LISTENING\s+(\d+)") {
-            $checkPid = [int]$Matches[1]
-            $proc = Get-Process -Id $checkPid -ErrorAction SilentlyContinue
-            if ($proc) { $alreadyRunning = $true; break }
+foreach ($pidFile in @($BackendPidFile, $FrontendPidFile)) {
+    if (Test-Path $pidFile) {
+        $savedPid = Get-Content $pidFile -Raw
+        $proc = Get-Process -Id ([int]$savedPid) -ErrorAction SilentlyContinue
+        if ($proc) {
+            $alreadyRunning = $true
+            break
+        } else {
+            Remove-Item $pidFile -Force  # 僵尸 PID 文件，清理掉
         }
     }
 }
 
 if ($alreadyRunning) {
-    Write-Host ""
-    Write-Host "Services are already running."
-    Write-Host "  Backend:  http://localhost:8000"
-    Write-Host "  Frontend: http://localhost:5173"
-    Write-Host ""
-    Write-Host "Run stop.bat to stop them first, then try again."
-    Stop-Transcript | Out-Null
-    try { Read-Host "Press Enter to close" } catch { }
+    Write-Host "Services are already running, opening browser..."
+    Start-Process "http://localhost:$FrontendPort"
     exit 0
 }
 
 # ============================================================
-# 清理残留
-# ============================================================
-Get-CimInstance Win32_Process -Filter "Name='cmd.exe'" |
-    Where-Object { $_.CommandLine -match "bilibili-tag-group" } |
-    ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
-
-Get-Process -Name "python", "node" -ErrorAction SilentlyContinue |
-    Where-Object { $_.Path -and $_.Path -match "bilibili-tag-group" } |
-    ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
-
-Start-Sleep -Seconds 1
-
-# ============================================================
 # 检查依赖
 # ============================================================
+Write-Host "============================================"
+Write-Host "  Bilibili Tag Group Launcher"
+Write-Host "============================================"
+
 Write-Host "[1/4] Checking Node.js..."
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
     Write-Host "[ERROR] Node.js not found."
-    Stop-Transcript | Out-Null
-    try { Read-Host "Press Enter to close" } catch { }
     exit 1
 }
 
@@ -74,19 +49,16 @@ Write-Host "[2/4] Checking Python..."
 $PythonExe = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
 if (-not (Test-Path $PythonExe)) {
     Write-Host "[ERROR] .venv not found."
-    Stop-Transcript | Out-Null
-    try { Read-Host "Press Enter to close" } catch { }
     exit 1
 }
 
 Write-Host "[3/4] Database migration..."
 $AlembicExe = Join-Path $PSScriptRoot ".venv\Scripts\alembic.exe"
-cmd /c "`"$AlembicExe`" upgrade head >>`"$MigrationLog`" 2>&1"
+$MigrationLog = Join-Path $LogDir "migration.log"
+& $AlembicExe upgrade head 2>&1 | Out-File -FilePath $MigrationLog -Encoding UTF8
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Migration failed. See: $MigrationLog"
     Get-Content $MigrationLog -ErrorAction SilentlyContinue | Write-Host
-    Stop-Transcript | Out-Null
-    try { Read-Host "Press Enter to close" } catch { }
     exit 1
 }
 Write-Host "       Migration OK"
@@ -99,54 +71,62 @@ Write-Host "[4/4] Starting services..."
 $UvicornExe = Join-Path $PSScriptRoot ".venv\Scripts\uvicorn.exe"
 $FrontendDir = Join-Path $PSScriptRoot "frontend"
 
-$backendProcess = Start-Process -FilePath $UvicornExe `
-    -ArgumentList "app.main:app --reload --host 127.0.0.1 --port 8000" `
-    -WindowStyle Hidden -PassThru `
-    -RedirectStandardOutput $BackendStdout -RedirectStandardError $BackendStderr
+# 启动后端 (uvicorn)
+$backendProc = Start-Process `
+    -FilePath $UvicornExe `
+    -ArgumentList "app.main:app --host 127.0.0.1 --port $BackendPort" `
+    -WindowStyle Hidden `
+    -PassThru
 
-$frontendProcess = Start-Process -FilePath "cmd.exe" `
-    -ArgumentList "/c `"cd /d `"$FrontendDir`" && npm run dev`"" `
-    -WindowStyle Hidden -PassThru `
-    -RedirectStandardOutput $FrontendStdout -RedirectStandardError $FrontendStderr
+# 启动前端 (vite)
+$npmCmd = (Get-Command npm.cmd -ErrorAction SilentlyContinue).Source
+if (-not $npmCmd) { $npmCmd = (Get-Command npm -ErrorAction SilentlyContinue).Source }
+$frontendProc = Start-Process `
+    -FilePath $npmCmd `
+    -ArgumentList "run dev" `
+    -WorkingDirectory $FrontendDir `
+    -WindowStyle Hidden `
+    -PassThru
 
 # ============================================================
-# 等待前端就绪
+# 等待服务就绪，并记录实际监听的 PID
 # ============================================================
-Write-Host "Waiting for frontend to be ready..."
-
-$maxRetries = 30
-$ready = $false
-for ($i = 1; $i -le $maxRetries; $i++) {
-    Start-Sleep -Seconds 1
-    try {
-        $tcp = New-Object System.Net.Sockets.TcpClient
-        $tcp.Connect("127.0.0.1", 5173)
-        $tcp.Close()
-        $ready = $true
-        break
-    } catch { }
+function Wait-ForPort($Port, $TimeoutSeconds) {
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+    while ($stopwatch.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
+        $conn = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($conn) { return $conn.OwningProcess }
+        Start-Sleep -Seconds 1
+    }
+    return $null
 }
 
-if (-not $ready) {
+Write-Host "       Waiting for backend on port $BackendPort..."
+$backendPid = Wait-ForPort $BackendPort 15
+if (-not $backendPid) {
+    Write-Host "[WARN] Backend did not start within 15 seconds."
+} else {
+    $backendPid | Out-File -FilePath $BackendPidFile -NoNewline
+    Write-Host "       Backend ready (PID $backendPid)"
+}
+
+Write-Host "       Waiting for frontend on port $FrontendPort..."
+$frontendPid = Wait-ForPort $FrontendPort 30
+if (-not $frontendPid) {
     Write-Host "[WARN] Frontend did not start within 30 seconds."
-    Write-Host "       Check: $FrontendStdout"
-    Get-Content $FrontendStdout -ErrorAction SilentlyContinue | Write-Host
+} else {
+    $frontendPid | Out-File -FilePath $FrontendPidFile -NoNewline
+    Write-Host "       Frontend ready (PID $frontendPid)"
 }
 
-# ============================================================
-# 打开浏览器
-# ============================================================
-if ($ready) {
-    Write-Host "Frontend is ready, opening browser..."
-    Start-Process "http://localhost:5173"
+if ($frontendPid) {
+    Write-Host "       Opening browser..."
+    Start-Process "http://localhost:$FrontendPort"
 }
 
 Write-Host ""
 Write-Host "============================================"
-Write-Host "  Backend:  http://localhost:8000"
-Write-Host "  Frontend: http://localhost:5173"
+Write-Host "  Backend:  http://localhost:$BackendPort"
+Write-Host "  Frontend: http://localhost:$FrontendPort"
 Write-Host "  Logs:     $LogDir"
 Write-Host "============================================"
-Write-Host ""
-
-Stop-Transcript | Out-Null
