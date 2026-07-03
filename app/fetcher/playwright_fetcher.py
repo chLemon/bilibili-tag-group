@@ -155,7 +155,7 @@ class PlaywrightBilibiliFetcher:
     def fetch_creator_name(self, uid: str) -> str:
         """获取指定 UP 主的昵称。
 
-        从空间页面 HTML 的 __INITIAL_STATE__ 或 title 标签中提取。
+        从空间页面定位 class='nickname' 元素获取。
 
         参数：
             uid: UP 主的数字 ID
@@ -170,24 +170,14 @@ class PlaywrightBilibiliFetcher:
         page = context.new_page()
         try:
             page.goto(
-                f"https://space.bilibili.com/{uid}/video",
+                f"https://space.bilibili.com/{uid}",
                 wait_until="networkidle",
                 timeout=self._PAGE_TIMEOUT,
             )
-            html = page.content()
-
-            # 尝试从 __INITIAL_STATE__ 中提取
-            name = self._extract_name_from_html(html)
-            if name:
-                return name
-
-            # 备选：从 <title> 标签提取
-            title = page.title()
-            if title:
-                # title 格式："UP主名称的个人空间"
-                name = title.replace("的个人空间", "").strip()
-                if name:
-                    return name
+            nickname_el = page.locator(".nickname").first
+            name = nickname_el.text_content()
+            if name and name.strip():
+                return name.strip()
 
             raise FetchError(f"未能提取到 UP 主昵称，uid={uid}")
         except FetchError:
@@ -222,19 +212,6 @@ class PlaywrightBilibiliFetcher:
 
         return [_parse_video_item(item) for item in vlist]
 
-    @staticmethod
-    def _extract_name_from_html(html: str) -> str | None:
-        """从页面 __INITIAL_STATE__ 中提取 UP 主昵称。"""
-        match = _INITIAL_STATE_RE.search(html)
-        if not match:
-            return None
-
-        try:
-            data = json.loads(match.group(1))
-        except json.JSONDecodeError:
-            return None
-
-        return data.get("data", {}).get("card", {}).get("name")
 
 
 def _parse_video_item(item: dict) -> FetchedVideo:

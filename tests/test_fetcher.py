@@ -74,12 +74,6 @@ MOCK_HTML = """<html>
 
 MOCK_HTML_EMPTY = """<html><body>No data</body></html>"""
 
-MOCK_HTML_CARD = """<html>
-<script>window.__INITIAL_STATE__={"data":{"card":{"name":"测试UP主"},"list":{"vlist":[
-    {"bvid":"BV1xx411c7mD","title":"测试视频","created":1700000000,"length":"10:30"}
-]}}};</script>
-</html>"""
-
 
 class TestHtmlExtraction:
     """测试从 HTML 中提取数据。"""
@@ -96,13 +90,6 @@ class TestHtmlExtraction:
         videos = PlaywrightBilibiliFetcher._extract_videos_from_html(MOCK_HTML_EMPTY, "12345")
         assert videos is None
 
-    def test_extract_name(self):
-        name = PlaywrightBilibiliFetcher._extract_name_from_html(MOCK_HTML_CARD)
-        assert name == "测试UP主"
-
-    def test_extract_name_no_data(self):
-        name = PlaywrightBilibiliFetcher._extract_name_from_html(MOCK_HTML_EMPTY)
-        assert name is None
 
 
 class TestPlaywrightBilibiliFetcher:
@@ -142,9 +129,18 @@ class TestPlaywrightBilibiliFetcher:
                 fetcher.fetch_videos("12345")
 
     def test_fetch_creator_name(self):
-        mock_ctx, _ = self._make_mock_context(MOCK_HTML_CARD)
+        from unittest.mock import MagicMock
 
-        with patch.object(PlaywrightBilibiliFetcher, "_create_context", return_value=mock_ctx):
+        mock_nickname_el = MagicMock()
+        mock_nickname_el.text_content.return_value = "测试UP主"
+
+        mock_page = MagicMock()
+        mock_page.locator.return_value.first = mock_nickname_el
+
+        mock_context = MagicMock()
+        mock_context.new_page.return_value = mock_page
+
+        with patch.object(PlaywrightBilibiliFetcher, "_create_context", return_value=mock_context):
             fetcher = PlaywrightBilibiliFetcher()
             name = fetcher.fetch_creator_name("12345")
 
