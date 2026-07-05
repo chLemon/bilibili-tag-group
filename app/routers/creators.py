@@ -28,6 +28,7 @@ def _to_creator_read(creator) -> CreatorRead:
         id=creator.id,
         name=creator.name,
         profile_url=creator.profile_url,
+        avatar_url=creator.avatar_url,
         enabled=creator.enabled,
         tag_ids=[tag.id for tag in creator.tags],
     )
@@ -44,22 +45,23 @@ def create_creator(
         name=payload.name,
         profile_url=payload.profile_url,
         tag_ids=payload.tag_ids,
+        avatar_url=payload.avatar_url,
     )
     return _to_creator_read(creator)
 
 
 @router.get("/resolve-name", response_model=dict)
 def resolve_creator_name(profile_url: str) -> dict:
-    """根据主页 URL 从 B 站获取 UP 主昵称。"""
+    """根据主页 URL 从 B 站获取 UP 主昵称和头像。"""
     uid = _uid_from_profile_url(profile_url)
     try:
-        name = _fetcher.fetch_creator_name(uid)
+        info = _fetcher.fetch_creator_info(uid)
     except FetchError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=str(exc),
         ) from exc
-    return {"name": name}
+    return {"name": info["name"], "avatar_url": info.get("avatar_url")}
 
 
 @router.get("", response_model=list[CreatorRead])

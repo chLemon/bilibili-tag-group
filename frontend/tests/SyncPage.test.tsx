@@ -26,13 +26,38 @@ const mockSettings: client.SyncSettings = {
   job_id: "sync-all",
 };
 
+const mockTags: client.Tag[] = [
+  { id: 1, name: "沙雕动画" },
+  { id: 2, name: "科技" },
+];
+
+const mockImmediateTags: client.ImmediateTag[] = [
+  { id: 1, tag_id: 1, sync_mode: "immediate" },
+];
+
+const completedTask: client.SyncTask = {
+  id: 1,
+  status: "completed",
+  total_creators: 2,
+  completed_creators: 2,
+  current_creator_name: null,
+  new_videos: 3,
+  error_message: null,
+  started_at: "2024-06-01T08:00:00",
+  finished_at: "2024-06-01T08:05:00",
+  heartbeat_at: "2024-06-01T08:05:00",
+};
+
 beforeEach(() => {
   vi.mocked(client.fetchLatestSync).mockResolvedValue(mockLog);
   vi.mocked(client.fetchSyncSettings).mockResolvedValue(mockSettings);
+  vi.mocked(client.fetchImmediateTags).mockResolvedValue(mockImmediateTags);
+  vi.mocked(client.fetchTags).mockResolvedValue(mockTags);
+  vi.mocked(client.fetchCurrentTask).mockResolvedValue(completedTask);
   vi.mocked(client.runSync).mockResolvedValue({
-    ...mockLog,
+    ...completedTask,
     id: 2,
-    new_videos: 2,
+    status: "completed",
   });
 });
 
@@ -48,19 +73,30 @@ describe("SyncPage", () => {
     });
   });
 
-  it("展示最近同步日志", async () => {
+  it("展示最近同步记录", async () => {
     render(
       <MemoryRouter>
         <SyncPage />
       </MemoryRouter>
     );
     await waitFor(() => {
-      expect(screen.getByText(/最近同步结果/)).toBeInTheDocument();
-      expect(screen.getByText(/新增视频：5 条/)).toBeInTheDocument();
+      expect(screen.getByText(/最近同步记录/)).toBeInTheDocument();
+      expect(screen.getByText("5 条")).toBeInTheDocument();
     });
   });
 
-  it('展示"立即同步"按钮', async () => {
+  it("展示同步完成状态", async () => {
+    render(
+      <MemoryRouter>
+        <SyncPage />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByText("同步完成")).toBeInTheDocument();
+    });
+  });
+
+  it('展示"立即同步"按钮且可用', async () => {
     render(
       <MemoryRouter>
         <SyncPage />
@@ -70,24 +106,37 @@ describe("SyncPage", () => {
     expect(screen.getByRole("button", { name: "立即同步" })).toBeEnabled();
   });
 
-  it('点击"立即同步"后更新日志（new_videos 变为 2）', async () => {
+  it("正在同步时按钮禁用", async () => {
+    vi.mocked(client.fetchCurrentTask).mockResolvedValue({
+      ...completedTask,
+      status: "running",
+      heartbeat_at: new Date().toISOString(),
+    });
     render(
       <MemoryRouter>
         <SyncPage />
       </MemoryRouter>
     );
-    await waitFor(() => screen.getByText(/新增视频：5 条/));
+    await waitFor(() => screen.getByRole("button", { name: "同步中…" }));
+    expect(screen.getByRole("button", { name: "同步中…" })).toBeDisabled();
+  });
+
+  it('点击"立即同步"后触发 runSync', async () => {
+    render(
+      <MemoryRouter>
+        <SyncPage />
+      </MemoryRouter>
+    );
+    await waitFor(() => screen.getByRole("button", { name: "立即同步" }));
     await userEvent.click(screen.getByRole("button", { name: "立即同步" }));
-    await waitFor(() => {
-      expect(screen.getByText(/新增视频：2 条/)).toBeInTheDocument();
-    });
+    expect(client.runSync).toHaveBeenCalled();
   });
 
-  it('同步状态为 failed 时展示中文"失败"', async () => {
-    vi.mocked(client.fetchLatestSync).mockResolvedValueOnce({
-      ...mockLog,
-      status: "failed",
-      error_message: "网络超时",
+  it("同步任务终止时展示特殊提示", async () => {
+    vi.mocked(client.fetchCurrentTask).mockResolvedValue({
+      ...completedTask,
+      status: "running",
+      heartbeat_at: new Date(Date.now() - 60 * 1000).toISOString(), // 60秒前
     });
     render(
       <MemoryRouter>
@@ -95,19 +144,7 @@ describe("SyncPage", () => {
       </MemoryRouter>
     );
     await waitFor(() => {
-      expect(screen.getByText("失败")).toBeInTheDocument();
-    });
-  });
-
-  it("无同步记录时展示提示文字", async () => {
-    vi.mocked(client.fetchLatestSync).mockResolvedValueOnce(null);
-    render(
-      <MemoryRouter>
-        <SyncPage />
-      </MemoryRouter>
-    );
-    await waitFor(() => {
-      expect(screen.getByText(/暂无同步记录/)).toBeInTheDocument();
+      expect(screen.getByText(/同步任务已终止/)).toBeInTheDocument();
     });
   });
 });

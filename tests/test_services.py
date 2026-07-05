@@ -286,7 +286,7 @@ class TestSyncAll:
         _make_creator(db_session, uid="111", enabled=True)
         _make_creator(db_session, uid="222", enabled=True)
 
-        def side_effect(uid: str):
+        def side_effect(uid: str, **kwargs):
             if uid == "111":
                 raise Exception("第一个 creator 抓取失败")
             return [_make_fetched_video("BV2bb222b2bB")]

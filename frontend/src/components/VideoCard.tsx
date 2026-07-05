@@ -1,10 +1,10 @@
 /**
  * VideoCard：展示单个视频的卡片组件。
- * 包含标题、UP 主、时长、发布时间，以及"标记已看"按钮。
  */
+import { useState } from "react";
 import { Video } from "../api/client";
+import { User, Clock, Calendar, ExternalLink, Eye } from "lucide-react";
 
-/** 将秒数格式化为 mm:ss 或 h:mm:ss */
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -14,60 +14,64 @@ function formatDuration(seconds: number): string {
   return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
-/** 将 ISO 时间字符串格式化为本地日期 */
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("zh-CN");
 }
 
 interface VideoCardProps {
   video: Video;
-  /** 点击"标记已看"时的回调 */
   onMarkWatched: (videoId: number) => void;
 }
 
 export default function VideoCard({ video, onMarkWatched }: VideoCardProps) {
+  const [removing, setRemoving] = useState(false);
+
+  function handleMarkWatched() {
+    setRemoving(true);
+    setTimeout(() => onMarkWatched(video.id), 200);
+  }
+
   return (
-    <div
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: 6,
-        padding: "12px 16px",
-        marginBottom: 8,
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        gap: 8,
-      }}
-    >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {/* 视频标题，点击跳转到 B 站 */}
-        <a
-          href={video.video_url}
-          target="_blank"
-          rel="noreferrer"
-          style={{ fontWeight: 600, wordBreak: "break-word" }}
-        >
-          {video.title}
-        </a>
-        <div style={{ fontSize: 13, color: "#666", marginTop: 4 }}>
-          <span>{video.creator_name}</span>
-          <span style={{ margin: "0 6px" }}>·</span>
-          <span>{formatDuration(video.duration_seconds)}</span>
-          <span style={{ margin: "0 6px" }}>·</span>
-          <span>{formatDate(video.published_at)}</span>
+    <div className={`video-card${removing ? " video-card-removing" : ""}`}>
+      <div className="video-card-accent" />
+      <div className="video-card-body">
+        <div className="video-card-info">
+          <a
+            href={video.video_url}
+            target="_blank"
+            rel="noreferrer"
+            className="video-card-title"
+            title={video.title}
+          >
+            {video.title}
+            <ExternalLink size={12} className="video-card-title-icon" />
+          </a>
+          <div className="video-card-meta">
+            <span className="video-card-meta-item">
+              <User size={12} />
+              {video.creator_name}
+            </span>
+            <span className="video-card-meta-sep">·</span>
+            <span className="video-card-meta-item">
+              <Clock size={12} />
+              {formatDuration(video.duration_seconds)}
+            </span>
+            <span className="video-card-meta-sep">·</span>
+            <span className="video-card-meta-item">
+              <Calendar size={12} />
+              {formatDate(video.published_at)}
+            </span>
+          </div>
         </div>
+        <button
+          onClick={handleMarkWatched}
+          className="btn btn-outline btn-sm"
+          style={{ flexShrink: 0 }}
+        >
+          <Eye size={13} />
+          已看
+        </button>
       </div>
-      <button
-        onClick={() => onMarkWatched(video.id)}
-        style={{
-          flexShrink: 0,
-          padding: "4px 10px",
-          cursor: "pointer",
-          fontSize: 12,
-        }}
-      >
-        已看
-      </button>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 /**
  * CreatorsPage：UP 主管理页面。
- * 展示已添加的 UP 主列表，支持添加、编辑（启用/禁用、标签）、手动同步。
+ * 展示已添加的 UP 主列表，支持添加、编辑、同步、按标签筛选。
  */
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import {
   fetchCreators,
   fetchTags,
@@ -12,6 +12,20 @@ import {
   Creator,
   Tag,
 } from "../api/client";
+import {
+  Plus,
+  Loader2,
+  AlertCircle,
+  RefreshCw,
+  Inbox,
+  ExternalLink,
+  Pencil,
+  CheckCircle2,
+  XCircle,
+  X,
+  User,
+  Filter,
+} from "lucide-react";
 import CreatorForm from "../components/CreatorForm";
 
 type FormMode =
@@ -29,6 +43,7 @@ export default function CreatorsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [syncingId, setSyncingId] = useState<number | null>(null);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const [filterTagId, setFilterTagId] = useState<number | null>(null);
 
   useEffect(() => {
     Promise.all([fetchCreators(), fetchTags()])
@@ -40,10 +55,16 @@ export default function CreatorsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  /** 添加 UP 主 */
+  /** 根据当前筛选标签过滤 UP 主 */
+  const filteredCreators = useMemo(() => {
+    if (filterTagId === null) return creators;
+    return creators.filter((c) => c.tag_ids.includes(filterTagId));
+  }, [creators, filterTagId]);
+
   async function handleAdd(values: {
     name: string;
     profile_url: string;
+    avatar_url?: string;
     enabled: boolean;
     tag_ids: number[];
   }) {
@@ -53,6 +74,7 @@ export default function CreatorsPage() {
       const created = await createCreator({
         name: values.name,
         profile_url: values.profile_url,
+        avatar_url: values.avatar_url,
         tag_ids: values.tag_ids,
       });
       setCreators((prev) => [...prev, created]);
@@ -64,7 +86,6 @@ export default function CreatorsPage() {
     }
   }
 
-  /** 编辑 UP 主 */
   async function handleEdit(
     creatorId: number,
     values: {
@@ -93,7 +114,6 @@ export default function CreatorsPage() {
     }
   }
 
-  /** 手动同步单个 UP 主 */
   async function handleSync(creatorId: number) {
     setSyncingId(creatorId);
     setSyncMsg(null);
@@ -107,41 +127,79 @@ export default function CreatorsPage() {
     }
   }
 
-  if (loading) return <p>加载中…</p>;
-  if (loadError) return <p style={{ color: "red" }}>错误：{loadError}</p>;
+  if (loading) {
+    return (
+      <div className="loading-state">
+        <Loader2 size={20} className="spinner" /> 加载中…
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="error-message">
+        <AlertCircle size={16} />
+        加载失败：{loadError}
+        <button className="btn btn-outline btn-sm" onClick={() => window.location.reload()}>
+          <RefreshCw size={12} /> 重试
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-        }}
-      >
-        <h2 style={{ margin: 0 }}>UP 主管理</h2>
-        <button onClick={() => setFormMode({ type: "add" })}>+ 添加 UP 主</button>
+      <div className="page-header">
+        <h2>UP 主管理</h2>
+        <button className="btn btn-primary" onClick={() => setFormMode({ type: "add" })}>
+          <Plus size={16} /> 添加 UP 主
+        </button>
       </div>
 
       {syncMsg && (
-        <p style={{ color: "green", marginBottom: 12 }}>{syncMsg}</p>
+        <div className="status-banner status-banner-success">
+          <CheckCircle2 size={16} />
+          {syncMsg}
+        </div>
       )}
       {submitError && (
-        <p style={{ color: "red", marginBottom: 12 }}>提交失败：{submitError}</p>
+        <div className="error-message">
+          <AlertCircle size={16} />
+          提交失败：{submitError}
+        </div>
+      )}
+
+      {/* 标签筛选栏 */}
+      {tags.length > 0 && (
+        <div className="filter-bar">
+          <Filter size={14} />
+          <button
+            className={`filter-chip${filterTagId === null ? " filter-chip-active" : ""}`}
+            onClick={() => setFilterTagId(null)}
+          >
+            全部
+          </button>
+          {tags.map((tag) => (
+            <button
+              key={tag.id}
+              className={`filter-chip${filterTagId === tag.id ? " filter-chip-active" : ""}`}
+              onClick={() => setFilterTagId(tag.id === filterTagId ? null : tag.id)}
+            >
+              {tag.name}
+            </button>
+          ))}
+          {filterTagId !== null && (
+            <span className="text-muted text-sm">
+              {filteredCreators.length} 个 UP 主
+            </span>
+          )}
+        </div>
       )}
 
       {/* 添加表单 */}
       {formMode.type === "add" && (
-        <div
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: 6,
-            padding: 16,
-            marginBottom: 16,
-          }}
-        >
-          <h4 style={{ margin: "0 0 12px" }}>添加 UP 主</h4>
+        <div className="card" style={{ padding: "var(--space-4)", marginBottom: "var(--space-4)" }}>
+          <h4 className="mb-3">添加 UP 主</h4>
           <CreatorForm
             tags={tags}
             onSubmit={handleAdd}
@@ -152,83 +210,114 @@ export default function CreatorsPage() {
       )}
 
       {/* UP 主列表 */}
-      {creators.length === 0 ? (
-        <p style={{ color: "#888" }}>暂无 UP 主，点击上方按钮添加。</p>
+      {filteredCreators.length === 0 ? (
+        <div className="empty-state" style={{ paddingTop: 48 }}>
+          <Inbox size={40} />
+          <p>{creators.length === 0 ? "暂无 UP 主" : "该标签下暂无 UP 主"}</p>
+          <p className="empty-hint">
+            {creators.length === 0 ? "点击上方按钮添加第一个 UP 主" : "尝试切换筛选标签"}
+          </p>
+        </div>
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ borderBottom: "2px solid #ddd", textAlign: "left" }}>
-              <th style={{ padding: "8px 10px" }}>名称</th>
-              <th style={{ padding: "8px 10px" }}>状态</th>
-              <th style={{ padding: "8px 10px" }}>标签</th>
-              <th style={{ padding: "8px 10px" }}>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {creators.map((c) => (
-              <Fragment key={c.id}>
-                <tr
-                  style={{ borderBottom: "1px solid #eee", verticalAlign: "top" }}
-                >
-                  <td style={{ padding: "8px 10px" }}>
-                    <a href={c.profile_url} target="_blank" rel="noreferrer">
+        <div className="creator-list">
+          {filteredCreators.map((c) => (
+            <Fragment key={c.id}>
+              <div className="creator-row">
+                {/* 头像 */}
+                <div className="creator-avatar">
+                  {c.avatar_url ? (
+                    <img src={c.avatar_url} alt={c.name} className="creator-avatar-img" />
+                  ) : (
+                    <span className="creator-avatar-placeholder">
+                      <User size={18} />
+                    </span>
+                  )}
+                </div>
+
+                <div className="creator-row-main">
+                  <div className="creator-name">
+                    <a href={c.profile_url} target="_blank" rel="noreferrer" className="creator-name-link">
                       {c.name}
+                      <ExternalLink size={12} />
                     </a>
-                  </td>
-                  <td style={{ padding: "8px 10px" }}>
-                    {c.enabled ? "启用" : "停用"}
-                  </td>
-                  <td style={{ padding: "8px 10px" }}>
-                    {c.tag_ids
-                      .map(
-                        (tid) => tags.find((t) => t.id === tid)?.name ?? `#${tid}`
-                      )
-                      .join(", ") || "-"}
-                  </td>
-                  <td style={{ padding: "8px 10px", display: "flex", gap: 6 }}>
-                    <button
-                      onClick={() => setFormMode({ type: "edit", creator: c })}
-                    >
-                      编辑
-                    </button>
-                    <button
-                      onClick={() => handleSync(c.id)}
-                      disabled={syncingId === c.id}
-                    >
-                      {syncingId === c.id ? "同步中…" : "同步"}
-                    </button>
-                  </td>
-                </tr>
-                {/* 编辑表单内联展示 */}
-                {formMode.type === "edit" && formMode.creator.id === c.id && (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      style={{
-                        padding: 16,
-                        background: "#fafafa",
-                        border: "1px solid #eee",
-                      }}
-                    >
-                      <CreatorForm
-                        initialValues={{
-                          name: c.name,
-                          profile_url: c.profile_url,
-                          enabled: c.enabled,
-                          tag_ids: c.tag_ids,
-                        }}
-                        tags={tags}
-                        onSubmit={(values) => handleEdit(c.id, values)}
-                        onCancel={() => setFormMode({ type: "none" })}
-                        submitting={submitting}
-                      />
-                    </td>
-                  </tr>
-                )}
-              </Fragment>
-            ))}
-          </tbody>
-        </table>
+                    <span className="creator-profile-url" title={c.profile_url}>
+                      {c.profile_url}
+                    </span>
+                  </div>
+                  <div className="creator-tags">
+                    {c.tag_ids.length > 0 ? (
+                      c.tag_ids.map((tid) => (
+                        <span key={tid} className="badge badge-info">
+                          {tags.find((t) => t.id === tid)?.name ?? `#${tid}`}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-muted text-sm">无标签</span>
+                    )}
+                  </div>
+                </div>
+                <div className="creator-row-actions">
+                  {c.enabled ? (
+                    <span className="badge badge-success">
+                      <CheckCircle2 size={11} /> 启用
+                    </span>
+                  ) : (
+                    <span className="badge badge-muted">
+                      <XCircle size={11} /> 停用
+                    </span>
+                  )}
+                  <button
+                    className="btn btn-outline btn-sm"
+                    onClick={() => setFormMode({ type: "edit", creator: c })}
+                  >
+                    <Pencil size={12} />
+                    编辑
+                  </button>
+                  <button
+                    className="btn btn-outline btn-sm"
+                    onClick={() => handleSync(c.id)}
+                    disabled={syncingId === c.id}
+                  >
+                    {syncingId === c.id ? (
+                      <Loader2 size={12} className="spinner" />
+                    ) : (
+                      <RefreshCw size={12} />
+                    )}
+                    {syncingId === c.id ? "同步中…" : "同步"}
+                  </button>
+                </div>
+              </div>
+
+              {/* 编辑表单内联 */}
+              {formMode.type === "edit" && formMode.creator.id === c.id && (
+                <div className="edit-card">
+                  <button
+                    type="button"
+                    className="edit-card-close"
+                    onClick={() => setFormMode({ type: "none" })}
+                    title="关闭 (Esc)"
+                  >
+                    <X size={22} />
+                  </button>
+                  <h4 className="mb-3">编辑：{c.name}</h4>
+                  <CreatorForm
+                    initialValues={{
+                      name: c.name,
+                      profile_url: c.profile_url,
+                      avatar_url: c.avatar_url ?? undefined,
+                      enabled: c.enabled,
+                      tag_ids: c.tag_ids,
+                    }}
+                    tags={tags}
+                    onSubmit={(values) => handleEdit(c.id, values)}
+                    onCancel={() => setFormMode({ type: "none" })}
+                    submitting={submitting}
+                  />
+                </div>
+              )}
+            </Fragment>
+          ))}
+        </div>
       )}
     </div>
   );

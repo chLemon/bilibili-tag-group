@@ -19,6 +19,7 @@ const mockCreators: client.Creator[] = [
     id: 1,
     name: "测试UP主",
     profile_url: "https://space.bilibili.com/123",
+    avatar_url: null,
     enabled: true,
     tag_ids: [1],
   },
@@ -31,11 +32,13 @@ beforeEach(() => {
     id: 2,
     name: "新UP主",
     profile_url: "https://space.bilibili.com/456",
+    avatar_url: null,
     enabled: true,
     tag_ids: [],
   });
   vi.mocked(client.updateCreator).mockResolvedValue({
     ...mockCreators[0],
+    avatar_url: null,
     enabled: false,
   });
   vi.mocked(client.syncCreator).mockResolvedValue({
@@ -45,6 +48,10 @@ beforeEach(() => {
   vi.mocked(client.createTag).mockResolvedValue({
     id: 2,
     name: "游戏",
+  });
+  vi.mocked(client.resolveCreatorName).mockResolvedValue({
+    name: "新UP主",
+    avatar_url: null,
   });
 });
 
@@ -78,7 +85,7 @@ describe("CreatorsPage", () => {
     );
     await waitFor(() => screen.getByText("测试UP主"));
     await userEvent.click(screen.getByRole("button", { name: /添加 UP 主/ }));
-    expect(screen.getByPlaceholderText("UP 主昵称")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("https://space.bilibili.com/...")).toBeInTheDocument();
   });
 
   it("手动同步后展示成功消息", async () => {
@@ -103,17 +110,15 @@ describe("CreatorsPage", () => {
     );
     await waitFor(() => screen.getByText("测试UP主"));
     await userEvent.click(screen.getByRole("button", { name: /添加 UP 主/ }));
-    // 填写表单并提交
-    await userEvent.type(screen.getByPlaceholderText("UP 主昵称"), "新UP主");
+    // 填写 URL 并获取信息
     await userEvent.type(
       screen.getByPlaceholderText("https://space.bilibili.com/..."),
       "https://space.bilibili.com/999"
     );
+    await userEvent.click(screen.getByRole("button", { name: "获取信息" }));
     await userEvent.click(screen.getByRole("button", { name: "保存" }));
     await waitFor(() => {
-      // 原列表仍在
       expect(screen.getByText("测试UP主")).toBeInTheDocument();
-      // 内联错误
       expect(screen.getByText(/提交失败/)).toBeInTheDocument();
     });
   });
@@ -125,7 +130,8 @@ describe("CreatorsPage", () => {
       </MemoryRouter>
     );
     await waitFor(() => {
-      expect(screen.getByText("科技")).toBeInTheDocument();
+      const badges = screen.getAllByText("科技");
+      expect(badges.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -141,8 +147,9 @@ describe("CreatorsPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "创建并选中" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("checkbox", { name: "游戏" })).toBeInTheDocument();
+      const chip = screen.getByRole("button", { name: "游戏" });
+      expect(chip).toBeInTheDocument();
+      expect(chip.className).toContain("form-tag-chip-active");
     });
-    expect(screen.getByRole("checkbox", { name: "游戏" })).toBeChecked();
   });
 });

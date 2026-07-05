@@ -3,13 +3,14 @@
 打开 UP 主投稿视频页面，通过 DOM 提取视频卡片数据并逐页翻页，
 绕过 WBI API 签名风控。
 
-浏览器实例作为类级别单例复用，避免反复启动开销。
+浏览器实例使用线程本地存储，避免跨线程共享导致的 greenlet 切换错误。
 """
 from __future__ import annotations
 
 import json
 import random as _random
 import re
+import threading as _threading
 import time as _time
 from datetime import datetime, timedelta, timezone
 
@@ -53,10 +54,10 @@ class PlaywrightBilibiliFetcher:
     """使用 Playwright 无头浏览器从 B 站空间页抓取视频列表和 UP 主信息。
 
     内部通过 SessionLocal 管理 SQLite 缓存，TTL 内命中缓存则跳过远程请求。
+    浏览器实例使用线程本地存储，确保 Playwright 同步 API 的线程安全性。
     """
 
-    _playwright = None
-    _browser: Browser | None = None
+    _thread_local: _threading.local = _threading.local()
 
     def __init__(self, cookie: str | None = None, headless: bool = True) -> None:
         """初始化抓取器。
@@ -70,10 +71,10 @@ class PlaywrightBilibiliFetcher:
 
     @classmethod
     def _get_browser(cls, headless: bool) -> Browser:
-        """懒加载浏览器实例（类级别单例，跨请求复用）。"""
-        if cls._browser is None or not cls._browser.is_connected():
-            cls._playwright = sync_playwright().start()
-            cls._browser = cls._playwright.chromium.launch(
+        """获取当前线程的浏览器实例（每个线程独立）。"""
+        if not getattr(cls._thread_local, "browser", None):
+            pw = sync_playwright().start()
+            browser = pw.chromium.launch(
                 headless=headless,
                 args=[
                     "--disable-blink-features=AutomationControlled",
@@ -82,17 +83,31 @@ class PlaywrightBilibiliFetcher:
                     "--disable-setuid-sandbox",
                 ],
             )
-        return cls._browser
+            cls._thread_local.playwright = pw
+            cls._thread_local.browser = browser
+        elif not cls._thread_local.browser.is_connected():
+            cls._thread_local.browser = cls._thread_local.playwright.chromium.launch(
+                headless=headless,
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-features=IsolateOrigins,site-per-process",
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                ],
+            )
+        return cls._thread_local.browser
 
     @classmethod
     def close_browser(cls) -> None:
-        """关闭浏览器实例，释放资源。"""
-        if cls._browser is not None:
-            cls._browser.close()
-            cls._browser = None
-        if cls._playwright is not None:
-            cls._playwright.stop()
-            cls._playwright = None
+        """关闭当前线程的浏览器实例，释放资源。"""
+        browser = getattr(cls._thread_local, "browser", None)
+        playwright = getattr(cls._thread_local, "playwright", None)
+        if browser is not None:
+            browser.close()
+            cls._thread_local.browser = None
+        if playwright is not None:
+            playwright.stop()
+            cls._thread_local.playwright = None
 
     def _create_context(self) -> BrowserContext:
         """创建带反检测配置的浏览器上下文。"""
@@ -337,25 +352,24 @@ class PlaywrightBilibiliFetcher:
             db.close()
 
     def fetch_creator_name(self, uid: str, ttl_cache: bool = True) -> str:
-        """获取指定 UP 主的昵称。
+        """获取指定 UP 主的昵称（兼容旧接口，内部调用 fetch_creator_info）。"""
+        return self.fetch_creator_info(uid, ttl_cache)["name"]
 
-        从空间页面定位 class='nickname' 元素获取。
+    def fetch_creator_info(self, uid: str, ttl_cache: bool = True) -> dict:
+        """获取指定 UP 主的昵称和头像 URL。
+
+        从空间页面提取昵称和头像。
 
         参数：
             uid: UP 主的数字 ID
-            ttl_cache: True 时优先返回 TTL 缓存（24h），False 时每次请求远程
+            ttl_cache: True 时优先返回 TTL 缓存（24h）
 
         返回：
-            UP 主昵称
+            dict，包含 name 和 avatar_url 字段
 
         异常：
             FetchError: 获取失败时抛出
         """
-        if ttl_cache:
-            cached = self._get_cached(uid, "name")
-            if cached is not None:
-                return cached
-
         context = self._create_context()
         page = context.new_page()
         try:
@@ -364,18 +378,23 @@ class PlaywrightBilibiliFetcher:
                 wait_until="networkidle",
                 timeout=_PAGE_TIMEOUT,
             )
-            nickname_el = page.locator(".nickname").first
-            name = nickname_el.text_content()
-            if name and name.strip():
-                name = name.strip()
-                self._set_cache(uid, "name", name)
-                return name
+            name = page.locator(".nickname").first.text_content()
+            if not name or not name.strip():
+                raise FetchError(f"未能提取到 UP 主昵称，uid={uid}")
+            name = name.strip()
 
-            raise FetchError(f"未能提取到 UP 主昵称，uid={uid}")
+            avatar_url: str | None = None
+            try:
+                avatar_el = page.locator("#h-avatar").first
+                avatar_url = avatar_el.get_attribute("src")
+            except Exception:
+                pass
+
+            return {"name": name, "avatar_url": avatar_url}
         except FetchError:
             raise
         except Exception as exc:
-            raise FetchError(f"获取昵称失败，uid={uid}: {exc}") from exc
+            raise FetchError(f"获取 UP 主信息失败，uid={uid}: {exc}") from exc
         finally:
             page.close()
             context.close()

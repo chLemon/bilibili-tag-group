@@ -16,6 +16,7 @@ class CreatorService:
         name: str,
         profile_url: str,
         tag_ids: list[int],
+        avatar_url: Optional[str] = None,
     ) -> Creator:
         """创建新 UP 主，并可选择同时关联标签。
 
@@ -23,9 +24,10 @@ class CreatorService:
             db: SQLAlchemy Session
             name: UP 主名称
             profile_url: B 站主页链接
+            avatar_url: 头像 URL（可选）
             tag_ids: 关联的标签 ID 列表
         """
-        creator = Creator(name=name, profile_url=profile_url)
+        creator = Creator(name=name, profile_url=profile_url, avatar_url=avatar_url)
         if tag_ids:
             tags = db.query(Tag).filter(Tag.id.in_(tag_ids)).all()
             creator.tags = tags

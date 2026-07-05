@@ -266,35 +266,34 @@ class TestSyncLatest:
 
 
 class TestSyncRun:
-    """POST /api/sync/run 测试。"""
+    """POST /api/sync/run 测试（异步模式：后台线程执行，立即返回 SyncTask）。"""
 
-    def test_run_sync_returns_sync_log(self, client):
-        """手动触发全量同步，返回 SyncLog（无 creator 时应 status=success）。"""
+    def test_run_sync_returns_task(self, client):
+        """手动触发全量同步，返回 SyncTask（异步模式）。"""
         with patch("app.routers.sync._sync_svc") as mock_svc:
-            from app.models.sync_log import SyncLog
-            fake_log = SyncLog(
+            from app.models.sync_task import SyncTask
+            fake_task = SyncTask(
                 id=1,
-                scope="all",
-                status="success",
+                status="running",
+                total_creators=0,
+                completed_creators=0,
                 new_videos=0,
                 started_at=datetime(2026, 4, 18, 0, 0, 0),
-                finished_at=datetime(2026, 4, 18, 0, 0, 5),
             )
-            mock_svc.sync_all.return_value = fake_log
+            mock_svc.start_async_sync.return_value = fake_task
             response = client.post("/api/sync/run")
 
         assert response.status_code == 200
         body = response.json()
-        assert body["scope"] == "all"
-        assert body["status"] == "success"
+        assert body["status"] == "running"
 
     def test_run_sync_with_real_db_no_creators(self, client):
-        """无 creator 时全量同步直接成功，new_videos=0。"""
+        """无 creator 时全量同步立即完成。"""
         response = client.post("/api/sync/run")
         assert response.status_code == 200
         body = response.json()
-        assert body["scope"] == "all"
-        assert body["new_videos"] == 0
+        assert body["status"] in ("running", "completed")
+        assert body["total_creators"] == 0
 
 
 class TestSyncSettings:

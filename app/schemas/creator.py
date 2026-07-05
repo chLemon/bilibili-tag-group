@@ -9,6 +9,7 @@ class CreatorCreate(BaseModel):
 
     name: str
     profile_url: str
+    avatar_url: Optional[str] = None
     tag_ids: list[int] = []
 
 
@@ -26,6 +27,7 @@ class CreatorRead(BaseModel):
     id: int
     name: str
     profile_url: str
+    avatar_url: Optional[str] = None
     enabled: bool
     tag_ids: list[int] = []
 

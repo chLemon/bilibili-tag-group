@@ -2,24 +2,23 @@
  * SyncStatusPanel：展示最近一次同步结果与手动触发入口。
  */
 import { SyncLog, SyncSettings } from "../api/client";
+import {
+  Clock,
+  CheckCircle2,
+  XCircle,
+  FileVideo,
+  CalendarClock,
+} from "lucide-react";
 
 interface SyncStatusPanelProps {
-  /** 最近同步日志（null 表示尚无记录） */
   latestLog: SyncLog | null;
-  /** 调度配置 */
   settings: SyncSettings | null;
-  /** 是否正在执行同步 */
-  syncing: boolean;
-  /** 点击"立即同步"时的回调 */
-  onRunSync: () => void;
 }
 
-/** 格式化 ISO 时间字符串为本地时间 */
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("zh-CN");
 }
 
-/** 根据状态返回中文标签 */
 function statusLabel(status: string): string {
   const map: Record<string, string> = {
     success: "成功",
@@ -32,70 +31,73 @@ function statusLabel(status: string): string {
 export default function SyncStatusPanel({
   latestLog,
   settings,
-  syncing,
-  onRunSync,
 }: SyncStatusPanelProps) {
   return (
     <div>
       {/* 调度配置信息 */}
       {settings && (
-        <div
-          style={{
-            marginBottom: 16,
-            padding: "10px 14px",
-            background: "#f5f5f5",
-            borderRadius: 6,
-            fontSize: 13,
-          }}
-        >
-          <strong>定时同步：</strong>
-          {settings.enabled
-            ? `已启用，每 ${settings.interval_minutes} 分钟执行一次`
-            : "未启用"}
+        <div className="status-banner status-banner-info" style={{ marginBottom: "var(--space-5)" }}>
+          <CalendarClock size={18} />
+          <div>
+            <strong>定时同步：</strong>
+            {settings.enabled
+              ? `已启用，每 ${settings.interval_minutes} 分钟执行一次`
+              : "未启用"}
+          </div>
         </div>
       )}
 
       {/* 最近同步日志 */}
       {latestLog ? (
-        <div
-          style={{
-            padding: "12px 16px",
-            border: "1px solid #ddd",
-            borderRadius: 6,
-            marginBottom: 16,
-          }}
-        >
-          <div style={{ marginBottom: 6, fontWeight: 600 }}>最近同步结果</div>
-          <div style={{ fontSize: 13, lineHeight: 1.8 }}>
-            <div>
-              状态：
-              <span
-                style={{
-                  color: latestLog.status === "success" ? "green" : "red",
-                  fontWeight: 600,
-                }}
-              >
-                {statusLabel(latestLog.status)}
+        <div className="card sync-log-card">
+          <div className="sync-log-header">
+            <Clock size={16} />
+            <span>最近同步结果</span>
+            {latestLog.status === "success" ? (
+              <span className="badge badge-success">
+                <CheckCircle2 size={12} /> {statusLabel(latestLog.status)}
               </span>
+            ) : (
+              <span className="badge badge-error">
+                <XCircle size={12} /> {statusLabel(latestLog.status)}
+              </span>
+            )}
+          </div>
+
+          <div className="sync-log-body">
+            <div className="sync-log-stat">
+              <FileVideo size={14} />
+              <span>新增视频</span>
+              <strong>{latestLog.new_videos} 条</strong>
             </div>
-            <div>新增视频：{latestLog.new_videos} 条</div>
-            <div>开始时间：{formatDateTime(latestLog.started_at)}</div>
+            <div className="sync-log-stat">
+              <CalendarClock size={14} />
+              <span>开始时间</span>
+              <span>{formatDateTime(latestLog.started_at)}</span>
+            </div>
             {latestLog.finished_at && (
-              <div>结束时间：{formatDateTime(latestLog.finished_at)}</div>
+              <div className="sync-log-stat">
+                <CalendarClock size={14} />
+                <span>结束时间</span>
+                <span>{formatDateTime(latestLog.finished_at)}</span>
+              </div>
             )}
             {latestLog.error_message && (
-              <div style={{ color: "red" }}>错误：{latestLog.error_message}</div>
+              <div className="error-message" style={{ marginTop: "var(--space-3)" }}>
+                <XCircle size={14} />
+                {latestLog.error_message}
+              </div>
             )}
           </div>
         </div>
       ) : (
-        <p style={{ color: "#888", marginBottom: 16 }}>暂无同步记录。</p>
+        <div className="empty-state" style={{ paddingTop: "var(--space-4)" }}>
+          <Clock size={36} />
+          <p>暂无同步记录</p>
+          <p className="empty-hint">点击下方按钮执行首次同步</p>
+        </div>
       )}
 
-      {/* 手动触发 */}
-      <button onClick={onRunSync} disabled={syncing}>
-        {syncing ? "同步中…" : "立即同步"}
-      </button>
     </div>
   );
 }

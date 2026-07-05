@@ -1,7 +1,7 @@
 /**
  * VideoCard 组件测试
  */
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import VideoCard from "../src/components/VideoCard";
@@ -46,6 +46,8 @@ describe("VideoCard", () => {
     const onMarkWatched = vi.fn();
     render(<VideoCard video={sampleVideo} onMarkWatched={onMarkWatched} />);
     await userEvent.click(screen.getByRole("button", { name: "已看" }));
-    expect(onMarkWatched).toHaveBeenCalledWith(sampleVideo.id);
+    await waitFor(() => {
+      expect(onMarkWatched).toHaveBeenCalledWith(sampleVideo.id);
+    });
   });
 });

@@ -10,6 +10,7 @@ import {
   Tag,
   Video,
 } from "../api/client";
+import { Hash, AlertCircle, Inbox, Loader2, RefreshCw } from "lucide-react";
 import VideoCard from "../components/VideoCard";
 
 export default function TagsPage() {
@@ -21,20 +22,16 @@ export default function TagsPage() {
   const [tagsError, setTagsError] = useState<string | null>(null);
   const [videosError, setVideosError] = useState<string | null>(null);
 
-  // 初次加载标签列表
   useEffect(() => {
     fetchTags()
       .then((data) => {
         setTags(data);
-        if (data.length > 0) {
-          setSelectedTagId(data[0].id);
-        }
+        if (data.length > 0) setSelectedTagId(data[0].id);
       })
       .catch((err: Error) => setTagsError(err.message))
       .finally(() => setLoadingTags(false));
   }, []);
 
-  // 选中标签变化时加载视频
   useEffect(() => {
     if (selectedTagId === null) return;
     setLoadingVideos(true);
@@ -45,7 +42,6 @@ export default function TagsPage() {
       .finally(() => setLoadingVideos(false));
   }, [selectedTagId]);
 
-  /** 标记已看后从列表中移除 */
   async function handleMarkWatched(videoId: number) {
     try {
       await updateWatched(videoId, true);
@@ -55,49 +51,91 @@ export default function TagsPage() {
     }
   }
 
-  if (loadingTags) return <p>加载标签中…</p>;
-  if (tagsError) return <p style={{ color: "red" }}>错误：{tagsError}</p>;
-  if (tags.length === 0) return <p>暂无标签，请先在"UP 主管理"中添加 UP 主并关联标签。</p>;
+  if (loadingTags) {
+    return (
+      <div className="loading-state">
+        <Loader2 size={20} className="spinner" /> 加载标签中…
+      </div>
+    );
+  }
+
+  if (tagsError) {
+    return (
+      <div className="error-message">
+        <AlertCircle size={16} />
+        加载失败：{tagsError}
+        <button className="btn btn-outline btn-sm" onClick={() => window.location.reload()}>
+          <RefreshCw size={12} /> 重试
+        </button>
+      </div>
+    );
+  }
+
+  if (tags.length === 0) {
+    return (
+      <div className="empty-state" style={{ paddingTop: 48 }}>
+        <Inbox size={40} />
+        <p>暂无标签</p>
+        <p className="empty-hint">请先在"UP 主管理"中添加 UP 主并关联标签</p>
+      </div>
+    );
+  }
+
+  const selectedTag = tags.find((t) => t.id === selectedTagId);
 
   return (
-    <div style={{ display: "flex", gap: 24, height: "100%" }}>
-      {/* 标签列表 */}
-      <div style={{ width: 180, flexShrink: 0 }}>
-        <h3 style={{ margin: "0 0 12px" }}>标签</h3>
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+    <div style={{ display: "flex", gap: 24, minHeight: "calc(100vh - 120px)" }}>
+      {/* 左侧标签列表 */}
+      <aside className="tag-sidebar">
+        <h3 className="tag-sidebar-title">
+          <Hash size={16} /> 标签
+        </h3>
+        <ul>
           {tags.map((tag) => (
             <li
               key={tag.id}
               onClick={() => setSelectedTagId(tag.id)}
-              style={{
-                padding: "8px 10px",
-                cursor: "pointer",
-                borderRadius: 4,
-                background: selectedTagId === tag.id ? "#e0e7ff" : "transparent",
-                fontWeight: selectedTagId === tag.id ? 600 : 400,
-              }}
+              className={`tag-item${selectedTagId === tag.id ? " tag-item-active" : ""}`}
             >
-              {tag.name}
+              <span className="tag-item-name truncate">{tag.name}</span>
             </li>
           ))}
         </ul>
-      </div>
+      </aside>
 
-      {/* 视频列表 */}
-      <div style={{ flex: 1, minWidth: 0 }}>
+      {/* 右侧视频列表 */}
+      <div className="video-panel">
+        {selectedTag && (
+          <h3 className="video-panel-title">
+            {selectedTag.name}
+            <span className="badge badge-muted">{videos.length} 个未看</span>
+          </h3>
+        )}
+
         {loadingVideos ? (
-          <p>加载视频中…</p>
+          <div className="loading-state">
+            <Loader2 size={20} className="spinner" /> 加载视频中…
+          </div>
         ) : videosError ? (
-          <p style={{ color: "red" }}>视频加载失败：{videosError}</p>
+          <div className="error-message">
+            <AlertCircle size={16} />
+            视频加载失败：{videosError}
+            <button className="btn btn-outline btn-sm" onClick={() => setSelectedTagId(selectedTagId)}>
+              <RefreshCw size={12} /> 重试
+            </button>
+          </div>
         ) : videos.length === 0 ? (
-          <p style={{ color: "#888" }}>该标签下暂无未看视频。</p>
+          <div className="empty-state">
+            <Inbox size={36} />
+            <p>该标签下暂无未看视频</p>
+            <p className="empty-hint">新视频同步后会展示在这里</p>
+          </div>
         ) : (
-          <>
-            <h3 style={{ margin: "0 0 12px" }}>未看视频（{videos.length}）</h3>
+          <div>
             {videos.map((v) => (
               <VideoCard key={v.id} video={v} onMarkWatched={handleMarkWatched} />
             ))}
-          </>
+          </div>
         )}
       </div>
     </div>

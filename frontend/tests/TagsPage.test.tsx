@@ -43,7 +43,8 @@ describe("TagsPage", () => {
       </MemoryRouter>
     );
     await waitFor(() => {
-      expect(screen.getByText("科技")).toBeInTheDocument();
+      const items = screen.getAllByText("科技");
+      expect(items.length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText("音乐")).toBeInTheDocument();
     });
   });
@@ -94,8 +95,9 @@ describe("TagsPage", () => {
       </MemoryRouter>
     );
     await waitFor(() => {
-      // 标签列表仍保留
-      expect(screen.getByText("科技")).toBeInTheDocument();
+      // 标签列表仍保留（标题和侧边栏各出现一次）
+      const items = screen.getAllByText("科技");
+      expect(items.length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText("音乐")).toBeInTheDocument();
       // 右侧展示视频加载错误
       expect(screen.getByText(/视频加载失败/)).toBeInTheDocument();

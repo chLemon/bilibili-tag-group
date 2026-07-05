@@ -1,27 +1,25 @@
 /**
  * CreatorForm：添加或编辑 UP 主的表单组件。
- * 支持名称、主页 URL、是否启用、关联标签的编辑。
+ * 添加模式：只填 URL，点击按钮自动获取名称和头像。
+ * 编辑模式：名称和 URL 只读，可修改启用状态和标签。
  */
 import { useEffect, useState } from "react";
+import { Plus, AlertCircle, Loader2, Search, User } from "lucide-react";
 import { Tag, createTag, resolveCreatorName } from "../api/client";
 
 interface FormValues {
   name: string;
   profile_url: string;
+  avatar_url?: string;
   enabled: boolean;
   tag_ids: number[];
 }
 
 interface CreatorFormProps {
-  /** 初始值（编辑模式时传入） */
   initialValues?: Partial<FormValues>;
-  /** 可选标签列表 */
   tags: Tag[];
-  /** 提交时的回调，参数为表单当前值 */
   onSubmit: (values: FormValues) => void;
-  /** 取消时的回调 */
   onCancel: () => void;
-  /** 是否正在提交（用于禁用按钮） */
   submitting?: boolean;
 }
 
@@ -32,14 +30,13 @@ export default function CreatorForm({
   onCancel,
   submitting = false,
 }: CreatorFormProps) {
+  const isEditing = !!initialValues?.name;
+
   const [name, setName] = useState(initialValues?.name ?? "");
-  const [profileUrl, setProfileUrl] = useState(
-    initialValues?.profile_url ?? ""
-  );
+  const [profileUrl, setProfileUrl] = useState(initialValues?.profile_url ?? "");
+  const [avatarUrl, setAvatarUrl] = useState(initialValues?.avatar_url ?? "");
   const [enabled, setEnabled] = useState(initialValues?.enabled ?? true);
-  const [tagIds, setTagIds] = useState<number[]>(
-    initialValues?.tag_ids ?? []
-  );
+  const [tagIds, setTagIds] = useState<number[]>(initialValues?.tag_ids ?? []);
   const [localTags, setLocalTags] = useState<Tag[]>(tags);
   const [newTagName, setNewTagName] = useState("");
   const [tagCreating, setTagCreating] = useState(false);
@@ -51,7 +48,15 @@ export default function CreatorForm({
     setLocalTags(tags);
   }, [tags]);
 
-  /** 切换标签选中状态 */
+  /** Esc 关闭表单 */
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onCancel();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onCancel]);
+
   function toggleTag(id: number) {
     setTagIds((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
@@ -60,9 +65,7 @@ export default function CreatorForm({
 
   async function handleCreateTag() {
     const trimmed = newTagName.trim();
-    if (!trimmed) {
-      return;
-    }
+    if (!trimmed) return;
 
     setTagCreating(true);
     setTagCreateError(null);
@@ -78,20 +81,20 @@ export default function CreatorForm({
     }
   }
 
-  async function handleProfileUrlBlur() {
+  /** 从 B 站获取 UP 主名称和头像 */
+  async function handleFetchInfo() {
     const trimmed = profileUrl.trim();
     if (!trimmed) return;
-    // 编辑时如果已有名称且 URL 未变，不重复获取
-    if (initialValues?.name && name) return;
 
     setNameResolving(true);
     setNameResolveError(null);
     try {
       const result = await resolveCreatorName(trimmed);
       setName(result.name);
+      if (result.avatar_url) setAvatarUrl(result.avatar_url);
     } catch (error) {
       setNameResolveError(
-        error instanceof Error ? error.message : "获取昵称失败，请手动输入"
+        error instanceof Error ? error.message : "获取昵称失败，请检查 URL 是否正确"
       );
     } finally {
       setNameResolving(false);
@@ -100,52 +103,87 @@ export default function CreatorForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ name, profile_url: profileUrl, enabled, tag_ids: tagIds });
+    onSubmit({ name, profile_url: profileUrl, avatar_url: avatarUrl || undefined, enabled, tag_ids: tagIds });
   }
 
-  const labelStyle: React.CSSProperties = {
-    display: "block",
-    marginBottom: 12,
-    fontSize: 14,
-  };
+  const canSubmit = !!name.trim() && !!profileUrl.trim();
 
   return (
-    <form onSubmit={handleSubmit} style={{ minWidth: 320 }}>
-      <label style={labelStyle}>
-        <span>名称</span>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          style={{ display: "block", width: "100%", marginTop: 4 }}
-          placeholder={nameResolving ? "正在从 B 站获取…" : "UP 主昵称"}
-          disabled={nameResolving}
-        />
-        {nameResolveError && (
-          <p style={{ color: "red", fontSize: 12, marginTop: 4 }}>{nameResolveError}</p>
+    <form onSubmit={handleSubmit} className="creator-form">
+      {/* 主页 URL */}
+      <div className="form-field">
+        <label className="form-label">主页 URL</label>
+        {isEditing ? (
+          <input
+            className="input"
+            value={profileUrl}
+            readOnly
+            disabled
+          />
+        ) : (
+          <div className="form-url-row">
+            <div style={{ flex: 1 }}>
+              <input
+                className="input"
+                value={profileUrl}
+                onChange={(e) => {
+                  setProfileUrl(e.target.value);
+                  setNameResolveError(null);
+                  if (!name) setName("");
+                }}
+                required
+                placeholder="https://space.bilibili.com/..."
+              />
+            </div>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={handleFetchInfo}
+              disabled={!profileUrl.trim() || nameResolving}
+            >
+              {nameResolving ? (
+                <Loader2 size={14} className="spinner" />
+              ) : (
+                <Search size={14} />
+              )}
+              {nameResolving ? "获取中…" : "获取信息"}
+            </button>
+          </div>
         )}
-      </label>
+        {nameResolveError && (
+          <p className="form-error"><AlertCircle size={12} /> {nameResolveError}</p>
+        )}
+      </div>
 
-      <label style={labelStyle}>
-        <span>主页 URL</span>
-        <input
-          value={profileUrl}
-          onChange={(e) => {
-            setProfileUrl(e.target.value);
-            // URL 变化时清除之前的解析错误和自动填充的名称
-            setNameResolveError(null);
-            if (!initialValues?.name) setName("");
-          }}
-          onBlur={handleProfileUrlBlur}
-          required
-          style={{ display: "block", width: "100%", marginTop: 4 }}
-          placeholder="https://space.bilibili.com/..."
-        />
-      </label>
+      {/* 名称 + 头像（添加模式下展示） */}
+      <div className="form-field">
+        <label className="form-label">名称</label>
+        {name ? (
+          <div className="form-name-display">
+            {!isEditing && avatarUrl && (
+              <img src={avatarUrl} alt={name} className="form-avatar-preview" />
+            )}
+            {!isEditing && !avatarUrl && (
+              <span className="form-avatar-placeholder">
+                <User size={18} />
+              </span>
+            )}
+            <input
+              className="input"
+              value={name}
+              readOnly
+              disabled
+            />
+          </div>
+        ) : (
+          <p className="text-muted text-sm" style={{ padding: "7px 0" }}>
+            {isEditing ? "无" : "请输入主页 URL 后点击「获取信息」自动填充"}
+          </p>
+        )}
+      </div>
 
-      <label
-        style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 8 }}
-      >
+      {/* 启用开关 */}
+      <label className="form-field-checkbox">
         <input
           type="checkbox"
           checked={enabled}
@@ -154,58 +192,65 @@ export default function CreatorForm({
         <span>启用同步</span>
       </label>
 
-      <div style={{ marginBottom: 12 }}>
-        <span style={{ fontSize: 14 }}>关联标签</span>
-        {localTags.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
-            {localTags.map((tag) => (
-              <label
-                key={tag.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                  fontSize: 13,
-                  cursor: "pointer",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={tagIds.includes(tag.id)}
-                  onChange={() => toggleTag(tag.id)}
-                />
-                {tag.name}
-              </label>
-            ))}
+      {/* 关联标签 */}
+      <div className="form-field">
+        <label className="form-label">关联标签</label>
+        {localTags.length > 0 ? (
+          <div className="form-tag-chips">
+            {localTags.map((tag) => {
+              const isSelected = tagIds.includes(tag.id);
+              return (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() => toggleTag(tag.id)}
+                  className={`form-tag-chip${isSelected ? " form-tag-chip-active" : ""}`}
+                >
+                  {tag.name}
+                </button>
+              );
+            })}
           </div>
+        ) : (
+          <p className="text-muted text-sm">暂无标签，请在下方创建</p>
         )}
 
-        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-          <input
-            value={newTagName}
-            onChange={(e) => setNewTagName(e.target.value)}
-            placeholder="输入新标签名"
-            style={{ display: "block", flex: 1 }}
-          />
+        {/* 新建标签 */}
+        <div className="form-new-tag">
+          <div style={{ flex: 1 }}>
+            <input
+              className="input"
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              placeholder="输入新标签名"
+            />
+          </div>
           <button
             type="button"
+            className="btn btn-outline btn-sm"
             onClick={handleCreateTag}
             disabled={!newTagName.trim() || tagCreating}
           >
+            {tagCreating ? (
+              <Loader2 size={12} className="spinner" />
+            ) : (
+              <Plus size={12} />
+            )}
             {tagCreating ? "创建中…" : "创建并选中"}
           </button>
         </div>
-
         {tagCreateError && (
-          <p style={{ color: "red", fontSize: 12, marginTop: 6 }}>{tagCreateError}</p>
+          <p className="form-error"><AlertCircle size={12} /> {tagCreateError}</p>
         )}
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-        <button type="submit" disabled={submitting}>
+      {/* 提交/取消 */}
+      <div className="form-actions">
+        <button type="submit" className="btn btn-primary" disabled={!canSubmit || submitting}>
+          {submitting && <Loader2 size={14} className="spinner" />}
           {submitting ? "提交中…" : "保存"}
         </button>
-        <button type="button" onClick={onCancel}>
+        <button type="button" className="btn btn-outline" onClick={onCancel}>
           取消
         </button>
       </div>

@@ -16,6 +16,7 @@ export interface Creator {
   id: number;
   name: string;
   profile_url: string;
+  avatar_url: string | null;
   enabled: boolean;
   tag_ids: number[];
 }
@@ -24,6 +25,7 @@ export interface Creator {
 export interface CreatorCreate {
   name: string;
   profile_url: string;
+  avatar_url?: string;
   tag_ids?: number[];
 }
 
@@ -57,6 +59,20 @@ export interface SyncLog {
   finished_at: string | null;
 }
 
+/** 同步任务进度 */
+export interface SyncTask {
+  id: number;
+  status: string;
+  total_creators: number;
+  completed_creators: number;
+  current_creator_name: string | null;
+  new_videos: number;
+  error_message: string | null;
+  started_at: string;
+  finished_at: string | null;
+  heartbeat_at: string | null;
+}
+
 /** 同步调度配置 */
 export interface SyncSettings {
   enabled: boolean;
@@ -75,7 +91,10 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
     const text = await res.text().catch(() => "");
     throw new Error(`HTTP ${res.status}: ${text}`);
   }
-  // 204 No Content 等无响应体时返回 null
+  // 204 No Content 无响应体，直接返回 null
+  if (res.status === 204) {
+    return null as unknown as T;
+  }
   const ct = res.headers.get("content-type") ?? "";
   if (ct.includes("application/json")) {
     return res.json() as Promise<T>;
@@ -110,11 +129,11 @@ export function fetchCreators(): Promise<Creator[]> {
   return request<Creator[]>("/api/creators");
 }
 
-/** 根据主页 URL 从 B 站获取 UP 主昵称 */
+/** 根据主页 URL 从 B 站获取 UP 主昵称和头像 */
 export function resolveCreatorName(
   profileUrl: string
-): Promise<{ name: string }> {
-  return request<{ name: string }>(
+): Promise<{ name: string; avatar_url: string | null }> {
+  return request<{ name: string; avatar_url: string | null }>(
     `/api/creators/resolve-name?profile_url=${encodeURIComponent(profileUrl)}`
   );
 }
@@ -165,12 +184,43 @@ export function fetchLatestSync(): Promise<SyncLog | null> {
   return request<SyncLog | null>("/api/sync/latest");
 }
 
-/** 手动触发全量同步 */
-export function runSync(): Promise<SyncLog> {
-  return request<SyncLog>("/api/sync/run", { method: "POST" });
+/** 手动触发全量同步（异步，立即返回 SyncTask） */
+export function runSync(): Promise<SyncTask> {
+  return request<SyncTask>("/api/sync/run", { method: "POST" });
+}
+
+/** 查询当前（或最近一次）同步任务进度 */
+export function fetchCurrentTask(): Promise<SyncTask | null> {
+  return request<SyncTask | null>("/api/sync/task/current");
 }
 
 /** 获取同步调度配置 */
 export function fetchSyncSettings(): Promise<SyncSettings> {
   return request<SyncSettings>("/api/sync/settings");
+}
+
+/** 立即同步标签 */
+export interface ImmediateTag {
+  id: number;
+  tag_id: number;
+  sync_mode: string;
+}
+
+/** 获取所有立即同步标签 */
+export function fetchImmediateTags(): Promise<ImmediateTag[]> {
+  return request<ImmediateTag[]>("/api/sync/immediate-tags");
+}
+
+/** 添加立即同步标签 */
+export function addImmediateTag(tagId: number): Promise<ImmediateTag> {
+  return request<ImmediateTag>(`/api/sync/immediate-tags?tag_id=${tagId}`, {
+    method: "POST",
+  });
+}
+
+/** 移除立即同步标签 */
+export function removeImmediateTag(tagId: number): Promise<void> {
+  return request<void>(`/api/sync/immediate-tags/${tagId}`, {
+    method: "DELETE",
+  });
 }
