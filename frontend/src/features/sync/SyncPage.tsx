@@ -12,8 +12,8 @@ import ImmediateTagsSection from "./ImmediateTagsSection";
 export default function SyncPage() {
   // ── 数据与操作 ──
   const { task, setTask, isStarting, startSync, error: taskError } = useSyncTask();
-  const { isRunning, isDead, progress } = useSyncPolling(task, setTask);
-  const { settings, latestLog, isLoading: settingsLoading, error: settingsError } = useSyncSettings();
+  const { settings, latestLog, isLoading: settingsLoading, error: settingsError, refreshLatestLog } = useSyncSettings();
+  const { isRunning, isDead, progress } = useSyncPolling(task, setTask, refreshLatestLog);
   const {
     immediateTags,
     availableTags,
@@ -61,7 +61,7 @@ export default function SyncPage() {
       {error && (
         <div className="error-message">
           <AlertCircle size={16} />
-          {error}
+          错误：{error}
         </div>
       )}
 

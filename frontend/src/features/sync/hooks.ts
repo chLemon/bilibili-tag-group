@@ -68,6 +68,7 @@ export function useSyncTask() {
 export function useSyncPolling(
   task: SyncTask | null,
   onTaskUpdate: (t: SyncTask | null) => void,
+  onComplete?: () => void,
 ) {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -102,12 +103,13 @@ export function useSyncPolling(
         onTaskUpdate(t);
         if (!t || t.status !== "running") {
           stopPolling();
+          onComplete?.();
         }
       } catch {
         // 轮询失败静默忽略，下一轮重试
       }
     }, POLL_INTERVAL);
-  }, [onTaskUpdate, stopPolling]);
+  }, [onTaskUpdate, stopPolling, onComplete]);
 
   // task 变为 running 时启动轮询，结束时或组件卸载时停止
   useEffect(() => {
@@ -116,11 +118,6 @@ export function useSyncPolling(
     }
     return () => stopPolling();
   }, [task?.status, task?.id, startPolling, stopPolling]);
-
-  // 组件卸载时清理定时器
-  useEffect(() => {
-    return () => stopPolling();
-  }, [stopPolling]);
 
   return { isRunning, isDead, progress };
 }
@@ -146,7 +143,16 @@ export function useSyncSettings() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  return { settings, latestLog, isLoading, error };
+  const refreshLatestLog = useCallback(async () => {
+    try {
+      const log = await fetchLatestSync();
+      setLatestLog(log);
+    } catch {
+      // 静默失败
+    }
+  }, []);
+
+  return { settings, latestLog, isLoading, error, refreshLatestLog };
 }
 
 // ── useImmediateTags ───────────────────────────────────────────────
