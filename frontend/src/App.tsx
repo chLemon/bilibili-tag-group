@@ -5,7 +5,7 @@ import { BrowserRouter, NavLink, Navigate, Route, Routes } from "react-router-do
 import { Tags, Users, RefreshCw, Hash } from "lucide-react";
 import TagsPage from "./pages/TagsPage";
 import CreatorsPage from "./pages/CreatorsPage";
-import SyncPage from "./pages/SyncPage";
+import { SyncPage } from "./features/sync";
 
 const navItems = [
   { to: "/tags", label: "标签视图", Icon: Tags },
