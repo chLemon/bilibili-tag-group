@@ -106,14 +106,17 @@ class SyncService:
 
     # ── 异步全量同步 ──────────────────────────────────────────────
 
+    # 心跳超过此秒数视为进程已崩溃，对应前端 DEAD_THRESHOLD_SEC
+    _HEARTBEAT_DEAD_SEC = 120
+
     def start_async_sync(self, request_db: Session) -> SyncTask:
         """启动异步全量同步：创建 SyncTask 并启动后台线程，立即返回。
 
-        如果已有正在运行的同步任务，直接返回该任务（幂等）。
+        如果已有正在运行且心跳正常的任务，直接返回该任务（幂等）。
+        如果旧任务心跳已超时（进程崩溃），将其标记为 failed 并创建新任务。
         """
         from app.database import SessionLocal
 
-        # 检查是否有正在运行的任务
         existing = (
             request_db.query(SyncTask)
             .filter_by(status="running")
@@ -121,7 +124,20 @@ class SyncService:
             .first()
         )
         if existing is not None:
-            return existing
+            # 检查旧任务是否已是僵尸（心跳超时意味着进程已崩溃）
+            if existing.heartbeat_at is not None:
+                age_sec = (_now_utc() - existing.heartbeat_at).total_seconds()
+                if age_sec >= self._HEARTBEAT_DEAD_SEC:
+                    existing.status = "failed"
+                    existing.error_message = "任务进程崩溃，心跳超时未更新"
+                    existing.finished_at = _now_utc()
+                    request_db.flush()
+                else:
+                    # 心跳正常，真正的幂等返回
+                    return existing
+            else:
+                # 无心跳记录，视为正常 running（刚创建）
+                return existing
 
         # 计算 total_creators
         total = request_db.query(Creator).filter_by(enabled=True).count()
