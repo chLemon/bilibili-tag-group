@@ -1,7 +1,7 @@
 /**
  * ImmediateTagsSection：管理立即同步标签——展示已设置的标签，提供添加/移除操作。
  */
-import { Zap, Plus, X, Loader2 } from "lucide-react";
+import { Zap, Plus, X, Loader2, ArrowDown } from "lucide-react";
 import { ImmediateTag, Tag } from "../../api/client";
 
 interface Props {
@@ -23,16 +23,16 @@ export default function ImmediateTagsSection({
 }: Props) {
   return (
     <div className="immediate-tags-section">
-      {/* 标题 */}
-      <h3 className="immediate-tags-title">
-        <Zap size={18} style={{ color: "var(--color-warning)" }} />
-        立即同步标签
-      </h3>
-
-      {/* 说明 */}
-      <p className="text-secondary text-sm" style={{ marginBottom: "var(--space-4)" }}>
-        拥有这些标签的 UP 主在同步时将绕过 TTL 缓存，直接从 B 站获取最新视频数据。
-      </p>
+      {/* 标题行：标题 + 说明 */}
+      <div className="immediate-tags-title">
+        <h3 style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+          <Zap size={18} style={{ color: "var(--color-warning)" }} />
+          立即同步标签
+        </h3>
+        <span className="text-secondary text-sm">
+          拥有这些标签的 UP 主在同步时将绕过 TTL 缓存，直接从 B 站获取最新视频数据。
+        </span>
+      </div>
 
       {/* 已设置的立即同步标签列表 */}
       {immediateTags.length === 0 ? (
@@ -61,8 +61,9 @@ export default function ImmediateTagsSection({
       )}
 
       {/* 可添加的标签选择器 */}
-      <div className="text-sm text-secondary" style={{ marginBottom: "var(--space-2)" }}>
-        点击标签设为"立即同步"：
+      <div className="immediate-tags-hint">
+        <ArrowDown size={14} />
+        <span>点击标签设为"立即同步"</span>
       </div>
       {availableTags.length > 0 ? (
         <div className="flex gap-2" style={{ flexWrap: "wrap" }}>
