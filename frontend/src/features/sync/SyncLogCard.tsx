@@ -1,8 +1,13 @@
 /**
  * SyncLogCard：展示最近一次同步日志记录，无记录时显示空状态。
  */
-import { Clock, FileVideo } from "lucide-react";
+import { Clock, FileVideo, CalendarClock } from "lucide-react";
 import { SyncLog } from "../../api/client";
+
+/** 格式化为本地时间字符串 */
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleString("zh-CN");
+}
 
 interface Props {
   latestLog: SyncLog | null;
@@ -31,6 +36,18 @@ export default function SyncLogCard({ latestLog }: Props) {
           <span>新增视频</span>
           <strong>{latestLog.new_videos} 条</strong>
         </div>
+        <div className="sync-log-stat">
+          <CalendarClock size={14} />
+          <span>开始时间</span>
+          <span>{formatTime(latestLog.started_at)}</span>
+        </div>
+        {latestLog.finished_at && (
+          <div className="sync-log-stat">
+            <CalendarClock size={14} />
+            <span>结束时间</span>
+            <span>{formatTime(latestLog.finished_at)}</span>
+          </div>
+        )}
       </div>
     </div>
   );
