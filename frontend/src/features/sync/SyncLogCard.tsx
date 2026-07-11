@@ -1,7 +1,7 @@
 /**
  * SyncLogCard：展示最近一次同步日志记录，无记录时显示空状态。
  */
-import { Clock, FileVideo, CalendarClock } from "lucide-react";
+import { Clock, FileVideo, CalendarClock, CheckCircle2, XCircle } from "lucide-react";
 import { SyncLog } from "../../api/client";
 
 /** 格式化为本地时间字符串 */
@@ -29,6 +29,15 @@ export default function SyncLogCard({ latestLog }: Props) {
       <div className="sync-log-header">
         <Clock size={16} />
         <span>最近同步记录</span>
+        {latestLog.status === "success" ? (
+          <span className="badge badge-success">
+            <CheckCircle2 size={12} /> 成功
+          </span>
+        ) : (
+          <span className="badge badge-error">
+            <XCircle size={12} /> 失败
+          </span>
+        )}
       </div>
       <div className="sync-log-body">
         <div className="sync-log-stat">
