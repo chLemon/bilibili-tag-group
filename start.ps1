@@ -126,19 +126,15 @@ if (-not (Test-Path $NodeModulesDir)) {
         Write-Host "[ERROR] npm not found."
         exit 1
     }
-    $installLog = Join-Path $LogDir "npm-install.log"
     $installProc = Start-Process `
         -FilePath $npmCmd `
         -ArgumentList "install" `
         -WorkingDirectory $FrontendDir `
         -Wait `
         -NoNewWindow `
-        -RedirectStandardOutput $installLog `
-        -RedirectStandardError $installLog `
         -PassThru
     if ($installProc.ExitCode -ne 0) {
-        Write-Host "[ERROR] npm install failed. See: $installLog"
-        Get-Content $installLog -Tail 20 | Write-Host
+        Write-Host "[ERROR] npm install failed."
         exit 1
     }
     Write-Host "       npm install OK"
@@ -146,12 +142,11 @@ if (-not (Test-Path $NodeModulesDir)) {
 
 # 启动后端 (uvicorn)
 $BackendLog = Join-Path $LogDir "backend.log"
+$backendArg = "app.main:app --host 127.0.0.1 --port $BackendPort"
 $backendProc = Start-Process `
-    -FilePath $UvicornExe `
-    -ArgumentList "app.main:app --host 127.0.0.1 --port $BackendPort" `
+    -FilePath "cmd.exe" `
+    -ArgumentList "/c `"`"$UvicornExe`" $backendArg >`"$BackendLog`" 2>&1`"" `
     -WindowStyle Hidden `
-    -RedirectStandardOutput $BackendLog `
-    -RedirectStandardError $BackendLog `
     -PassThru
 
 # 启动前端 (vite)
@@ -159,12 +154,9 @@ $npmCmd = (Get-Command npm.cmd -ErrorAction SilentlyContinue).Source
 if (-not $npmCmd) { $npmCmd = (Get-Command npm -ErrorAction SilentlyContinue).Source }
 $FrontendLog = Join-Path $LogDir "frontend.log"
 $frontendProc = Start-Process `
-    -FilePath $npmCmd `
-    -ArgumentList "run dev" `
-    -WorkingDirectory $FrontendDir `
+    -FilePath "cmd.exe" `
+    -ArgumentList "/c `"cd /d `"$FrontendDir`" && `"$npmCmd`" run dev >`"$FrontendLog`" 2>&1`"" `
     -WindowStyle Hidden `
-    -RedirectStandardOutput $FrontendLog `
-    -RedirectStandardError $FrontendLog `
     -PassThru
 
 # ============================================================
