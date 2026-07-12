@@ -302,7 +302,7 @@ class PlaywrightBilibiliFetcher:
         page = context.new_page()
         try:
             page.goto(
-                f"https://space.bilibili.com/{uid}",
+                f"https://space.bilibili.com/{uid}/upload/video",
                 wait_until="networkidle",
                 timeout=_PAGE_TIMEOUT,
             )
@@ -326,7 +326,7 @@ class PlaywrightBilibiliFetcher:
                 nav_items = page.locator(".side-nav__item")
                 for i in range(nav_items.count()):
                     item = nav_items.nth(i)
-                    text_el = item.locator(".side-nav__item__text")
+                    text_el = item.locator(".side-nav__item__main-text")
                     if text_el.count() > 0 and "视频" in (text_el.text_content() or ""):
                         count_el = item.locator(".side-nav__item__sub-text")
                         if count_el.count() > 0:
