@@ -17,17 +17,25 @@ foreach ($pidFile in @($BackendPidFile, $FrontendPidFile)) {
         continue
     }
 
-    $savedPid = Get-Content $pidFile -Raw
-    $proc = Get-Process -Id ([int]$savedPid) -ErrorAction SilentlyContinue
-
-    if (-not $proc) {
-        Write-Host "PID $savedPid not running, removing stale PID file."
+    $savedPid = (Get-Content $pidFile -Raw).Trim()
+    if (-not $savedPid -or (-not [int]::TryParse($savedPid, [ref]$null))) {
+        Write-Host "Invalid or empty PID file: $pidFile, removing."
         Remove-Item $pidFile -Force
         $stopped = $true
         continue
     }
 
-    Write-Host "Stopping $($proc.ProcessName) (PID $savedPid)..."
+    $pidInt = [int]$savedPid
+    $proc = Get-Process -Id $pidInt -ErrorAction SilentlyContinue
+
+    if (-not $proc) {
+        Write-Host "PID $pidInt not running, removing stale PID file."
+        Remove-Item $pidFile -Force
+        $stopped = $true
+        continue
+    }
+
+    Write-Host "Stopping $($proc.ProcessName) (PID $pidInt)..."
     Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
     Remove-Item $pidFile -Force
     $stopped = $true

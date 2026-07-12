@@ -15,14 +15,16 @@ New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 $alreadyRunning = $false
 foreach ($pidFile in @($BackendPidFile, $FrontendPidFile)) {
     if (Test-Path $pidFile) {
-        $savedPid = Get-Content $pidFile -Raw
-        $proc = Get-Process -Id ([int]$savedPid) -ErrorAction SilentlyContinue
-        if ($proc) {
-            $alreadyRunning = $true
-            break
-        } else {
-            Remove-Item $pidFile -Force  # 僵尸 PID 文件，清理掉
+        $savedPid = (Get-Content $pidFile -Raw).Trim()
+        if ($savedPid -and [int]::TryParse($savedPid, [ref]$null)) {
+            $pidInt = [int]$savedPid
+            $proc = Get-Process -Id $pidInt -ErrorAction SilentlyContinue
+            if ($proc) {
+                $alreadyRunning = $true
+                break
+            }
         }
+        Remove-Item $pidFile -Force  # 僵尸或无效 PID 文件，清理掉
     }
 }
 
