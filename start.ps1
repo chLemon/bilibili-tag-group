@@ -116,21 +116,55 @@ Write-Host "[5/5] Starting services..."
 $UvicornExe = Join-Path $PSScriptRoot ".venv\Scripts\uvicorn.exe"
 $FrontendDir = Join-Path $PSScriptRoot "frontend"
 
+# 检查并安装前端依赖
+$NodeModulesDir = Join-Path $FrontendDir "node_modules"
+if (-not (Test-Path $NodeModulesDir)) {
+    Write-Host "       node_modules not found, running npm install..."
+    $npmCmd = (Get-Command npm.cmd -ErrorAction SilentlyContinue).Source
+    if (-not $npmCmd) { $npmCmd = (Get-Command npm -ErrorAction SilentlyContinue).Source }
+    if (-not $npmCmd) {
+        Write-Host "[ERROR] npm not found."
+        exit 1
+    }
+    $installLog = Join-Path $LogDir "npm-install.log"
+    $installProc = Start-Process `
+        -FilePath $npmCmd `
+        -ArgumentList "install" `
+        -WorkingDirectory $FrontendDir `
+        -Wait `
+        -NoNewWindow `
+        -RedirectStandardOutput $installLog `
+        -RedirectStandardError $installLog `
+        -PassThru
+    if ($installProc.ExitCode -ne 0) {
+        Write-Host "[ERROR] npm install failed. See: $installLog"
+        Get-Content $installLog -Tail 20 | Write-Host
+        exit 1
+    }
+    Write-Host "       npm install OK"
+}
+
 # 启动后端 (uvicorn)
+$BackendLog = Join-Path $LogDir "backend.log"
 $backendProc = Start-Process `
     -FilePath $UvicornExe `
     -ArgumentList "app.main:app --host 127.0.0.1 --port $BackendPort" `
     -WindowStyle Hidden `
+    -RedirectStandardOutput $BackendLog `
+    -RedirectStandardError $BackendLog `
     -PassThru
 
 # 启动前端 (vite)
 $npmCmd = (Get-Command npm.cmd -ErrorAction SilentlyContinue).Source
 if (-not $npmCmd) { $npmCmd = (Get-Command npm -ErrorAction SilentlyContinue).Source }
+$FrontendLog = Join-Path $LogDir "frontend.log"
 $frontendProc = Start-Process `
     -FilePath $npmCmd `
     -ArgumentList "run dev" `
     -WorkingDirectory $FrontendDir `
     -WindowStyle Hidden `
+    -RedirectStandardOutput $FrontendLog `
+    -RedirectStandardError $FrontendLog `
     -PassThru
 
 # ============================================================
@@ -160,7 +194,7 @@ function Wait-ForPort($Port, $TimeoutSeconds) {
 Write-Host "       Waiting for backend on port $BackendPort..."
 $backendReady = Wait-ForPort $BackendPort 15
 if (-not $backendReady) {
-    Write-Host "[WARN] Backend did not start within 15 seconds."
+    Write-Host "[WARN] Backend did not start within 15 seconds. See: $BackendLog"
 } else {
     $backendProc.Id | Out-File -FilePath $BackendPidFile -NoNewline
     Write-Host "       Backend ready (PID $($backendProc.Id))"
@@ -169,7 +203,7 @@ if (-not $backendReady) {
 Write-Host "       Waiting for frontend on port $FrontendPort..."
 $frontendReady = Wait-ForPort $FrontendPort 30
 if (-not $frontendReady) {
-    Write-Host "[WARN] Frontend did not start within 30 seconds."
+    Write-Host "[WARN] Frontend did not start within 30 seconds. See: $FrontendLog"
 } else {
     $frontendProc.Id | Out-File -FilePath $FrontendPidFile -NoNewline
     Write-Host "       Frontend ready (PID $($frontendProc.Id))"
