@@ -51,14 +51,25 @@ Write-Host "[2/4] Checking Python..."
 $PythonExe = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
 if (-not (Test-Path $PythonExe)) {
     Write-Host "       .venv not found, creating..."
-    $pythonCmd = "python3"
-    if (-not (Get-Command python3 -ErrorAction SilentlyContinue)) {
-        $pythonCmd = "python"
+    $pythonCmd = $null
+    foreach ($candidate in @("py", "python3", "python")) {
+        $found = Get-Command $candidate -ErrorAction SilentlyContinue
+        if (-not $found) { continue }
+        # 排除 Microsoft Store 占位程序
+        if ($found.Source -match "WindowsApps") { continue }
+        # 验证是真 Python
+        $ver = & $found.Source --version 2>&1
+        if ($LASTEXITCODE -eq 0 -and $ver -match "Python") {
+            $pythonCmd = $found.Source
+            break
+        }
     }
-    if (-not (Get-Command $pythonCmd -ErrorAction SilentlyContinue)) {
-        Write-Host "[ERROR] Python not found on system."
+    if (-not $pythonCmd) {
+        Write-Host "[ERROR] Python not found. Install from https://www.python.org/downloads/"
+        Write-Host "        Make sure 'Add Python to PATH' is checked during installation."
         exit 1
     }
+    Write-Host "       Using: $pythonCmd"
     $venvOutput = & $pythonCmd -m venv .venv 2>&1
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] Failed to create .venv:"
