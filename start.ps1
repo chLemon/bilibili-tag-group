@@ -52,7 +52,20 @@ if (-not (Test-Path $PythonExe)) {
     exit 1
 }
 
-Write-Host "[3/4] Database migration..."
+Write-Host "[3/5] Checking private-data directory..."
+$PrivateDataDir = Join-Path $PSScriptRoot "..\private-data\bilibili-tag-group"
+if (-not (Test-Path $PrivateDataDir)) {
+    Write-Host "       Creating $PrivateDataDir ..."
+    New-Item -ItemType Directory -Force -Path $PrivateDataDir | Out-Null
+}
+$DbFile = Join-Path $PrivateDataDir "my_bilibili.db"
+if (Test-Path $DbFile) {
+    Write-Host "       Database found: $DbFile"
+} else {
+    Write-Host "       Database not found, will be created on first run: $DbFile"
+}
+
+Write-Host "[4/5] Database migration..."
 $AlembicExe = Join-Path $PSScriptRoot ".venv\Scripts\alembic.exe"
 $MigrationLog = Join-Path $LogDir "migration.log"
 & $AlembicExe upgrade head 2>&1 | Out-File -FilePath $MigrationLog -Encoding UTF8
@@ -66,7 +79,7 @@ Write-Host "       Migration OK"
 # ============================================================
 # 启动服务
 # ============================================================
-Write-Host "[4/4] Starting services..."
+Write-Host "[5/5] Starting services..."
 
 $UvicornExe = Join-Path $PSScriptRoot ".venv\Scripts\uvicorn.exe"
 $FrontendDir = Join-Path $PSScriptRoot "frontend"
