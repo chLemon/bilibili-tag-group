@@ -35,8 +35,12 @@ foreach ($pidFile in @($BackendPidFile, $FrontendPidFile)) {
         continue
     }
 
-    Write-Host "Stopping $($proc.ProcessName) (PID $pidInt)..."
-    Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+    Write-Host "Stopping $($proc.ProcessName) (PID $pidInt) and children..."
+    & taskkill /T /PID $proc.Id /F 2>$null
+    # 如果 taskkill 失败或 PID 文件存的是子进程真实 PID，兜底用 Stop-Process
+    if ($LASTEXITCODE -ne 0) {
+        Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+    }
     Remove-Item $pidFile -Force
     $stopped = $true
 }

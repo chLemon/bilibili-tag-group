@@ -188,8 +188,13 @@ $backendReady = Wait-ForPort $BackendPort 15
 if (-not $backendReady) {
     Write-Host "[WARN] Backend did not start within 15 seconds. See: $BackendLog"
 } else {
-    $backendProc.Id | Out-File -FilePath $BackendPidFile -NoNewline
-    Write-Host "       Backend ready (PID $($backendProc.Id))"
+    # cmd.exe 包裹启动，子进程才是真正的 uvicorn
+    $realBackendPid = $backendProc.Id
+    $childProcs = Get-CimInstance Win32_Process -Filter "ParentProcessId=$($backendProc.Id)" |
+        Where-Object { $_.Name -match 'uvicorn|python' }
+    if ($childProcs) { $realBackendPid = $childProcs[0].ProcessId }
+    $realBackendPid | Out-File -FilePath $BackendPidFile -NoNewline
+    Write-Host "       Backend ready (PID $realBackendPid)"
 }
 
 Write-Host "       Waiting for frontend on port $FrontendPort..."
@@ -197,8 +202,13 @@ $frontendReady = Wait-ForPort $FrontendPort 30
 if (-not $frontendReady) {
     Write-Host "[WARN] Frontend did not start within 30 seconds. See: $FrontendLog"
 } else {
-    $frontendProc.Id | Out-File -FilePath $FrontendPidFile -NoNewline
-    Write-Host "       Frontend ready (PID $($frontendProc.Id))"
+    # cmd.exe 包裹启动，子进程才是真正的 node
+    $realFrontendPid = $frontendProc.Id
+    $childProcs = Get-CimInstance Win32_Process -Filter "ParentProcessId=$($frontendProc.Id)" |
+        Where-Object { $_.Name -eq 'node.exe' }
+    if ($childProcs) { $realFrontendPid = $childProcs[0].ProcessId }
+    $realFrontendPid | Out-File -FilePath $FrontendPidFile -NoNewline
+    Write-Host "       Frontend ready (PID $realFrontendPid)"
 }
 
 if ($frontendReady) {
