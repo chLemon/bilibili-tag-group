@@ -72,6 +72,8 @@ class SyncService:
                 creator.name = info["name"]
             if info.get("avatar_url"):
                 creator.avatar_url = info["avatar_url"]
+            if info.get("video_count") is not None:
+                creator.video_count = info["video_count"]
         except Exception:
             pass  # 元数据更新失败不影响视频同步
 

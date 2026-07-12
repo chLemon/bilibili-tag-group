@@ -7,6 +7,7 @@ import {
   fetchTagVideos,
   fetchUntaggedVideos,
   updateStatus,
+  batchUpdateCreatorVideos,
   Tag,
   Video,
 } from "../api/client";
@@ -80,7 +81,7 @@ export function useTagVideos(selectedTagId: number | null) {
       }
       map.get(v.creator_id)!.videos.push(v);
     }
-    return Array.from(map.values());
+    return Array.from(map.values()).sort((a, b) => a.creatorId - b.creatorId);
   }, [videos]);
 
   const markWatched = useCallback(async (videoId: number) => {
@@ -101,7 +102,25 @@ export function useTagVideos(selectedTagId: number | null) {
     }
   }, []);
 
-  return { videos, groupedVideos, loading, error, markWatched, markIgnored };
+  const markAllWatched = useCallback(async (creatorId: number) => {
+    try {
+      await batchUpdateCreatorVideos(creatorId, 1);
+      setVideos((prev) => prev.filter((v) => v.creator_id !== creatorId));
+    } catch (err) {
+      setError(String(err));
+    }
+  }, []);
+
+  const markAllIgnored = useCallback(async (creatorId: number) => {
+    try {
+      await batchUpdateCreatorVideos(creatorId, 2);
+      setVideos((prev) => prev.filter((v) => v.creator_id !== creatorId));
+    } catch (err) {
+      setError(String(err));
+    }
+  }, []);
+
+  return { videos, groupedVideos, loading, error, markWatched, markIgnored, markAllWatched, markAllIgnored };
 }
 
 // ── useScrollSpy ─────────────────────────────────────────────────────

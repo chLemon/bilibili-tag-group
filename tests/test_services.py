@@ -44,6 +44,7 @@ class TestSyncCreatorNewVideos:
         fetched = [_make_fetched_video("BV1aa111a1aA"), _make_fetched_video("BV2bb222b2bB")]
 
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.return_value = fetched
 
         service = SyncService(fetcher=mock_fetcher)
@@ -61,6 +62,7 @@ class TestSyncCreatorNewVideos:
         fetched = [_make_fetched_video("BV1aa111a1aA")]
 
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.return_value = fetched
 
         service = SyncService(fetcher=mock_fetcher)
@@ -80,6 +82,7 @@ class TestSyncCreatorNewVideos:
             _make_fetched_video("BV3cc333c3cC"),
         ]
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.return_value = fetched
 
         service = SyncService(fetcher=mock_fetcher)
@@ -115,6 +118,7 @@ class TestSyncCreatorExistingVideos:
             duration_seconds=999,
         )]
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.return_value = fetched
 
         service = SyncService(fetcher=mock_fetcher)
@@ -150,6 +154,7 @@ class TestSyncCreatorExistingVideos:
         # 再次同步相同视频
         fetched = [_make_fetched_video("BV1aa111a1aA", title="已看视频更新标题")]
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.return_value = fetched
 
         service = SyncService(fetcher=mock_fetcher)
@@ -182,6 +187,7 @@ class TestSyncCreatorExistingVideos:
 
         fetched = [_make_fetched_video("BV1aa111a1aA")]
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.return_value = fetched
 
         service = SyncService(fetcher=mock_fetcher)
@@ -197,6 +203,7 @@ class TestSyncAll:
     def test_sync_all_returns_sync_log(self, db_session):
         """sync_all 返回 SyncLog 对象。"""
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.return_value = []
 
         service = SyncService(fetcher=mock_fetcher)
@@ -207,6 +214,7 @@ class TestSyncAll:
     def test_sync_all_scope_is_all(self, db_session):
         """sync_all 创建的 SyncLog scope 为 'all'。"""
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.return_value = []
 
         service = SyncService(fetcher=mock_fetcher)
@@ -218,6 +226,7 @@ class TestSyncAll:
         """成功时 SyncLog.status 为 'success'。"""
         creator = _make_creator(db_session, enabled=True)
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.return_value = [_make_fetched_video("BV1aa111a1aA")]
 
         service = SyncService(fetcher=mock_fetcher)
@@ -232,6 +241,7 @@ class TestSyncAll:
         db_session.flush()
 
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.return_value = []
 
         service = SyncService(fetcher=mock_fetcher)
@@ -247,6 +257,7 @@ class TestSyncAll:
         """sync_all 的 SyncLog.new_videos 反映新增视频总数。"""
         _make_creator(db_session, enabled=True)
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.return_value = [
             _make_fetched_video("BV1aa111a1aA"),
             _make_fetched_video("BV2bb222b2bB"),
@@ -261,6 +272,7 @@ class TestSyncAll:
         """fetch_videos 抛出异常时 SyncLog 应有 status='failed' 且 error_message 有内容。"""
         _make_creator(db_session, enabled=True)
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.side_effect = Exception("网络连接超时")
 
         service = SyncService(fetcher=mock_fetcher)
@@ -274,6 +286,7 @@ class TestSyncAll:
         """失败时 SyncLog.finished_at 仍应被设置（在 finally 中处理）。"""
         _make_creator(db_session, enabled=True)
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.side_effect = Exception("超时错误")
 
         service = SyncService(fetcher=mock_fetcher)
@@ -292,6 +305,7 @@ class TestSyncAll:
             return [_make_fetched_video("BV2bb222b2bB")]
 
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.side_effect = side_effect
 
         service = SyncService(fetcher=mock_fetcher)
@@ -307,6 +321,7 @@ class TestSyncAll:
     def test_sync_all_success_sets_finished_at(self, db_session):
         """成功时 SyncLog.finished_at 也应被设置。"""
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.return_value = []
 
         service = SyncService(fetcher=mock_fetcher)
@@ -317,6 +332,7 @@ class TestSyncAll:
     def test_sync_all_log_persisted_to_db(self, db_session):
         """sync_all 创建的 SyncLog 应持久化到数据库中。"""
         mock_fetcher = MagicMock()
+        mock_fetcher.fetch_creator_info.return_value = {}
         mock_fetcher.fetch_videos.return_value = []
 
         service = SyncService(fetcher=mock_fetcher)

@@ -150,6 +150,18 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   border-color: #CBD5E1;
 }
 
+.btn-outline-danger {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+.btn-outline-danger:hover:not(:disabled) {
+  background: #FEF2F2;
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--color-text-secondary);
@@ -159,6 +171,17 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .btn-ghost:hover:not(:disabled) {
   background: var(--color-bg);
   color: var(--color-text);
+}
+
+.btn-ghost-danger {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-color: transparent;
+}
+
+.btn-ghost-danger:hover:not(:disabled) {
+  background: #FEF2F2;
+  color: var(--color-error);
 }
 
 .btn-danger {
@@ -174,6 +197,11 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .btn-sm {
   padding: 4px 10px;
   font-size: 12px;
+}
+
+.btn-xs {
+  padding: 2px 6px;
+  font-size: 11px;
 }
 
 .btn-lg {
@@ -741,6 +769,12 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   font-size: 15px;
   font-weight: 600;
   color: var(--color-text);
+}
+
+.creator-group-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
 }
 
 /* ===== UP 主列表列 ===== */

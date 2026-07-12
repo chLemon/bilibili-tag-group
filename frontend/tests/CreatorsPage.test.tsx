@@ -22,7 +22,8 @@ const mockCreators: client.Creator[] = [
     profile_url: "https://space.bilibili.com/123",
     avatar_url: null,
     tag_ids: [1],
-    video_count: 5,
+    video_count: 30,
+    synced_video_count: 5,
     unwatched_count: 2,
     last_synced_at: "2026-07-12T08:00:00",
   },
@@ -39,6 +40,7 @@ beforeEach(() => {
     avatar_url: null,
     tag_ids: [],
     video_count: 0,
+    synced_video_count: 0,
     unwatched_count: 0,
     last_synced_at: null,
   });

@@ -3,7 +3,7 @@
  * 左侧标签列表 + UP 主目录锚点，右侧按 UP 主分组的未看视频列表。
  */
 import { useState } from "react";
-import { Hash, AlertCircle, Inbox, Loader2, RefreshCw, Tag } from "lucide-react";
+import { Hash, AlertCircle, Inbox, Loader2, RefreshCw, Tag, CheckCheck, EyeOff } from "lucide-react";
 import { useTags, useTagVideos, useScrollSpy, UNTAGGED_ID } from "../hooks/useTags";
 import VideoCard from "../components/VideoCard";
 import CreatorAnchorNav from "../components/CreatorAnchorNav";
@@ -27,12 +27,36 @@ export default function TagsPage() {
     error: videosError,
     markWatched,
     markIgnored,
+    markAllWatched,
+    markAllIgnored,
   } = useTagVideos(selectedTagId);
 
   const { activeCreatorId, scrollToCreator } = useScrollSpy(
     groupedVideos,
     !loadingVideos,
   );
+
+  const [batchLoadingId, setBatchLoadingId] = useState<number | null>(null);
+
+  const handleMarkAllWatched = async (creatorId: number) => {
+    if (!window.confirm("确定将该 UP 主的所有未看视频标记为已看？")) return;
+    setBatchLoadingId(creatorId);
+    try {
+      await markAllWatched(creatorId);
+    } finally {
+      setBatchLoadingId(null);
+    }
+  };
+
+  const handleMarkAllIgnored = async (creatorId: number) => {
+    if (!window.confirm("确定将该 UP 主的所有未看视频标记为不看？")) return;
+    setBatchLoadingId(creatorId);
+    try {
+      await markAllIgnored(creatorId);
+    } finally {
+      setBatchLoadingId(null);
+    }
+  };
 
   // ── 标签加载态 ──
   if (loadingTags) {
@@ -146,6 +170,32 @@ export default function TagsPage() {
                       : group.creatorName}
                   </span>
                   <span className="badge badge-muted">{group.videos.length} 个视频</span>
+                  <div className="creator-group-actions">
+                    <button
+                      className="btn btn-sm btn-primary"
+                      disabled={batchLoadingId !== null}
+                      onClick={() => handleMarkAllWatched(group.creatorId)}
+                    >
+                      {batchLoadingId === group.creatorId ? (
+                        <Loader2 size={14} className="spinner" />
+                      ) : (
+                        <CheckCheck size={14} />
+                      )}
+                      一键已看
+                    </button>
+                    <button
+                      className="btn btn-sm btn-danger"
+                      disabled={batchLoadingId !== null}
+                      onClick={() => handleMarkAllIgnored(group.creatorId)}
+                    >
+                      {batchLoadingId === group.creatorId ? (
+                        <Loader2 size={14} className="spinner" />
+                      ) : (
+                        <EyeOff size={14} />
+                      )}
+                      一键不看
+                    </button>
+                  </div>
                 </div>
                 {group.videos.map((v) => (
                   <VideoCard key={v.id} video={v} onMarkWatched={markWatched} onMarkIgnored={markIgnored} />

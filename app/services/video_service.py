@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.models.video_status import VideoStatus
@@ -36,3 +37,21 @@ class VideoService:
 
         db.flush()
         return video_status
+
+    def batch_set_status_by_creator(
+        self, db: Session, creator_id: int, status_value: int
+    ) -> int:
+        """批量将某个 UP 主的所有未看视频标记为指定状态，返回更新行数。"""
+        watched_at = _now_utc() if status_value == 1 else None
+        result = db.execute(
+            update(VideoStatus)
+            .where(VideoStatus.video_id.in_(
+                db.query(VideoStatus.video_id)
+                .filter(VideoStatus.status == 0)
+                .filter(VideoStatus.video.has(creator_id=creator_id))
+                .subquery()
+            ))
+            .values(status=status_value, watched_at=watched_at)
+        )
+        db.flush()
+        return result.rowcount

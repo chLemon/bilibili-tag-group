@@ -28,6 +28,7 @@ import {
   ArrowLeft,
   Play,
   Image,
+  Film,
 } from "lucide-react";
 
 function formatDuration(seconds: number): string {
@@ -173,7 +174,12 @@ export default function CreatorDetailPage() {
           <div className="detail-header-stats">
             <span className="creator-card-stat">
               <Video size={13} />
-              {creator.video_count} 视频
+              {creator.video_count} 个视频
+            </span>
+            <span className="creator-card-stat-dot" />
+            <span className="creator-card-stat">
+              <Film size={13} />
+              已同步 {creator.synced_video_count}
             </span>
             <span className="creator-card-stat-dot" />
             <span className="creator-card-stat creator-card-unwatched">

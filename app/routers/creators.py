@@ -11,11 +11,13 @@ from app.models.creator import Creator
 from app.models.video import Video
 from app.models.video_status import VideoStatus
 from app.schemas.creator import CreatorCreate, CreatorRead, CreatorUpdate
-from app.schemas.video import VideoDetail
+from app.schemas.video import VideoDetail, VideoStatusUpdate
 from app.services.creator_service import CreatorService
+from app.services.video_service import VideoService
 
 router = APIRouter(prefix="/api/creators", tags=["creators"])
 _creator_svc = CreatorService()
+_video_svc = VideoService()
 _fetcher = PlaywrightBilibiliFetcher(cookie=settings.bilibili_cookie or None)
 
 
@@ -35,7 +37,8 @@ def _to_creator_read(creator) -> CreatorRead:
         profile_url=creator.profile_url,
         avatar_url=creator.avatar_url,
         tag_ids=[tag.id for tag in creator.tags],
-        video_count=len(videos),
+        video_count=creator.video_count or 0,
+        synced_video_count=len(videos),
         unwatched_count=unwatched,
         last_synced_at=creator.last_synced_at,
     )
@@ -149,3 +152,21 @@ def update_creator(
         tag_ids=payload.tag_ids,
     )
     return _to_creator_read(creator)
+
+
+@router.patch("/{creator_id}/videos/status")
+def batch_update_video_status(
+    creator_id: int,
+    payload: VideoStatusUpdate,
+    db: Annotated[Session, Depends(get_db)],
+) -> dict:
+    """批量将某个 UP 主的所有未看视频标记为指定状态。
+
+    - status=1：一键已看
+    - status=2：一键不看
+    """
+    creator = _creator_svc.get_creator(db, creator_id)
+    if creator is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Creator 不存在")
+    count = _video_svc.batch_set_status_by_creator(db, creator_id, payload.status)
+    return {"creator_id": creator_id, "status": payload.status, "updated_count": count}

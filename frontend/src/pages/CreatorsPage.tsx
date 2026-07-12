@@ -290,7 +290,12 @@ export default function CreatorsPage() {
                 <div className="creator-card-stats">
                   <span className="creator-card-stat">
                     <Video size={12} />
-                    {c.video_count} 视频
+                    {c.video_count} 个视频
+                  </span>
+                  <span className="creator-card-stat-dot" />
+                  <span className="creator-card-stat">
+                    <Film size={12} />
+                    已同步 {c.synced_video_count}
                   </span>
                   {c.unwatched_count > 0 && (
                     <>

@@ -33,6 +33,7 @@ class CreatorRead(BaseModel):
     avatar_url: Optional[str] = None
     tag_ids: list[int] = []
     video_count: int = 0
+    synced_video_count: int = 0
     unwatched_count: int = 0
     last_synced_at: Optional[datetime] = None
 

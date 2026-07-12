@@ -20,6 +20,7 @@ export interface Creator {
   avatar_url: string | null;
   tag_ids: number[];
   video_count: number;
+  synced_video_count: number;
   unwatched_count: number;
   last_synced_at: string | null;
 }
@@ -203,6 +204,17 @@ export function updateStatus(
   status: number
 ): Promise<void> {
   return request(`/api/videos/${videoId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+/** 批量更新某 UP 主的所有未看视频状态 */
+export function batchUpdateCreatorVideos(
+  creatorId: number,
+  status: number
+): Promise<{ creator_id: number; status: number; updated_count: number }> {
+  return request(`/api/creators/${creatorId}/videos/status`, {
     method: "PATCH",
     body: JSON.stringify({ status }),
   });

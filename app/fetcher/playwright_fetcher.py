@@ -289,9 +289,9 @@ class PlaywrightBilibiliFetcher:
     def fetch_creator_info(
         self, uid: str, ttl_cache: bool = True
     ) -> dict:
-        """获取指定 UP 主的昵称和头像 URL。
+        """获取指定 UP 主的昵称、头像和视频总数。
 
-        返回 dict，包含 name 和 avatar_url 字段，失败抛出 FetchError。
+        返回 dict，包含 name、avatar_url 和 video_count 字段，失败抛出 FetchError。
         """
         if ttl_cache:
             cached = self._get_cached(uid, "name")
@@ -321,7 +321,22 @@ class PlaywrightBilibiliFetcher:
             except Exception:
                 pass
 
-            result = {"name": name, "avatar_url": avatar_url}
+            video_count: int | None = None
+            try:
+                nav_items = page.locator(".side-nav__item")
+                for i in range(nav_items.count()):
+                    item = nav_items.nth(i)
+                    text_el = item.locator(".side-nav__item__text")
+                    if text_el.count() > 0 and "视频" in (text_el.text_content() or ""):
+                        count_el = item.locator(".side-nav__item__sub-text")
+                        if count_el.count() > 0:
+                            count_text = (count_el.text_content() or "").strip()
+                            video_count = int(count_text)
+                        break
+            except Exception:
+                pass
+
+            result = {"name": name, "avatar_url": avatar_url, "video_count": video_count}
             self._set_cache(uid, "name", result)
             return result
         except FetchError:

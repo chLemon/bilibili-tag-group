@@ -16,6 +16,7 @@ class Creator(Base):
     profile_url: Mapped[str] = mapped_column(String(512), unique=True, nullable=False)
     avatar_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1", nullable=False)
+    video_count: Mapped[int | None] = mapped_column(nullable=True)
     last_synced_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     tags = relationship("Tag", secondary="creator_tags", back_populates="creators")
