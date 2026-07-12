@@ -244,5 +244,5 @@ class TestPlaywrightBilibiliFetcher:
              patch.object(PlaywrightBilibiliFetcher, "_set_cache"):
             fetcher = PlaywrightBilibiliFetcher()
 
-            with pytest.raises(FetchError, match="获取昵称失败"):
+            with pytest.raises(FetchError, match="获取 UP 主信息失败"):
                 fetcher.fetch_creator_name("12345")

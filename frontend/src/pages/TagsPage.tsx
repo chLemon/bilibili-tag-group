@@ -1,56 +1,40 @@
 /**
  * TagsPage：标签视图页面。
- * 左侧展示标签列表，右侧展示选中标签下的未看视频。
+ * 左侧标签列表 + UP 主目录锚点，右侧按 UP 主分组的未看视频列表。
  */
-import { useEffect, useState } from "react";
-import {
-  fetchTags,
-  fetchTagVideos,
-  updateWatched,
-  Tag,
-  Video,
-} from "../api/client";
-import { Hash, AlertCircle, Inbox, Loader2, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { Hash, AlertCircle, Inbox, Loader2, RefreshCw, Tag } from "lucide-react";
+import { useTags, useTagVideos, useScrollSpy, UNTAGGED_ID } from "../hooks/useTags";
 import VideoCard from "../components/VideoCard";
+import CreatorAnchorNav from "../components/CreatorAnchorNav";
 
 export default function TagsPage() {
-  const [tags, setTags] = useState<Tag[]>([]);
+  const { tags, loading: loadingTags, error: tagsError } = useTags();
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [loadingTags, setLoadingTags] = useState(true);
-  const [loadingVideos, setLoadingVideos] = useState(false);
-  const [tagsError, setTagsError] = useState<string | null>(null);
-  const [videosError, setVideosError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchTags()
-      .then((data) => {
-        setTags(data);
-        if (data.length > 0) setSelectedTagId(data[0].id);
-      })
-      .catch((err: Error) => setTagsError(err.message))
-      .finally(() => setLoadingTags(false));
-  }, []);
-
-  useEffect(() => {
-    if (selectedTagId === null) return;
-    setLoadingVideos(true);
-    setVideosError(null);
-    fetchTagVideos(selectedTagId)
-      .then(setVideos)
-      .catch((err: Error) => setVideosError(err.message))
-      .finally(() => setLoadingVideos(false));
-  }, [selectedTagId]);
-
-  async function handleMarkWatched(videoId: number) {
-    try {
-      await updateWatched(videoId, true);
-      setVideos((prev) => prev.filter((v) => v.id !== videoId));
-    } catch (err) {
-      setVideosError(String(err));
-    }
+  // 标签加载完成后自动选中第一个
+  if (selectedTagId === null && tags.length > 0) {
+    setSelectedTagId(tags[0].id);
+  } else if (selectedTagId === null && !loadingTags) {
+    // 标签列表为空时选中"无标签"
+    if (selectedTagId === null) setSelectedTagId(UNTAGGED_ID);
   }
 
+  const {
+    videos,
+    groupedVideos,
+    loading: loadingVideos,
+    error: videosError,
+    markWatched,
+    markIgnored,
+  } = useTagVideos(selectedTagId);
+
+  const { activeCreatorId, scrollToCreator } = useScrollSpy(
+    groupedVideos,
+    !loadingVideos,
+  );
+
+  // ── 标签加载态 ──
   if (loadingTags) {
     return (
       <div className="loading-state">
@@ -59,6 +43,7 @@ export default function TagsPage() {
     );
   }
 
+  // ── 标签加载失败 ──
   if (tagsError) {
     return (
       <div className="error-message">
@@ -71,21 +56,14 @@ export default function TagsPage() {
     );
   }
 
-  if (tags.length === 0) {
-    return (
-      <div className="empty-state" style={{ paddingTop: 48 }}>
-        <Inbox size={40} />
-        <p>暂无标签</p>
-        <p className="empty-hint">请先在"UP 主管理"中添加 UP 主并关联标签</p>
-      </div>
-    );
-  }
-
-  const selectedTag = tags.find((t) => t.id === selectedTagId);
+  const selectedTag =
+    selectedTagId === UNTAGGED_ID
+      ? null
+      : tags.find((t) => t.id === selectedTagId);
 
   return (
     <div style={{ display: "flex", gap: 24, minHeight: "calc(100vh - 120px)" }}>
-      {/* 左侧标签列表 */}
+      {/* 左侧：标签列表 */}
       <aside className="tag-sidebar">
         <h3 className="tag-sidebar-title">
           <Hash size={16} /> 标签
@@ -100,17 +78,23 @@ export default function TagsPage() {
               <span className="tag-item-name truncate">{tag.name}</span>
             </li>
           ))}
+          <li
+            onClick={() => setSelectedTagId(UNTAGGED_ID)}
+            className={`tag-item${selectedTagId === UNTAGGED_ID ? " tag-item-active" : ""}`}
+          >
+            <span className="tag-item-name truncate" style={{ fontStyle: "italic" }}>
+              <Tag size={12} /> 无标签
+            </span>
+          </li>
         </ul>
       </aside>
 
-      {/* 右侧视频列表 */}
+      {/* 中间：视频列表 */}
       <div className="video-panel">
-        {selectedTag && (
-          <h3 className="video-panel-title">
-            {selectedTag.name}
-            <span className="badge badge-muted">{videos.length} 个未看</span>
-          </h3>
-        )}
+        <h3 className="video-panel-title">
+          {selectedTagId === UNTAGGED_ID ? "无标签 UP 主" : selectedTag?.name ?? ""}
+          <span className="badge badge-muted">{videos.length} 个未看</span>
+        </h3>
 
         {loadingVideos ? (
           <div className="loading-state">
@@ -127,17 +111,57 @@ export default function TagsPage() {
         ) : videos.length === 0 ? (
           <div className="empty-state">
             <Inbox size={36} />
-            <p>该标签下暂无未看视频</p>
+            <p>
+              {selectedTagId === UNTAGGED_ID
+                ? "暂无无标签 UP 主的未看视频"
+                : "该标签下暂无未看视频"}
+            </p>
             <p className="empty-hint">新视频同步后会展示在这里</p>
           </div>
         ) : (
-          <div>
-            {videos.map((v) => (
-              <VideoCard key={v.id} video={v} onMarkWatched={handleMarkWatched} />
+          <div key={selectedTagId}>
+            {groupedVideos.map((group, i) => (
+              <section
+                key={group.creatorId}
+                id={`creator-${group.creatorId}`}
+                className="creator-group"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
+                <div className="creator-group-header">
+                  {group.creatorAvatarUrl ? (
+                    <img
+                      src={group.creatorAvatarUrl}
+                      alt={group.creatorName}
+                      className="creator-group-avatar"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <span className="creator-group-avatar creator-group-avatar-placeholder">
+                      {group.creatorName.charAt(0)}
+                    </span>
+                  )}
+                  <span className="creator-group-name">
+                    {group.creatorAlias
+                      ? `${group.creatorAlias}（${group.creatorName}）`
+                      : group.creatorName}
+                  </span>
+                  <span className="badge badge-muted">{group.videos.length} 个视频</span>
+                </div>
+                {group.videos.map((v) => (
+                  <VideoCard key={v.id} video={v} onMarkWatched={markWatched} onMarkIgnored={markIgnored} />
+                ))}
+              </section>
             ))}
           </div>
         )}
       </div>
+
+      {/* 右侧：UP 主列表 */}
+      <CreatorAnchorNav
+        groups={groupedVideos}
+        activeCreatorId={activeCreatorId}
+        onSelect={scrollToCreator}
+      />
     </div>
   );
 }

@@ -39,18 +39,18 @@ class TagService:
             VideoRead 列表（已按 published_at 倒序排列）
         """
         rows = (
-            db.query(Video, Creator.name.label("creator_name"))
+            db.query(Video, Creator.name.label("creator_name"), Creator.alias.label("creator_alias"), Creator.avatar_url.label("creator_avatar_url"))
             .join(Creator, Video.creator_id == Creator.id)
             .join(CreatorTag, CreatorTag.creator_id == Creator.id)
             .join(VideoStatus, VideoStatus.video_id == Video.id)
             .filter(CreatorTag.tag_id == tag_id)
-            .filter(VideoStatus.watched.is_(False))
+            .filter(VideoStatus.status == 0)
             .order_by(Video.published_at.desc())
             .all()
         )
 
         result: list[VideoRead] = []
-        for video, creator_name in rows:
+        for video, creator_name, creator_alias, creator_avatar_url in rows:
             result.append(
                 VideoRead(
                     id=video.id,
@@ -58,7 +58,47 @@ class TagService:
                     title=video.title,
                     creator_id=video.creator_id,
                     creator_name=creator_name,
+                    creator_alias=creator_alias,
+                    creator_avatar_url=creator_avatar_url,
                     video_url=video.video_url,
+                    published_at=video.published_at,
+                    duration_seconds=video.duration_seconds,
+                    cover_url=video.cover_url,
+                )
+            )
+        return result
+
+    def list_unwatched_videos_untagged(self, db: Session) -> list[VideoRead]:
+        """查询所有无标签 UP 主的未看视频，按发布时间倒序。"""
+        untagged_ids = (
+            db.query(Creator.id)
+            .outerjoin(CreatorTag, CreatorTag.creator_id == Creator.id)
+            .filter(CreatorTag.tag_id.is_(None))
+        )
+
+        rows = (
+            db.query(Video, Creator.name.label("creator_name"), Creator.alias.label("creator_alias"), Creator.avatar_url.label("creator_avatar_url"))
+            .join(Creator, Video.creator_id == Creator.id)
+            .join(VideoStatus, VideoStatus.video_id == Video.id)
+            .filter(Video.creator_id.in_(untagged_ids))
+            .filter(VideoStatus.status == 0)
+            .order_by(Video.published_at.desc())
+            .all()
+        )
+
+        result: list[VideoRead] = []
+        for video, creator_name, creator_alias, creator_avatar_url in rows:
+            result.append(
+                VideoRead(
+                    id=video.id,
+                    bvid=video.bvid,
+                    title=video.title,
+                    creator_id=video.creator_id,
+                    creator_name=creator_name,
+                    creator_alias=creator_alias,
+                    creator_avatar_url=creator_avatar_url,
+                    video_url=video.video_url,
+                    cover_url=video.cover_url,
                     published_at=video.published_at,
                     duration_seconds=video.duration_seconds,
                 )

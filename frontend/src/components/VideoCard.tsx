@@ -3,7 +3,7 @@
  */
 import { useState } from "react";
 import { Video } from "../api/client";
-import { User, Clock, Calendar, ExternalLink, Eye } from "lucide-react";
+import { Clock, Calendar, ExternalLink, Eye, EyeOff, Image } from "lucide-react";
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -21,19 +21,34 @@ function formatDate(iso: string): string {
 interface VideoCardProps {
   video: Video;
   onMarkWatched: (videoId: number) => void;
+  onMarkIgnored: (videoId: number) => void;
 }
 
-export default function VideoCard({ video, onMarkWatched }: VideoCardProps) {
+export default function VideoCard({ video, onMarkWatched, onMarkIgnored }: VideoCardProps) {
   const [removing, setRemoving] = useState(false);
 
-  function handleMarkWatched() {
+  function handleAction(callback: (id: number) => void) {
     setRemoving(true);
-    setTimeout(() => onMarkWatched(video.id), 200);
+    setTimeout(() => callback(video.id), 200);
   }
 
   return (
     <div className={`video-card${removing ? " video-card-removing" : ""}`}>
       <div className="video-card-accent" />
+      <a
+        href={video.video_url}
+        target="_blank"
+        rel="noreferrer"
+        className="video-card-cover"
+      >
+        {video.cover_url ? (
+          <img src={video.cover_url} alt={video.title} loading="lazy" referrerPolicy="no-referrer" />
+        ) : (
+          <span className="video-card-cover-placeholder">
+            <Image size={20} />
+          </span>
+        )}
+      </a>
       <div className="video-card-body">
         <div className="video-card-info">
           <a
@@ -48,8 +63,19 @@ export default function VideoCard({ video, onMarkWatched }: VideoCardProps) {
           </a>
           <div className="video-card-meta">
             <span className="video-card-meta-item">
-              <User size={12} />
-              {video.creator_name}
+              {video.creator_avatar_url ? (
+                <img
+                  src={video.creator_avatar_url}
+                  alt={video.creator_name}
+                  className="video-card-creator-avatar"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <span className="video-card-creator-avatar video-card-creator-avatar-placeholder">
+                  {video.creator_name.charAt(0)}
+                </span>
+              )}
+              {video.creator_alias ? `${video.creator_alias}（${video.creator_name}）` : video.creator_name}
             </span>
             <span className="video-card-meta-sep">·</span>
             <span className="video-card-meta-item">
@@ -63,14 +89,24 @@ export default function VideoCard({ video, onMarkWatched }: VideoCardProps) {
             </span>
           </div>
         </div>
-        <button
-          onClick={handleMarkWatched}
-          className="btn btn-outline btn-sm"
-          style={{ flexShrink: 0 }}
-        >
-          <Eye size={13} />
-          已看
-        </button>
+        <div className="video-card-actions" style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+          <button
+            onClick={() => handleAction(onMarkWatched)}
+            className="btn btn-sm"
+            style={{ background: "#FB7299", color: "#fff", borderColor: "#FB7299" }}
+          >
+            <Eye size={13} />
+            已看
+          </button>
+          <button
+            onClick={() => handleAction(onMarkIgnored)}
+            className="btn btn-sm"
+            style={{ background: "var(--color-bg-muted)", color: "var(--color-text-secondary)", borderColor: "var(--color-border)" }}
+          >
+            <EyeOff size={13} />
+            不看
+          </button>
+        </div>
       </div>
     </div>
   );

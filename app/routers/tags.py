@@ -32,6 +32,14 @@ def list_tags(
     return [TagRead(id=t.id, name=t.name) for t in tags]
 
 
+@router.get("/untagged/videos", response_model=list[VideoRead])
+def list_untagged_videos(
+    db: Annotated[Session, Depends(get_db)],
+) -> list[VideoRead]:
+    """返回所有无标签 UP 主的未看视频，按发布时间倒序。"""
+    return _tag_svc.list_unwatched_videos_untagged(db)
+
+
 @router.get("/{tag_id}/videos", response_model=list[VideoRead])
 def list_tag_videos(
     tag_id: int,

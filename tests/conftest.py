@@ -89,7 +89,7 @@ def seeded_data(db_session):
     db_session.add(video)
     db_session.flush()
 
-    status = VideoStatus(video_id=video.id, watched=False)
+    status = VideoStatus(video_id=video.id)
     db_session.add(status)
     db_session.commit()
 

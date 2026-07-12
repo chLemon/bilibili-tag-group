@@ -15,10 +15,13 @@ export interface Tag {
 export interface Creator {
   id: number;
   name: string;
+  alias: string | null;
   profile_url: string;
   avatar_url: string | null;
-  enabled: boolean;
   tag_ids: number[];
+  video_count: number;
+  unwatched_count: number;
+  last_synced_at: string | null;
 }
 
 /** 创建 UP 主请求体 */
@@ -26,13 +29,14 @@ export interface CreatorCreate {
   name: string;
   profile_url: string;
   avatar_url?: string;
+  alias?: string;
   tag_ids?: number[];
 }
 
 /** 编辑 UP 主请求体（PATCH，全部可选） */
 export interface CreatorUpdate {
   name?: string;
-  enabled?: boolean;
+  alias?: string;
   tag_ids?: number[];
 }
 
@@ -43,9 +47,28 @@ export interface Video {
   title: string;
   creator_id: number;
   creator_name: string;
+  creator_alias: string | null;
+  creator_avatar_url: string | null;
   video_url: string;
+  cover_url: string | null;
   published_at: string;
   duration_seconds: number;
+}
+
+/** 视频详情（含已看状态） */
+export interface VideoDetail {
+  id: number;
+  bvid: string;
+  title: string;
+  creator_id: number;
+  creator_name: string;
+  creator_alias: string | null;
+  creator_avatar_url: string | null;
+  video_url: string;
+  cover_url: string | null;
+  published_at: string;
+  duration_seconds: number;
+  status: number; // 0=未看, 1=已看, 2=不看
 }
 
 /** 同步日志 */
@@ -114,6 +137,11 @@ export function fetchTagVideos(tagId: number): Promise<Video[]> {
   return request<Video[]>(`/api/tags/${tagId}/videos`);
 }
 
+/** 获取无标签 UP 主的未看视频列表 */
+export function fetchUntaggedVideos(): Promise<Video[]> {
+  return request<Video[]>("/api/tags/untagged/videos");
+}
+
 /** 创建标签 */
 export function createTag(payload: { name: string }): Promise<Tag> {
   return request<Tag>("/api/tags", {
@@ -138,6 +166,16 @@ export function resolveCreatorName(
   );
 }
 
+/** 获取单个 UP 主 */
+export function fetchCreator(creatorId: number): Promise<Creator> {
+  return request<Creator>(`/api/creators/${creatorId}`);
+}
+
+/** 获取某 UP 主的所有视频（含已看状态） */
+export function fetchCreatorVideos(creatorId: number): Promise<VideoDetail[]> {
+  return request<VideoDetail[]>(`/api/creators/${creatorId}/videos`);
+}
+
 /** 添加 UP 主 */
 export function createCreator(payload: CreatorCreate): Promise<Creator> {
   return request<Creator>("/api/creators", {
@@ -157,23 +195,16 @@ export function updateCreator(
   });
 }
 
-/** 对单个 UP 主执行手动同步 */
-export function syncCreator(
-  creatorId: number
-): Promise<{ creator_id: number; new_videos: number }> {
-  return request(`/api/creators/${creatorId}/sync`, { method: "POST" });
-}
-
 // ---- 视频 API ----
 
-/** 标记视频已看 / 未看 */
-export function updateWatched(
+/** 更新视频状态：0=未看, 1=已看, 2=不看 */
+export function updateStatus(
   videoId: number,
-  watched: boolean
+  status: number
 ): Promise<void> {
-  return request(`/api/videos/${videoId}/watched`, {
+  return request(`/api/videos/${videoId}/status`, {
     method: "PATCH",
-    body: JSON.stringify({ watched }),
+    body: JSON.stringify({ status }),
   });
 }
 

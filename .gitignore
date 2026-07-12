@@ -23,6 +23,8 @@ htmlcov/
 
 # 数据库
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 

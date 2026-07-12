@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from app.config import settings
@@ -17,6 +17,22 @@ engine = create_engine(
     },
 )
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+
+
+def run_migrations() -> None:
+    """在应用启动时执行轻量级数据库迁移（SQLite 环境）。"""
+    with engine.connect() as conn:
+        # 获取现有列名
+        existing = {row[1] for row in conn.execute(text("PRAGMA table_info('creators')")).fetchall()}
+        if "alias" not in existing:
+            conn.execute(text("ALTER TABLE creators ADD COLUMN alias VARCHAR(255)"))
+            conn.commit()
+
+        # videos 表迁移
+        video_cols = {row[1] for row in conn.execute(text("PRAGMA table_info('videos')")).fetchall()}
+        if "cover_url" not in video_cols:
+            conn.execute(text("ALTER TABLE videos ADD COLUMN cover_url VARCHAR(512)"))
+            conn.commit()
 
 
 # 启用 WAL 模式（持久化，只需设置一次），提升 SQLite 并发能力。

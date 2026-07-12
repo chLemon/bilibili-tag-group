@@ -21,3 +21,6 @@ class FetchedVideo:
 
     duration_seconds: int
     """视频时长（秒）"""
+
+    cover_url: str | None = None
+    """视频封面图 URL"""

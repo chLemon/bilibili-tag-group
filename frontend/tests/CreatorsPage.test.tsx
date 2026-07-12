@@ -18,10 +18,13 @@ const mockCreators: client.Creator[] = [
   {
     id: 1,
     name: "测试UP主",
+    alias: null,
     profile_url: "https://space.bilibili.com/123",
     avatar_url: null,
-    enabled: true,
     tag_ids: [1],
+    video_count: 5,
+    unwatched_count: 2,
+    last_synced_at: "2026-07-12T08:00:00",
   },
 ];
 
@@ -31,19 +34,17 @@ beforeEach(() => {
   vi.mocked(client.createCreator).mockResolvedValue({
     id: 2,
     name: "新UP主",
+    alias: null,
     profile_url: "https://space.bilibili.com/456",
     avatar_url: null,
-    enabled: true,
     tag_ids: [],
+    video_count: 0,
+    unwatched_count: 0,
+    last_synced_at: null,
   });
   vi.mocked(client.updateCreator).mockResolvedValue({
     ...mockCreators[0],
     avatar_url: null,
-    enabled: false,
-  });
-  vi.mocked(client.syncCreator).mockResolvedValue({
-    creator_id: 1,
-    new_videos: 3,
   });
   vi.mocked(client.createTag).mockResolvedValue({
     id: 2,
@@ -86,19 +87,6 @@ describe("CreatorsPage", () => {
     await waitFor(() => screen.getByText("测试UP主"));
     await userEvent.click(screen.getByRole("button", { name: /添加 UP 主/ }));
     expect(screen.getByPlaceholderText("https://space.bilibili.com/...")).toBeInTheDocument();
-  });
-
-  it("手动同步后展示成功消息", async () => {
-    render(
-      <MemoryRouter>
-        <CreatorsPage />
-      </MemoryRouter>
-    );
-    await waitFor(() => screen.getByText("测试UP主"));
-    await userEvent.click(screen.getByRole("button", { name: "同步" }));
-    await waitFor(() => {
-      expect(screen.getByText(/新增 3 条视频/)).toBeInTheDocument();
-    });
   });
 
   it("创建 UP 主失败时页面不被整页覆盖，内联展示错误消息", async () => {

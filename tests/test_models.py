@@ -9,7 +9,7 @@ from app.models.sync_log import SyncLog
 
 
 def test_video_status_defaults_to_unwatched(db_session):
-    """新建的 VideoStatus 默认 watched=False。"""
+    """新建的 VideoStatus 默认 status=0。"""
     creator = Creator(name="测试UP", profile_url="https://space.bilibili.com/1")
     db_session.add(creator)
     db_session.flush()
@@ -29,7 +29,7 @@ def test_video_status_defaults_to_unwatched(db_session):
     db_session.add(status)
     db_session.commit()
 
-    assert status.watched is False
+    assert status.status == 0
     assert status.watched_at is None
 
 

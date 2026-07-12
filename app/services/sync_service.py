@@ -59,11 +59,21 @@ class SyncService:
 
         - 拥有"立即同步"标签 → 绕过 TTL 缓存
         - 其余 → 使用 TTL 缓存
-        不会更新 Creator 的名称/头像等元数据。
+        - 同时更新 Creator 的名称/头像、视频的封面
 
         返回：本次新增的视频数量
         """
         uid = _uid_from_profile_url(creator.profile_url)
+
+        # 更新 UP 主元数据（名称、头像）
+        try:
+            info = self._fetcher.fetch_creator_info(uid, ttl_cache=False)
+            if info.get("name"):
+                creator.name = info["name"]
+            if info.get("avatar_url"):
+                creator.avatar_url = info["avatar_url"]
+        except Exception:
+            pass  # 元数据更新失败不影响视频同步
 
         immediate_tag_ids = self._get_immediate_tag_ids(db_session)
         use_ttl = not self._creator_has_immediate_tag(
@@ -84,6 +94,8 @@ class SyncService:
                 video.video_url = fv.video_url
                 video.published_at = fv.published_at
                 video.duration_seconds = fv.duration_seconds
+                if fv.cover_url:
+                    video.cover_url = fv.cover_url
             else:
                 video = Video(
                     bvid=fv.bvid,
@@ -92,10 +104,11 @@ class SyncService:
                     video_url=fv.video_url,
                     published_at=fv.published_at,
                     duration_seconds=fv.duration_seconds,
+                    cover_url=fv.cover_url,
                 )
                 db_session.add(video)
                 db_session.flush()
-                status = VideoStatus(video_id=video.id, watched=False)
+                status = VideoStatus(video_id=video.id)
                 video.status = status
                 db_session.add(status)
                 new_count += 1
@@ -106,8 +119,10 @@ class SyncService:
 
     # ── 异步全量同步 ──────────────────────────────────────────────
 
-    # 心跳超过此秒数视为进程已崩溃，对应前端 DEAD_THRESHOLD_SEC
-    _HEARTBEAT_DEAD_SEC = 120
+    # 心跳更新间隔（独立心跳线程），对应前端轮询周期
+    _HEARTBEAT_INTERVAL = 15
+    # 心跳超过此秒数视为进程已崩溃，与前端 DEAD_THRESHOLD_SEC 保持一致
+    _HEARTBEAT_DEAD_SEC = 45
 
     def start_async_sync(self, request_db: Session) -> SyncTask:
         """启动异步全量同步：创建 SyncTask 并启动后台线程，立即返回。
@@ -140,7 +155,7 @@ class SyncService:
                 return existing
 
         # 计算 total_creators
-        total = request_db.query(Creator).filter_by(enabled=True).count()
+        total = request_db.query(Creator).count()
 
         task = SyncTask(
             status="running",
@@ -154,6 +169,9 @@ class SyncService:
         request_db.flush()
         task_id = task.id
 
+        # 必须在启动线程之前提交，否则后台线程的独立连接看不到这条新记录
+        request_db.commit()
+
         # 启动后台线程执行同步
         thread = _threading.Thread(
             target=self._run_async_sync,
@@ -164,17 +182,51 @@ class SyncService:
 
         return task
 
-    def _run_async_sync(self, task_id: int, SessionLocal) -> None:
-        """后台线程：逐个同步 UP 主，更新 SyncTask 进度。"""
+    @staticmethod
+    def _heartbeat_loop(task_id: int, SessionLocal, stop_event: _threading.Event) -> None:
+        """独立心跳线程：每隔 _HEARTBEAT_INTERVAL 秒更新 heartbeat_at。
+
+        与同步耗时解耦——即使 sync_creator 卡在网络请求上，心跳仍正常推进。
+        stop_event 由主同步线程在 finally 中设置，保证同步线程结束时心跳线程一定退出。
+        """
         db = SessionLocal()
+        try:
+            while not stop_event.wait(SyncService._HEARTBEAT_INTERVAL):
+                try:
+                    task = db.query(SyncTask).filter_by(id=task_id).first()
+                    if task is None:
+                        return
+                    task.heartbeat_at = _now_utc()
+                    db.commit()
+                except Exception:
+                    db.rollback()
+        finally:
+            db.close()
+
+    def _run_async_sync(self, task_id: int, SessionLocal) -> None:
+        """后台线程：逐个同步 UP 主，更新 SyncTask 进度。
+
+        启动独立心跳线程保证 heartbeat_at 持续更新，
+        不因 sync_creator 网络耗时而中断。finally 确保心跳线程随主线程退出。
+        """
+        db = SessionLocal()
+        heartbeat_stop = _threading.Event()
+        hb_thread = None
         try:
             task = db.query(SyncTask).filter_by(id=task_id).first()
             if task is None:
                 return
 
-            creators = db.query(Creator).filter_by(enabled=True).all()
+            # 启动独立心跳线程，与同步耗时解耦
+            hb_thread = _threading.Thread(
+                target=self._heartbeat_loop,
+                args=(task_id, SessionLocal, heartbeat_stop),
+                daemon=True,
+            )
+            hb_thread.start()
+
+            creators = db.query(Creator).all()
             task.total_creators = len(creators)
-            task.heartbeat_at = _now_utc()
             db.commit()
 
             total_new = 0
@@ -184,12 +236,10 @@ class SyncService:
                 if idx > 0:
                     _time.sleep(1)
 
-                # 更新当前正在处理的 UP 主
                 task = db.query(SyncTask).filter_by(id=task_id).first()
                 if task is None:
                     return
                 task.current_creator_name = creator.name
-                task.heartbeat_at = _now_utc()
                 db.commit()
 
                 try:
@@ -200,14 +250,12 @@ class SyncService:
                     db.rollback()
                     errors.append(f"{creator.name}: {exc}")
 
-                # 更新完成数
                 task = db.query(SyncTask).filter_by(id=task_id).first()
                 if task is None:
                     return
                 task.completed_creators += 1
                 task.new_videos = total_new
                 task.current_creator_name = None
-                task.heartbeat_at = _now_utc()
                 db.commit()
 
             # 全部完成
@@ -217,7 +265,6 @@ class SyncService:
             task.current_creator_name = None
             task.new_videos = total_new
             task.finished_at = _now_utc()
-            task.heartbeat_at = _now_utc()
             if errors:
                 task.status = "failed"
                 task.error_message = "\n".join(errors)
@@ -245,11 +292,13 @@ class SyncService:
                     task.status = "failed"
                     task.error_message = str(exc)
                     task.finished_at = _now_utc()
-                    task.heartbeat_at = _now_utc()
                     db.commit()
             except Exception:
                 pass
         finally:
+            heartbeat_stop.set()
+            if hb_thread is not None:
+                hb_thread.join(timeout=5)
             db.close()
 
     # ── 调度器用的同步（同步执行，阻塞返回） ──────────────────────
@@ -266,7 +315,7 @@ class SyncService:
         db_session.flush()
 
         try:
-            creators = db_session.query(Creator).filter_by(enabled=True).all()
+            creators = db_session.query(Creator).all()
             total_new = 0
             errors: list[str] = []
             for idx, creator in enumerate(creators):

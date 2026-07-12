@@ -23,7 +23,10 @@ const mockVideos: client.Video[] = [
     title: "科技视频1",
     creator_id: 1,
     creator_name: "科技UP",
+    creator_alias: null,
+    creator_avatar_url: null,
     video_url: "https://bilibili.com/video/BVabc",
+    cover_url: null,
     published_at: "2024-01-01T00:00:00",
     duration_seconds: 60,
   },
@@ -32,7 +35,8 @@ const mockVideos: client.Video[] = [
 beforeEach(() => {
   vi.mocked(client.fetchTags).mockResolvedValue(mockTags);
   vi.mocked(client.fetchTagVideos).mockResolvedValue(mockVideos);
-  vi.mocked(client.updateWatched).mockResolvedValue(undefined);
+  vi.mocked(client.fetchUntaggedVideos).mockResolvedValue([]);
+  vi.mocked(client.updateStatus).mockResolvedValue(undefined);
 });
 
 describe("TagsPage", () => {
@@ -104,7 +108,7 @@ describe("TagsPage", () => {
     });
   });
 
-  it("无标签时展示引导提示", async () => {
+  it("无标签时展示无标签视图", async () => {
     vi.mocked(client.fetchTags).mockResolvedValueOnce([]);
     render(
       <MemoryRouter>
@@ -112,7 +116,7 @@ describe("TagsPage", () => {
       </MemoryRouter>
     );
     await waitFor(() => {
-      expect(screen.getByText(/暂无标签/)).toBeInTheDocument();
+      expect(screen.getByText("无标签 UP 主")).toBeInTheDocument();
     });
   });
 });

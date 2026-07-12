@@ -5,7 +5,8 @@ import { BrowserRouter, NavLink, Navigate, Route, Routes } from "react-router-do
 import { Tags, Users, RefreshCw, Hash } from "lucide-react";
 import TagsPage from "./pages/TagsPage";
 import CreatorsPage from "./pages/CreatorsPage";
-import { SyncPage } from "./features/sync";
+import CreatorDetailPage from "./pages/CreatorDetailPage";
+import SyncPage from "./pages/SyncPage";
 
 const navItems = [
   { to: "/tags", label: "标签视图", Icon: Tags },
@@ -43,6 +44,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/tags" replace />} />
           <Route path="/tags" element={<TagsPage />} />
+          <Route path="/creators/:creatorId" element={<CreatorDetailPage />} />
           <Route path="/creators" element={<CreatorsPage />} />
           <Route path="/sync" element={<SyncPage />} />
         </Routes>

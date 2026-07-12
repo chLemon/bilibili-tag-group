@@ -68,7 +68,7 @@ class TestSyncCreatorNewVideos:
 
         video = db_session.query(Video).filter_by(bvid="BV1aa111a1aA").one()
         assert video.status is not None
-        assert video.status.watched is False
+        assert video.status.status == 0
         assert video.status.watched_at is None
 
     def test_returns_count_of_new_videos(self, db_session):
@@ -141,7 +141,7 @@ class TestSyncCreatorExistingVideos:
         watched_time = datetime(2024, 3, 15, 10, 0, 0)
         existing_status = VideoStatus(
             video_id=existing_video.id,
-            watched=True,
+            status=1,
             watched_at=watched_time,
         )
         db_session.add(existing_status)
@@ -159,7 +159,7 @@ class TestSyncCreatorExistingVideos:
         assert count == 0
 
         db_session.expire(existing_status)
-        assert existing_status.watched is True
+        assert existing_status.status == 1
         assert existing_status.watched_at == watched_time
 
     def test_no_duplicate_video_status_created(self, db_session):
@@ -176,7 +176,7 @@ class TestSyncCreatorExistingVideos:
         db_session.add(existing_video)
         db_session.flush()
 
-        existing_status = VideoStatus(video_id=existing_video.id, watched=False)
+        existing_status = VideoStatus(video_id=existing_video.id)
         db_session.add(existing_status)
         db_session.flush()
 
@@ -430,7 +430,7 @@ from app.services.tag_service import TagService
 class TestTagService:
     """测试 TagService 的标签查询与未看视频查询。"""
 
-    def _seed_creator_with_tag_and_video(self, db_session, watched: bool = False):
+    def _seed_creator_with_tag_and_video(self, db_session, status_value: int = 0):
         """辅助：创建标签、UP 主、视频和状态，返回 (tag, video)。"""
         tag = Tag(name="精品")
         db_session.add(tag)
@@ -452,7 +452,7 @@ class TestTagService:
         db_session.add(video)
         db_session.flush()
 
-        status = VideoStatus(video_id=video.id, watched=watched)
+        status = VideoStatus(video_id=video.id, status=status_value)
         db_session.add(status)
         db_session.flush()
 
@@ -470,7 +470,7 @@ class TestTagService:
 
     def test_list_unwatched_returns_unwatched_videos(self, db_session):
         """list_unwatched_videos_by_tag 返回未看视频。"""
-        tag, video = self._seed_creator_with_tag_and_video(db_session, watched=False)
+        tag, video = self._seed_creator_with_tag_and_video(db_session, 0)
         svc = TagService()
         result = svc.list_unwatched_videos_by_tag(db_session, tag.id)
         assert len(result) == 1
@@ -479,7 +479,7 @@ class TestTagService:
 
     def test_list_unwatched_excludes_watched_videos(self, db_session):
         """list_unwatched_videos_by_tag 不返回已看视频。"""
-        tag, _video = self._seed_creator_with_tag_and_video(db_session, watched=True)
+        tag, _video = self._seed_creator_with_tag_and_video(db_session, 1)
         svc = TagService()
         result = svc.list_unwatched_videos_by_tag(db_session, tag.id)
         assert result == []
@@ -514,7 +514,7 @@ class TestTagService:
             )
             db_session.add(v)
             db_session.flush()
-            db_session.add(VideoStatus(video_id=v.id, watched=False))
+            db_session.add(VideoStatus(video_id=v.id))
         db_session.flush()
 
         svc = TagService()
@@ -531,9 +531,9 @@ from app.services.video_service import VideoService
 
 
 class TestVideoService:
-    """测试 VideoService 的已看状态管理。"""
+    """测试 VideoService 的视频状态管理。"""
 
-    def _seed_video_with_status(self, db_session, watched: bool = False):
+    def _seed_video_with_status(self, db_session, status_value: int = 0):
         """辅助：创建视频和状态，返回 (video, status)。"""
         creator = Creator(name="UP", profile_url="https://space.bilibili.com/4444")
         db_session.add(creator)
@@ -550,32 +550,39 @@ class TestVideoService:
         db_session.add(video)
         db_session.flush()
 
-        status = VideoStatus(video_id=video.id, watched=watched)
+        status = VideoStatus(video_id=video.id, status=status_value)
         db_session.add(status)
         db_session.flush()
 
         return video, status
 
-    def test_mark_watched_true(self, db_session):
-        """mark_watched(watched=True) 应设置 watched=True 并写入 watched_at。"""
-        video, status = self._seed_video_with_status(db_session, watched=False)
+    def test_set_status_watched(self, db_session):
+        """set_status(status=1) 应设置 status=1 并写入 watched_at。"""
+        video, status = self._seed_video_with_status(db_session, 0)
         svc = VideoService()
-        result = svc.mark_watched(db_session, video.id, watched=True)
+        result = svc.set_status(db_session, video.id, 1)
         assert result is not None
-        assert result.watched is True
+        assert result.status == 1
         assert result.watched_at is not None
 
-    def test_mark_watched_false_clears_watched_at(self, db_session):
-        """mark_watched(watched=False) 应清空 watched_at。"""
-        video, status = self._seed_video_with_status(db_session, watched=True)
+    def test_set_status_unwatched_clears_watched_at(self, db_session):
+        """set_status(status=0) 应清空 watched_at。"""
+        video, status = self._seed_video_with_status(db_session, 1)
         svc = VideoService()
-        svc.mark_watched(db_session, video.id, watched=True)  # 先设置 watched_at
-        result = svc.mark_watched(db_session, video.id, watched=False)
-        assert result.watched is False
+        result = svc.set_status(db_session, video.id, 0)
+        assert result.status == 0
         assert result.watched_at is None
 
-    def test_mark_watched_not_found_returns_none(self, db_session):
+    def test_set_status_ignored(self, db_session):
+        """set_status(status=2) 应设置 status=2 并清空 watched_at。"""
+        video, status = self._seed_video_with_status(db_session, 1)
+        svc = VideoService()
+        result = svc.set_status(db_session, video.id, 2)
+        assert result.status == 2
+        assert result.watched_at is None
+
+    def test_set_status_not_found_returns_none(self, db_session):
         """不存在的 video_id 应返回 None。"""
         svc = VideoService()
-        result = svc.mark_watched(db_session, video_id=99999, watched=True)
+        result = svc.set_status(db_session, 99999, 1)
         assert result is None

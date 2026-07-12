@@ -6,7 +6,7 @@ from collections.abc import AsyncGenerator
 from fastapi import FastAPI
 
 from app.config import settings
-from app.database import SessionLocal
+from app.database import SessionLocal, run_migrations
 from app.routers.creators import router as creators_router
 from app.routers.sync import router as sync_router, set_scheduler_context
 from app.routers.tags import router as tags_router
@@ -42,6 +42,7 @@ def _make_sync_job() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """管理调度器生命周期：启动时注册并启动，关闭时停止。"""
+    run_migrations()
     scheduler = build_scheduler(
         sync_interval_minutes=settings.sync_interval_minutes,
         sync_callable=_make_sync_job,

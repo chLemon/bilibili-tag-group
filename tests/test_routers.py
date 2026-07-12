@@ -188,8 +188,8 @@ class TestTagVideos:
     def test_mark_video_watched_removes_from_tag_feed(self, client, seeded_data):
         """标记已看后，该视频不再出现在标签未看列表中。"""
         mark_resp = client.patch(
-            f"/api/videos/{seeded_data.video_id}/watched",
-            json={"watched": True},
+            f"/api/videos/{seeded_data.video_id}/status",
+            json={"status": 1},
         )
         assert mark_resp.status_code == 200
 
@@ -201,34 +201,41 @@ class TestTagVideos:
 # Videos 路由
 # ──────────────────────────────────────────────
 
-class TestMarkWatched:
-    """PATCH /api/videos/{video_id}/watched 测试。"""
+class TestUpdateStatus:
+    """PATCH /api/videos/{video_id}/status 测试。"""
 
-    def test_mark_watched_true(self, client, seeded_data):
+    def test_update_status_watched(self, client, seeded_data):
         response = client.patch(
-            f"/api/videos/{seeded_data.video_id}/watched",
-            json={"watched": True},
+            f"/api/videos/{seeded_data.video_id}/status",
+            json={"status": 1},
         )
         assert response.status_code == 200
-        assert response.json()["watched"] is True
+        assert response.json()["status"] == 1
 
-    def test_mark_watched_false(self, client, seeded_data):
-        """标记回未看后，watched 应为 False。"""
-        # 先标记已看
+    def test_update_status_unwatched(self, client, seeded_data):
+        """标记回未看后，status 应为 0。"""
         client.patch(
-            f"/api/videos/{seeded_data.video_id}/watched",
-            json={"watched": True},
+            f"/api/videos/{seeded_data.video_id}/status",
+            json={"status": 1},
         )
-        # 再标记回未看
         response = client.patch(
-            f"/api/videos/{seeded_data.video_id}/watched",
-            json={"watched": False},
+            f"/api/videos/{seeded_data.video_id}/status",
+            json={"status": 0},
         )
         assert response.status_code == 200
-        assert response.json()["watched"] is False
+        assert response.json()["status"] == 0
 
-    def test_mark_watched_not_found(self, client):
-        response = client.patch("/api/videos/99999/watched", json={"watched": True})
+    def test_update_status_ignored(self, client, seeded_data):
+        """标记为不看后，status 应为 2。"""
+        response = client.patch(
+            f"/api/videos/{seeded_data.video_id}/status",
+            json={"status": 2},
+        )
+        assert response.status_code == 200
+        assert response.json()["status"] == 2
+
+    def test_update_status_not_found(self, client):
+        response = client.patch("/api/videos/99999/status", json={"status": 1})
         assert response.status_code == 404
 
 

@@ -11,7 +11,7 @@ interface FormValues {
   name: string;
   profile_url: string;
   avatar_url?: string;
-  enabled: boolean;
+  alias?: string;
   tag_ids: number[];
 }
 
@@ -33,9 +33,9 @@ export default function CreatorForm({
   const isEditing = !!initialValues?.name;
 
   const [name, setName] = useState(initialValues?.name ?? "");
+  const [alias, setAlias] = useState(initialValues?.alias ?? "");
   const [profileUrl, setProfileUrl] = useState(initialValues?.profile_url ?? "");
   const [avatarUrl, setAvatarUrl] = useState(initialValues?.avatar_url ?? "");
-  const [enabled, setEnabled] = useState(initialValues?.enabled ?? true);
   const [tagIds, setTagIds] = useState<number[]>(initialValues?.tag_ids ?? []);
   const [localTags, setLocalTags] = useState<Tag[]>(tags);
   const [newTagName, setNewTagName] = useState("");
@@ -103,7 +103,7 @@ export default function CreatorForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ name, profile_url: profileUrl, avatar_url: avatarUrl || undefined, enabled, tag_ids: tagIds });
+    onSubmit({ name, alias: alias || undefined, profile_url: profileUrl, avatar_url: avatarUrl || undefined, tag_ids: tagIds });
   }
 
   const canSubmit = !!name.trim() && !!profileUrl.trim();
@@ -161,7 +161,7 @@ export default function CreatorForm({
         {name ? (
           <div className="form-name-display">
             {!isEditing && avatarUrl && (
-              <img src={avatarUrl} alt={name} className="form-avatar-preview" />
+              <img src={avatarUrl} alt={name} className="form-avatar-preview" referrerPolicy="no-referrer" />
             )}
             {!isEditing && !avatarUrl && (
               <span className="form-avatar-placeholder">
@@ -182,15 +182,16 @@ export default function CreatorForm({
         )}
       </div>
 
-      {/* 启用开关 */}
-      <label className="form-field-checkbox">
+      {/* 别名 */}
+      <div className="form-field">
+        <label className="form-label">别名（可选）</label>
         <input
-          type="checkbox"
-          checked={enabled}
-          onChange={(e) => setEnabled(e.target.checked)}
+          className="input"
+          value={alias}
+          onChange={(e) => setAlias(e.target.value)}
+          placeholder="便于识别的自定义名称"
         />
-        <span>启用同步</span>
-      </label>
+      </div>
 
       {/* 关联标签 */}
       <div className="form-field">

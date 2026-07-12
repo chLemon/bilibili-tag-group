@@ -16,6 +16,7 @@ class Video(Base):
     video_url: Mapped[str] = mapped_column(String(512), nullable=False)
     published_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     duration_seconds: Mapped[int] = mapped_column(Integer, nullable=False)
+    cover_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
 
     creator = relationship("Creator", back_populates="videos")
     status = relationship("VideoStatus", back_populates="video", uselist=False)

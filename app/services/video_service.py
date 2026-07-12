@@ -18,29 +18,21 @@ class VideoService:
     只负责 watched / watched_at 的读写，不修改视频公开信息。
     """
 
-    def mark_watched(self, db: Session, video_id: int, watched: bool) -> Optional[VideoStatus]:
-        """更新视频的已看状态。
+    def set_status(self, db: Session, video_id: int, status_value: int) -> Optional[VideoStatus]:
+        """更新视频状态（0=未看, 1=已看, 2=不看）。
 
-        - watched=True：同步写入 watched_at（当前 UTC 时间）
-        - watched=False：清空 watched_at
-
-        参数：
-            db: SQLAlchemy Session
-            video_id: 视频 ID
-            watched: 目标已看状态
-
-        返回：
-            更新后的 VideoStatus 对象，视频不存在时返回 None
+        - status=1：同步写入 watched_at（当前 UTC 时间）
+        - 其他状态：清空 watched_at
         """
-        status = db.get(VideoStatus, video_id)
-        if status is None:
+        video_status = db.get(VideoStatus, video_id)
+        if video_status is None:
             return None
 
-        status.watched = watched
-        if watched:
-            status.watched_at = _now_utc()
+        video_status.status = status_value
+        if status_value == 1:
+            video_status.watched_at = _now_utc()
         else:
-            status.watched_at = None
+            video_status.watched_at = None
 
         db.flush()
-        return status
+        return video_status
