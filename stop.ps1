@@ -54,3 +54,31 @@ if ($stopped) {
 }
 
 Write-Host "============================================"
+
+# ── 提交 private-data 中的数据库变更 ──────────────────────────────────────────
+$PrivateDataPath = Join-Path $PSScriptRoot "..\private-data"
+
+if (Test-Path $PrivateDataPath) {
+    Write-Host ""
+    Write-Host ">>> Committing database changes to private-data..."
+
+    git -C $PrivateDataPath pull --ff-only 2>$null
+
+    $dbFile = Join-Path $PrivateDataPath "bilibili-tag-group\my_bilibili.db"
+    if (Test-Path $dbFile) {
+        git -C $PrivateDataPath add "bilibili-tag-group/my_bilibili.db" 2>$null
+    }
+
+    $status = git -C $PrivateDataPath status --porcelain 2>$null
+    if ($status) {
+        $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm"
+        git -C $PrivateDataPath commit -m "backup: bilibili-tag-group db snapshot ($timestamp)" 2>$null
+        git -C $PrivateDataPath push 2>$null
+        Write-Host "    database changes committed and pushed."
+    } else {
+        Write-Host "    no changes to commit."
+    }
+} else {
+    Write-Host ""
+    Write-Host "(private-data directory not found, skipping backup)"
+}

@@ -12,7 +12,11 @@ if config.config_file_name is not None:
 
 # 导入模型以使 target_metadata 包含所有表定义
 import app.models  # noqa: F401
+from app.config import settings
 from app.database import Base
+
+# 统一使用 app.config 中的数据库路径，避免迁移到错误的数据库文件
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
 target_metadata = Base.metadata
 
