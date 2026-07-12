@@ -1726,3 +1726,42 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   flex: 1;
   min-width: 0;
 }
+
+/* ===== 大屏适配 ===== */
+@media (min-width: 1440px) {
+  body {
+    font-size: 15px;
+  }
+
+  .main-content,
+  .navbar-inner {
+    max-width: 1400px;
+  }
+
+  .tag-sidebar {
+    width: 140px;
+  }
+
+  .creator-anchor-nav {
+    width: 135px;
+  }
+}
+
+@media (min-width: 1920px) {
+  body {
+    font-size: 16px;
+  }
+
+  .main-content,
+  .navbar-inner {
+    max-width: 1600px;
+  }
+
+  .tag-sidebar {
+    width: 160px;
+  }
+
+  .creator-anchor-nav {
+    width: 150px;
+  }
+}
