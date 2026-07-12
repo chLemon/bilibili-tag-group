@@ -50,8 +50,24 @@ if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
 Write-Host "[2/4] Checking Python..."
 $PythonExe = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
 if (-not (Test-Path $PythonExe)) {
-    Write-Host "[ERROR] .venv not found."
-    exit 1
+    Write-Host "       .venv not found, creating..."
+    $SystemPython = Get-Command python3 -ErrorAction SilentlyContinue
+    if (-not $SystemPython) { $SystemPython = Get-Command python -ErrorAction SilentlyContinue }
+    if (-not $SystemPython) {
+        Write-Host "[ERROR] Python not found on system."
+        exit 1
+    }
+    & $SystemPython.Source -m venv .venv
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Failed to create .venv"
+        exit 1
+    }
+    & $PythonExe -m pip install -e ".[dev]"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Failed to install dependencies"
+        exit 1
+    }
+    Write-Host "       .venv created and dependencies installed."
 }
 
 Write-Host "[3/5] Checking private-data directory..."
