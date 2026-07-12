@@ -134,37 +134,48 @@ $frontendProc = Start-Process `
     -PassThru
 
 # ============================================================
-# 等待服务就绪，并记录实际监听的 PID
+# 等待服务就绪
 # ============================================================
+function Test-Port($Port) {
+    try {
+        $tcp = New-Object System.Net.Sockets.TcpClient
+        if ($tcp.ConnectAsync("127.0.0.1", $Port).Wait(1000)) {
+            $tcp.Close()
+            return $true
+        }
+        $tcp.Close()
+    } catch {}
+    return $false
+}
+
 function Wait-ForPort($Port, $TimeoutSeconds) {
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     while ($stopwatch.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
-        $conn = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($conn) { return $conn.OwningProcess }
+        if (Test-Port $Port) { return $true }
         Start-Sleep -Seconds 1
     }
-    return $null
+    return $false
 }
 
 Write-Host "       Waiting for backend on port $BackendPort..."
-$backendPid = Wait-ForPort $BackendPort 15
-if (-not $backendPid) {
+$backendReady = Wait-ForPort $BackendPort 15
+if (-not $backendReady) {
     Write-Host "[WARN] Backend did not start within 15 seconds."
 } else {
-    $backendPid | Out-File -FilePath $BackendPidFile -NoNewline
-    Write-Host "       Backend ready (PID $backendPid)"
+    $backendProc.Id | Out-File -FilePath $BackendPidFile -NoNewline
+    Write-Host "       Backend ready (PID $($backendProc.Id))"
 }
 
 Write-Host "       Waiting for frontend on port $FrontendPort..."
-$frontendPid = Wait-ForPort $FrontendPort 30
-if (-not $frontendPid) {
+$frontendReady = Wait-ForPort $FrontendPort 30
+if (-not $frontendReady) {
     Write-Host "[WARN] Frontend did not start within 30 seconds."
 } else {
-    $frontendPid | Out-File -FilePath $FrontendPidFile -NoNewline
-    Write-Host "       Frontend ready (PID $frontendPid)"
+    $frontendProc.Id | Out-File -FilePath $FrontendPidFile -NoNewline
+    Write-Host "       Frontend ready (PID $($frontendProc.Id))"
 }
 
-if ($frontendPid) {
+if ($frontendReady) {
     Write-Host "       Opening browser..."
     Start-Process "http://localhost:$FrontendPort"
 }
