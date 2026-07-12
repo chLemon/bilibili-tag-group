@@ -9,6 +9,7 @@ import {
   fetchCreatorVideos,
   fetchTags,
   updateStatus,
+  batchUpdateCreatorVideos,
   Creator,
   Tag,
   VideoDetail,
@@ -29,6 +30,8 @@ import {
   Play,
   Image,
   Film,
+  CheckCheck,
+  Undo2,
 } from "lucide-react";
 
 function formatDuration(seconds: number): string {
@@ -58,6 +61,28 @@ export default function CreatorDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toggling, setToggling] = useState<number | null>(null);
+  const [batchLoading, setBatchLoading] = useState(false);
+
+  async function handleBatchUpdate(status: number, label: string) {
+    if (!window.confirm(`确定将该 UP 主的所有视频标记为${label}？`)) return;
+    setBatchLoading(true);
+    try {
+      await batchUpdateCreatorVideos(id, status);
+      setVideos((prev) =>
+        prev.map((v) => ({ ...v, status }))
+      );
+      if (creator) {
+        setCreator({
+          ...creator,
+          unwatched_count: status === 0 ? creator.video_count : 0,
+        });
+      }
+    } catch (err) {
+      setError(String(err));
+    } finally {
+      setBatchLoading(false);
+    }
+  }
 
   useEffect(() => {
     if (!id) return;
@@ -209,6 +234,34 @@ export default function CreatorDetailPage() {
             )}
           </div>
         </div>
+        {videos.length > 0 && (
+          <div className="detail-header-actions">
+            <button
+              className="btn btn-sm btn-primary"
+              disabled={batchLoading}
+              onClick={() => handleBatchUpdate(1, "已看")}
+            >
+              {batchLoading ? <Loader2 size={14} className="spinner" /> : <CheckCheck size={14} />}
+              一键已看
+            </button>
+            <button
+              className="btn btn-sm btn-danger"
+              disabled={batchLoading}
+              onClick={() => handleBatchUpdate(2, "不看")}
+            >
+              {batchLoading ? <Loader2 size={14} className="spinner" /> : <EyeOff size={14} />}
+              一键不看
+            </button>
+            <button
+              className="btn btn-sm btn-info"
+              disabled={batchLoading}
+              onClick={() => handleBatchUpdate(0, "未看")}
+            >
+              {batchLoading ? <Loader2 size={14} className="spinner" /> : <Undo2 size={14} />}
+              一键未看
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 视频列表 */}
@@ -311,11 +364,11 @@ export default function CreatorDetailPage() {
                 )}
                 {v.status !== 0 && (
                   <button
-                    className="btn btn-sm btn-outline"
+                    className="btn btn-sm btn-info"
                     onClick={() => handleSetStatus(v, 0)}
                     disabled={toggling === v.id}
                   >
-                    撤销
+                    未看
                   </button>
                 )}
               </div>
