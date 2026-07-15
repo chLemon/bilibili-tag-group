@@ -185,6 +185,41 @@ export function createCreator(payload: CreatorCreate): Promise<Creator> {
   });
 }
 
+/** 批量添加请求的单条记录 */
+export interface BatchCreatorItem {
+  uid: string;
+  tag_names: string[];
+  name?: string;
+}
+
+/** 批量添加请求 */
+export interface BatchCreatorRequest {
+  items: BatchCreatorItem[];
+}
+
+/** 单条批量添加结果 */
+export interface BatchCreatorResult {
+  uid: string;
+  success: boolean;
+  creator: Creator | null;
+  error: string | null;
+}
+
+/** 批量添加响应 */
+export interface BatchCreatorResponse {
+  results: BatchCreatorResult[];
+}
+
+/** 批量添加 UP 主 */
+export function batchCreateCreators(
+  payload: BatchCreatorRequest
+): Promise<BatchCreatorResponse> {
+  return request<BatchCreatorResponse>("/api/creators/batch", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 /** 编辑 UP 主 */
 export function updateCreator(
   creatorId: number,

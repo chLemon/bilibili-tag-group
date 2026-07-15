@@ -1,4 +1,5 @@
 """UP 主管理路由。"""
+import re
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -10,7 +11,14 @@ from app.fetcher.playwright_fetcher import PlaywrightBilibiliFetcher, FetchError
 from app.models.creator import Creator
 from app.models.video import Video
 from app.models.video_status import VideoStatus
-from app.schemas.creator import CreatorCreate, CreatorRead, CreatorUpdate
+from app.schemas.creator import (
+    BatchCreatorRequest,
+    BatchCreatorResponse,
+    BatchCreatorResult,
+    CreatorCreate,
+    CreatorRead,
+    CreatorUpdate,
+)
 from app.schemas.video import VideoDetail, VideoStatusUpdate
 from app.services.creator_service import CreatorService
 from app.services.video_service import VideoService
@@ -21,9 +29,18 @@ _video_svc = VideoService()
 _fetcher = PlaywrightBilibiliFetcher(cookie=settings.bilibili_cookie or None)
 
 
+_UID_RE = re.compile(r"space\.bilibili\.com/(\d+)")
+
+
 def _uid_from_profile_url(profile_url: str) -> str:
-    """从 B 站主页 URL 中提取 uid。"""
-    return profile_url.rstrip("/").split("/")[-1]
+    """从 B 站主页 URL 中提取 uid；若已是纯数字 uid 则直接返回。"""
+    trimmed = profile_url.strip()
+    if trimmed.isdigit():
+        return trimmed
+    m = _UID_RE.search(trimmed)
+    if m:
+        return m.group(1)
+    raise ValueError(f"无法从 URL 中提取 UID：{profile_url}")
 
 
 def _to_creator_read(creator) -> CreatorRead:
@@ -59,6 +76,54 @@ def create_creator(
         alias=payload.alias,
     )
     return _to_creator_read(creator)
+
+
+@router.post("/batch", status_code=status.HTTP_200_OK, response_model=BatchCreatorResponse)
+def batch_create_creators(
+    payload: BatchCreatorRequest,
+    db: Annotated[Session, Depends(get_db)],
+) -> BatchCreatorResponse:
+    """批量添加 UP 主。
+
+    每行格式：uid,标签1,标签2
+    前端解析后传入 JSON，后端逐条解析名称、匹配/创建标签并入库。
+    """
+    results: list[BatchCreatorResult] = []
+    for item in payload.items:
+        try:
+            profile_url = f"https://space.bilibili.com/{item.uid}"
+            if item.name:
+                creator_name = item.name
+                avatar_url = None
+            else:
+                try:
+                    info = _fetcher.fetch_creator_info(item.uid)
+                    creator_name = info["name"]
+                    avatar_url = info.get("avatar_url")
+                except FetchError as exc:
+                    results.append(BatchCreatorResult(
+                        uid=item.uid, success=False, error=f"获取 UP 主信息失败：{exc}"
+                    ))
+                    continue
+
+            tags = _creator_svc.find_or_create_tags(db, item.tag_names)
+            tag_ids = [t.id for t in tags]
+
+            creator = _creator_svc.create_creator(
+                db=db,
+                name=creator_name,
+                profile_url=profile_url,
+                tag_ids=tag_ids,
+                avatar_url=avatar_url,
+            )
+            results.append(BatchCreatorResult(
+                uid=item.uid, success=True, creator=_to_creator_read(creator)
+            ))
+        except Exception as exc:
+            results.append(BatchCreatorResult(
+                uid=item.uid, success=False, error=str(exc)
+            ))
+    return BatchCreatorResponse(results=results)
 
 
 @router.get("/resolve-name", response_model=dict)

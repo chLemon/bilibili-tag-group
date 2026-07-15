@@ -14,6 +14,7 @@ import {
 } from "../api/client";
 import {
   Plus,
+  ListPlus,
   Loader2,
   AlertCircle,
   RefreshCw,
@@ -30,6 +31,7 @@ import {
   Film,
 } from "lucide-react";
 import CreatorForm from "../components/CreatorForm";
+import BatchImportModal from "../components/BatchImportModal";
 
 type FormMode =
   | { type: "none" }
@@ -45,6 +47,7 @@ export default function CreatorsPage() {
   const [formMode, setFormMode] = useState<FormMode>({ type: "none" });
   const [submitting, setSubmitting] = useState(false);
   const [filterTagId, setFilterTagId] = useState<number | null>(null);
+  const [showBatchModal, setShowBatchModal] = useState(false);
 
   useEffect(() => {
     Promise.all([fetchCreators(), fetchTags()])
@@ -90,6 +93,12 @@ export default function CreatorsPage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleBatchSuccess(newCreators: Creator[]) {
+    setCreators((prev) => [...prev, ...newCreators]);
+    fetchTags().then(setTags).catch(() => {});
+    setShowBatchModal(false);
   }
 
   async function handleEdit(
@@ -150,12 +159,20 @@ export default function CreatorsPage() {
       {/* 页面标题 */}
       <div className="page-header">
         <h2>UP 主管理</h2>
-        <button
-          className="btn btn-primary"
-          onClick={() => setFormMode({ type: "add" })}
-        >
-          <Plus size={16} /> 添加 UP 主
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            className="btn btn-primary"
+            onClick={() => setFormMode({ type: "add" })}
+          >
+            <Plus size={16} /> 添加 UP 主
+          </button>
+          <button
+            className="btn btn-outline"
+            onClick={() => setShowBatchModal(true)}
+          >
+            <ListPlus size={16} /> 批量添加
+          </button>
+        </div>
       </div>
 
       {/* 统计摘要栏 */}
@@ -396,6 +413,14 @@ export default function CreatorsPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* 批量导入弹窗 */}
+      {showBatchModal && (
+        <BatchImportModal
+          onClose={() => setShowBatchModal(false)}
+          onSuccess={handleBatchSuccess}
+        />
       )}
     </div>
   );

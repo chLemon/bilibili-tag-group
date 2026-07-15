@@ -28,6 +28,18 @@ class CreatorService:
         db.flush()
         return creator
 
+    def find_or_create_tags(self, db: Session, names: list[str]) -> list[Tag]:
+        """根据标签名称列表查找已有标签，不存在的自动创建。"""
+        if not names:
+            return []
+        existing = db.query(Tag).filter(Tag.name.in_(names)).all()
+        existing_names = {t.name for t in existing}
+        new_tags = [Tag(name=n) for n in names if n not in existing_names]
+        if new_tags:
+            db.add_all(new_tags)
+            db.flush()
+        return existing + new_tags
+
     def list_creators(self, db: Session) -> list[Creator]:
         """返回所有 UP 主列表（按 id 升序）。"""
         return db.query(Creator).order_by(Creator.id).all()

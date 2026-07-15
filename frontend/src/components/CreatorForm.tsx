@@ -81,15 +81,19 @@ export default function CreatorForm({
     }
   }
 
-  /** 从 B 站获取 UP 主名称和头像 */
+  /** 从 B 站获取 UP 主名称和头像。支持完整 URL 或纯数字 UID。 */
   async function handleFetchInfo() {
     const trimmed = profileUrl.trim();
     if (!trimmed) return;
 
+    const query = /^\d+$/.test(trimmed)
+      ? `https://space.bilibili.com/${trimmed}`
+      : trimmed;
+
     setNameResolving(true);
     setNameResolveError(null);
     try {
-      const result = await resolveCreatorName(trimmed);
+      const result = await resolveCreatorName(query);
       setName(result.name);
       if (result.avatar_url) setAvatarUrl(result.avatar_url);
     } catch (error) {
