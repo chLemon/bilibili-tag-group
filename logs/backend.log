@@ -1,29 +1,28 @@
-<<<<<<< HEAD
-INFO:     Started server process [7424]
+INFO:     Started server process [26836]
 INFO:     Waiting for application startup.
-2026-07-15 22:57:31 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
-2026-07-15 22:57:31 [INFO] apscheduler.scheduler: Added job "_make_sync_job" to job store "default"
-2026-07-15 22:57:31 [INFO] apscheduler.scheduler: Scheduler started
+2026-07-15 23:09:09 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-07-15 23:09:09 [INFO] apscheduler.scheduler: Added job "_make_sync_job" to job store "default"
+2026-07-15 23:09:09 [INFO] apscheduler.scheduler: Scheduler started
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:8400 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8212 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8220 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
-INFO:     127.0.0.1:9391 - "GET /api/sync/task/current HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6488 - "GET /api/sync/settings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6493 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6492 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6491 - "GET /api/sync/latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:5469 - "GET /api/sync/task/current HTTP/1.1" 200 OK
-INFO:     127.0.0.1:5265 - "GET /api/sync/settings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:5266 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:2566 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:2567 - "GET /api/sync/latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:1750 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:1749 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:5615 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:5133 - "GET /api/creators HTTP/1.1" 200 OK
-2026-07-15 22:58:33 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=178753244
+INFO:     127.0.0.1:10984 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10983 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10985 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10986 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6251 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14116 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11110 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11108 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11116 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7962 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6544 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6546 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1625 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10351 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10354 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10350 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10358 - "GET /api/creators HTTP/1.1" 200 OK
+2026-07-15 23:09:24 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=178753244
 Traceback (most recent call last):
   File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
     info = _fetcher.fetch_creator_info(uid)
@@ -68,7 +67,7 @@ playwright._impl._errors.Error: BrowserType.launch: Executable doesn't exist at 
 ║                                                            ║
 ║ <3 Playwright Team                                         ║
 ╚════════════════════════════════════════════════════════════╝
-2026-07-15 22:58:33 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=29071700
+2026-07-15 23:09:24 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=474417988
 Traceback (most recent call last):
   File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
     info = _fetcher.fetch_creator_info(uid)
@@ -113,8 +112,8 @@ playwright._impl._errors.Error: BrowserType.launch: Executable doesn't exist at 
 ║                                                            ║
 ║ <3 Playwright Team                                         ║
 ╚════════════════════════════════════════════════════════════╝
-INFO:     127.0.0.1:8539 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F178753244 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:33 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=28043
+INFO:     127.0.0.1:9089 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F178753244 HTTP/1.1" 500 Internal Server Error
+2026-07-15 23:09:24 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=29235818
 Traceback (most recent call last):
   File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
     info = _fetcher.fetch_creator_info(uid)
@@ -159,8 +158,8 @@ playwright._impl._errors.Error: BrowserType.launch: Executable doesn't exist at 
 ║                                                            ║
 ║ <3 Playwright Team                                         ║
 ╚════════════════════════════════════════════════════════════╝
-INFO:     127.0.0.1:8542 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F29071700 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:33 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=223305228
+INFO:     127.0.0.1:9090 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F474417988 HTTP/1.1" 500 Internal Server Error
+2026-07-15 23:09:24 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=223305228
 Traceback (most recent call last):
   File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
     info = _fetcher.fetch_creator_info(uid)
@@ -205,403 +204,5 @@ playwright._impl._errors.Error: BrowserType.launch: Executable doesn't exist at 
 ║                                                            ║
 ║ <3 Playwright Team                                         ║
 ╚════════════════════════════════════════════════════════════╝
-INFO:     127.0.0.1:8543 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F28043 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:33 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=29235818
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 99, in _get_browser
-    tl.browser = pw.chromium.launch(headless=headless, args=_BROWSER_ARGS)
-                 ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_generated.py", line 16515, in launch
-    self._sync(
-    ~~~~~~~~~~^
-        self._impl_obj.launch(
-        ^^^^^^^^^^^^^^^^^^^^^^
-    ...<17 lines>...
-        )
-        ^
-    )
-    ^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_sync_base.py", line 115, in _sync
-    return task.result()
-           ~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_browser_type.py", line 97, in launch
-    await self._channel.send(
-        "launch", TimeoutSettings.launch_timeout, params
-    )
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 69, in send
-    return await self._connection.wrap_api_call(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ...<3 lines>...
-    )
-    ^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 563, in wrap_api_call
-    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
-playwright._impl._errors.Error: BrowserType.launch: Executable doesn't exist at C:\Users\55012\AppData\Local\ms-playwright\chromium_headless_shell-1228\chrome-headless-shell-win64\chrome-headless-shell.exe
-╔════════════════════════════════════════════════════════════╗
-║ Looks like Playwright was just installed or updated.       ║
-║ Please run the following command to download new browsers: ║
-║                                                            ║
-║     playwright install                                     ║
-║                                                            ║
-║ <3 Playwright Team                                         ║
-╚════════════════════════════════════════════════════════════╝
-INFO:     127.0.0.1:4410 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F223305228 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:33 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=474417988
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 99, in _get_browser
-    tl.browser = pw.chromium.launch(headless=headless, args=_BROWSER_ARGS)
-                 ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_generated.py", line 16515, in launch
-    self._sync(
-    ~~~~~~~~~~^
-        self._impl_obj.launch(
-        ^^^^^^^^^^^^^^^^^^^^^^
-    ...<17 lines>...
-        )
-        ^
-    )
-    ^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_sync_base.py", line 115, in _sync
-    return task.result()
-           ~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_browser_type.py", line 97, in launch
-    await self._channel.send(
-        "launch", TimeoutSettings.launch_timeout, params
-    )
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 69, in send
-    return await self._connection.wrap_api_call(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ...<3 lines>...
-    )
-    ^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 563, in wrap_api_call
-    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
-playwright._impl._errors.Error: BrowserType.launch: Executable doesn't exist at C:\Users\55012\AppData\Local\ms-playwright\chromium_headless_shell-1228\chrome-headless-shell-win64\chrome-headless-shell.exe
-╔════════════════════════════════════════════════════════════╗
-║ Looks like Playwright was just installed or updated.       ║
-║ Please run the following command to download new browsers: ║
-║                                                            ║
-║     playwright install                                     ║
-║                                                            ║
-║ <3 Playwright Team                                         ║
-╚════════════════════════════════════════════════════════════╝
-INFO:     127.0.0.1:8541 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F29235818 HTTP/1.1" 500 Internal Server Error
-INFO:     127.0.0.1:8540 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F474417988 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:34 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=4450838
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 97, in _get_browser
-    pw = sync_playwright().start()
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 84, in start
-    return self.__enter__()
-           ~~~~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 47, in __enter__
-                raise Error(
-    ...<2 lines>...
-                )
-playwright._impl._errors.Error: It looks like you are using Playwright Sync API inside the asyncio loop.
-Please use the Async API instead.
-INFO:     127.0.0.1:7598 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F4450838 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:34 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=1263688319
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 97, in _get_browser
-    pw = sync_playwright().start()
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 84, in start
-    return self.__enter__()
-           ~~~~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 47, in __enter__
-                raise Error(
-    ...<2 lines>...
-                )
-playwright._impl._errors.Error: It looks like you are using Playwright Sync API inside the asyncio loop.
-Please use the Async API instead.
-INFO:     127.0.0.1:7597 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F1263688319 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:34 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=1966711850
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 97, in _get_browser
-    pw = sync_playwright().start()
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 84, in start
-    return self.__enter__()
-           ~~~~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 47, in __enter__
-                raise Error(
-    ...<2 lines>...
-                )
-playwright._impl._errors.Error: It looks like you are using Playwright Sync API inside the asyncio loop.
-Please use the Async API instead.
-2026-07-15 22:58:34 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=31786758
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 97, in _get_browser
-    pw = sync_playwright().start()
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 84, in start
-    return self.__enter__()
-           ~~~~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 47, in __enter__
-                raise Error(
-    ...<2 lines>...
-                )
-playwright._impl._errors.Error: It looks like you are using Playwright Sync API inside the asyncio loop.
-Please use the Async API instead.
-INFO:     127.0.0.1:7599 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F1966711850 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:34 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=123764244
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 97, in _get_browser
-    pw = sync_playwright().start()
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 84, in start
-    return self.__enter__()
-           ~~~~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 47, in __enter__
-                raise Error(
-    ...<2 lines>...
-                )
-playwright._impl._errors.Error: It looks like you are using Playwright Sync API inside the asyncio loop.
-Please use the Async API instead.
-INFO:     127.0.0.1:7602 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F31786758 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:34 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=702812589
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 97, in _get_browser
-    pw = sync_playwright().start()
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 84, in start
-    return self.__enter__()
-           ~~~~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 47, in __enter__
-                raise Error(
-    ...<2 lines>...
-                )
-playwright._impl._errors.Error: It looks like you are using Playwright Sync API inside the asyncio loop.
-Please use the Async API instead.
-INFO:     127.0.0.1:7600 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F123764244 HTTP/1.1" 500 Internal Server Error
-INFO:     127.0.0.1:7601 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F702812589 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:34 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=485297541
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 97, in _get_browser
-    pw = sync_playwright().start()
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 84, in start
-    return self.__enter__()
-           ~~~~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 47, in __enter__
-                raise Error(
-    ...<2 lines>...
-                )
-playwright._impl._errors.Error: It looks like you are using Playwright Sync API inside the asyncio loop.
-Please use the Async API instead.
-2026-07-15 22:58:34 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=3493094005672344
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 97, in _get_browser
-    pw = sync_playwright().start()
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 84, in start
-    return self.__enter__()
-           ~~~~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 47, in __enter__
-                raise Error(
-    ...<2 lines>...
-                )
-playwright._impl._errors.Error: It looks like you are using Playwright Sync API inside the asyncio loop.
-Please use the Async API instead.
-INFO:     127.0.0.1:13909 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F485297541 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:34 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=341141386
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 97, in _get_browser
-    pw = sync_playwright().start()
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 84, in start
-    return self.__enter__()
-           ~~~~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 47, in __enter__
-                raise Error(
-    ...<2 lines>...
-                )
-playwright._impl._errors.Error: It looks like you are using Playwright Sync API inside the asyncio loop.
-Please use the Async API instead.
-INFO:     127.0.0.1:13910 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F3493094005672344 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:34 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=8697041
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 97, in _get_browser
-    pw = sync_playwright().start()
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 84, in start
-    return self.__enter__()
-           ~~~~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 47, in __enter__
-                raise Error(
-    ...<2 lines>...
-                )
-playwright._impl._errors.Error: It looks like you are using Playwright Sync API inside the asyncio loop.
-Please use the Async API instead.
-INFO:     127.0.0.1:13913 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F341141386 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:34 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=482254585
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 97, in _get_browser
-    pw = sync_playwright().start()
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 84, in start
-    return self.__enter__()
-           ~~~~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 47, in __enter__
-                raise Error(
-    ...<2 lines>...
-                )
-playwright._impl._errors.Error: It looks like you are using Playwright Sync API inside the asyncio loop.
-Please use the Async API instead.
-INFO:     127.0.0.1:13915 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F8697041 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:34 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=289455483
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 97, in _get_browser
-    pw = sync_playwright().start()
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 84, in start
-    return self.__enter__()
-           ~~~~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 47, in __enter__
-                raise Error(
-    ...<2 lines>...
-                )
-playwright._impl._errors.Error: It looks like you are using Playwright Sync API inside the asyncio loop.
-Please use the Async API instead.
-INFO:     127.0.0.1:13908 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F482254585 HTTP/1.1" 500 Internal Server Error
-INFO:     127.0.0.1:13916 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F289455483 HTTP/1.1" 500 Internal Server Error
-2026-07-15 22:58:34 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=7824567
-Traceback (most recent call last):
-  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
-    info = _fetcher.fetch_creator_info(uid)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 301, in fetch_creator_info
-    context = self._create_context()
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 123, in _create_context
-    browser = self._get_browser(self._headless)
-  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 97, in _get_browser
-    pw = sync_playwright().start()
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 84, in start
-    return self.__enter__()
-           ~~~~~~~~~~~~~~^^
-  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\sync_api\_context_manager.py", line 47, in __enter__
-                raise Error(
-    ...<2 lines>...
-                )
-playwright._impl._errors.Error: It looks like you are using Playwright Sync API inside the asyncio loop.
-Please use the Async API instead.
-INFO:     127.0.0.1:5207 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F7824567 HTTP/1.1" 500 Internal Server Error
-INFO:     127.0.0.1:6025 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3424 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:14852 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3102 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:1257 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8790 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:1766 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6155 - "GET /api/sync/settings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6159 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6154 - "GET /api/sync/task/current HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6157 - "GET /api/sync/latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6158 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:1210 - "GET /api/sync/settings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:5485 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:5482 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:5483 - "GET /api/sync/task/current HTTP/1.1" 200 OK
-INFO:     127.0.0.1:5484 - "GET /api/sync/latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6557 - "POST /api/sync/run HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6163 - "GET /api/sync/task/current HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10352 - "GET /api/sync/latest HTTP/1.1" 200 OK
-=======
-INFO:     Started server process [11248]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:8837 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8839 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8841 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3184 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3186 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3182 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6104 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3779 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F223305228 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:14323 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:14322 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:1608 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:1607 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10747 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10751 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10745 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10749 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:14117 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:14120 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:14116 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:14118 - "GET /api/creators HTTP/1.1" 200 OK
->>>>>>> 81b1f48a4f755eea793c35befdda57a0315ea885
+INFO:     127.0.0.1:9091 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F29235818 HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:9088 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F223305228 HTTP/1.1" 500 Internal Server Error
