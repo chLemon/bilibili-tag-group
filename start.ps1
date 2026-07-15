@@ -110,7 +110,7 @@ Write-Host "       Migration OK"
 
 Write-Host "[5/6] Checking Playwright browsers..."
 $PlaywrightExe = Join-Path $PSScriptRoot ".venv\Scripts\playwright.exe"
-& $PlaywrightExe install chromium 2>&1 | Out-Null
+& $PlaywrightExe install chromium 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[WARN] Playwright browser install failed. resolve-name will not work."
 } else {
