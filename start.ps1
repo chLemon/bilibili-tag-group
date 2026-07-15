@@ -110,17 +110,11 @@ Write-Host "       Migration OK"
 
 Write-Host "[5/6] Checking Playwright browsers..."
 $PlaywrightExe = Join-Path $PSScriptRoot ".venv\Scripts\playwright.exe"
-$MsPlaywrightDir = Join-Path $env:LOCALAPPDATA "ms-playwright"
-if (-not (Test-Path $MsPlaywrightDir)) {
-    Write-Host "       Chromium browser not found, installing..."
-    & $PlaywrightExe install chromium 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[WARN] Playwright browser install failed. resolve-name will not work."
-    } else {
-        Write-Host "       Playwright chromium installed."
-    }
+& $PlaywrightExe install chromium 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[WARN] Playwright browser install failed. resolve-name will not work."
 } else {
-    Write-Host "       Playwright browsers found."
+    Write-Host "       Playwright chromium OK."
 }
 
 # 清空旧日志
