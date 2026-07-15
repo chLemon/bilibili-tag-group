@@ -1,4 +1,5 @@
 """同步路由：查询最近同步状态、手动触发全量同步、查询调度配置、管理立即同步标签。"""
+import logging
 from typing import Annotated, Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,6 +13,8 @@ from app.models.sync_task import SyncTask
 from app.models.tag_sync_config import TagSyncConfig
 from app.schemas.sync import SyncLogRead, SyncTaskRead
 from app.services.sync_service import SyncService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/sync", tags=["sync"])
 _sync_svc = SyncService(fetcher=PlaywrightBilibiliFetcher(cookie=settings.bilibili_cookie or None))

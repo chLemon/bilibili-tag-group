@@ -1,9 +1,12 @@
 """UP 主管理路由。"""
+import logging
 import re
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.config import settings
 from app.dependencies import get_db
@@ -101,6 +104,7 @@ def batch_create_creators(
                     creator_name = info["name"]
                     avatar_url = info.get("avatar_url")
                 except FetchError as exc:
+                    logger.exception("批量添加-获取 UP 主信息失败 uid=%s", item.uid)
                     results.append(BatchCreatorResult(
                         uid=item.uid, success=False, error=f"获取 UP 主信息失败：{exc}"
                     ))
@@ -120,6 +124,7 @@ def batch_create_creators(
                 uid=item.uid, success=True, creator=_to_creator_read(creator)
             ))
         except Exception as exc:
+            logger.exception("批量添加 UP 主失败 uid=%s", item.uid)
             results.append(BatchCreatorResult(
                 uid=item.uid, success=False, error=str(exc)
             ))
@@ -133,9 +138,16 @@ def resolve_creator_name(profile_url: str) -> dict:
     try:
         info = _fetcher.fetch_creator_info(uid)
     except FetchError as exc:
+        logger.exception("解析 UP 主名称失败 uid=%s", uid)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=str(exc),
+        ) from exc
+    except Exception as exc:
+        logger.exception("解析 UP 主名称失败 uid=%s", uid)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"解析失败，请确认已运行 playwright install chromium：{exc}",
         ) from exc
     return {"name": info["name"], "avatar_url": info.get("avatar_url")}
 

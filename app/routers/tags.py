@@ -1,4 +1,5 @@
 """标签路由：标签列表与标签下未看视频。"""
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
@@ -8,6 +9,8 @@ from app.dependencies import get_db
 from app.schemas.tag import TagCreate, TagRead
 from app.schemas.video import VideoRead
 from app.services.tag_service import TagService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/tags", tags=["tags"])
 _tag_svc = TagService()

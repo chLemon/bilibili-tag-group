@@ -1,9 +1,13 @@
 """FastAPI 应用入口：注册路由，通过 lifespan 管理定时同步调度器生命周期。"""
 import logging
+import sys
 from contextlib import asynccontextmanager
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from collections.abc import AsyncGenerator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import SessionLocal, run_migrations
@@ -14,6 +18,32 @@ from app.routers.videos import router as videos_router
 from app.scheduler import build_scheduler
 from app.fetcher.playwright_fetcher import PlaywrightBilibiliFetcher
 from app.services.sync_service import SyncService
+
+# ── 日志配置 ──────────────────────────────────────────────────────
+
+LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
+_file_handler = RotatingFileHandler(
+    LOG_DIR / "app.log",
+    maxBytes=10 * 1024 * 1024,  # 10MB
+    backupCount=5,
+    encoding="utf-8",
+)
+_file_handler.setFormatter(logging.Formatter(
+    "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+))
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.StreamHandler(sys.stderr),
+        _file_handler,
+    ],
+)
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +96,20 @@ app.include_router(creators_router)
 app.include_router(tags_router)
 app.include_router(videos_router)
 app.include_router(sync_router)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """全局异常处理器：记录完整堆栈到日志文件后返回 500。"""
+    logger.exception(
+        "未捕获的异常: %s %s",
+        request.method,
+        request.url.path,
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "服务器内部错误，请查看日志"},
+    )
 
 
 @app.get("/health")
