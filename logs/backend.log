@@ -1,71 +1,102 @@
-<<<<<<< HEAD
-INFO:     Started server process [28676]
+INFO:     Started server process [23096]
 INFO:     Waiting for application startup.
-2026-07-16 00:28:54 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
-2026-07-16 00:28:54 [INFO] apscheduler.scheduler: Added job "_make_sync_job" to job store "default"
-2026-07-16 00:28:54 [INFO] apscheduler.scheduler: Scheduler started
+2026-07-16 00:57:18 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-07-16 00:57:18 [INFO] apscheduler.scheduler: Added job "_make_sync_job" to job store "default"
+2026-07-16 00:57:18 [INFO] apscheduler.scheduler: Scheduler started
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:7363 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:7365 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:7367 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
-INFO:     127.0.0.1:7371 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:7373 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:7370 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:1533 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8716 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:9488 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8715 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:7600 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:4845 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:4847 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:4844 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:7407 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3551 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3553 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3549 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:13310 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:1534 - "GET /api/sync/settings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:1533 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:7555 - "GET /api/sync/task/current HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8691 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8690 - "GET /api/sync/latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8326 - "GET /api/sync/settings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8329 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8330 - "GET /api/sync/task/current HTTP/1.1" 200 OK
-INFO:     127.0.0.1:14770 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:14771 - "GET /api/sync/latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6577 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6576 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:2808 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10418 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:1455 - "GET /api/sync/task/current HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3287 - "GET /api/sync/settings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3290 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3289 - "GET /api/sync/latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3291 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3292 - "GET /api/sync/task/current HTTP/1.1" 200 OK
-INFO:     127.0.0.1:7402 - "GET /api/sync/settings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:7403 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:7404 - "GET /api/sync/latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:7405 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:11616 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:11614 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:5831 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:3642 - "GET /api/creators HTTP/1.1" 200 OK
-=======
-INFO:     Started server process [21768]
-INFO:     Waiting for application startup.
-2026-07-16 00:30:30 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
-2026-07-16 00:30:30 [INFO] apscheduler.scheduler: Added job "_make_sync_job" to job store "default"
-2026-07-16 00:30:30 [INFO] apscheduler.scheduler: Scheduler started
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:8407 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8409 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8411 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6642 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6644 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6641 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10339 - "GET /api/creators HTTP/1.1" 200 OK
->>>>>>> 8083a4bee4013fcc89f57730c894828d5d470ae8
+INFO:     127.0.0.1:6037 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6039 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6041 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4872 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2991 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1871 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11160 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7185 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10867 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10868 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10869 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5504 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10870 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8148 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8151 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8150 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10051 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8884 - "POST /api/sync/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1248 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4049 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5066 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9166 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12468 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4705 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4706 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4708 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4707 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3808 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12040 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12043 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12041 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12042 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6561 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9026 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:01:12 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 36 个视频，累计 36 个
+INFO:     127.0.0.1:4876 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7413 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2844 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9468 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2006 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1639 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9706 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14597 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2800 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8947 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3096 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4865 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5883 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11814 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4128 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12028 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12736 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12736 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10411 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3986 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4536 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6484 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7339 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:02:20 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个
+INFO:     127.0.0.1:9414 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10238 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5930 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10845 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3521 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13263 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9343 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5519 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13510 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7510 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3779 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9946 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:02:58 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个
+INFO:     127.0.0.1:5510 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8798 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:03:05 [INFO] app.fetcher.playwright_fetcher: 第 2 页，当页 42 个视频，累计 42 个
+INFO:     127.0.0.1:8921 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4920 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5448 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:03:12 [INFO] app.fetcher.playwright_fetcher: 第 3 页，当页 42 个视频，累计 84 个
+INFO:     127.0.0.1:3790 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2945 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:03:18 [INFO] app.fetcher.playwright_fetcher: 第 4 页，当页 42 个视频，累计 126 个
+INFO:     127.0.0.1:6011 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13271 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:03:24 [INFO] app.fetcher.playwright_fetcher: 第 5 页，当页 33 个视频，累计 159 个
+INFO:     127.0.0.1:6647 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6762 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2993 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12501 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9187 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8781 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11464 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10528 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9368 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10530 - "GET /api/creators HTTP/1.1" 200 OK
