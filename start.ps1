@@ -108,6 +108,10 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host "       Migration OK"
 
+# 清空旧日志
+Get-ChildItem -Path $LogDir -Filter "*.log" -ErrorAction SilentlyContinue |
+    ForEach-Object { Clear-Content -Path $_.FullName -Force }
+
 # ============================================================
 # 启动服务
 # ============================================================
