@@ -1,28 +1,41 @@
-INFO:     Started server process [26836]
+INFO:     Started server process [17252]
 INFO:     Waiting for application startup.
-2026-07-15 23:09:09 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
-2026-07-15 23:09:09 [INFO] apscheduler.scheduler: Added job "_make_sync_job" to job store "default"
-2026-07-15 23:09:09 [INFO] apscheduler.scheduler: Scheduler started
+2026-07-15 23:29:27 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-07-15 23:29:27 [INFO] apscheduler.scheduler: Added job "_make_sync_job" to job store "default"
+2026-07-15 23:29:27 [INFO] apscheduler.scheduler: Scheduler started
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:10984 - "GET /api/sync/settings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10983 - "GET /api/sync/task/current HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10985 - "GET /api/sync/latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10986 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6251 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:14116 - "GET /api/sync/settings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:11110 - "GET /api/sync/task/current HTTP/1.1" 200 OK
-INFO:     127.0.0.1:11108 - "GET /api/sync/latest HTTP/1.1" 200 OK
-INFO:     127.0.0.1:11116 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:7962 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6544 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6546 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:1625 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10351 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10354 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10350 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10358 - "GET /api/creators HTTP/1.1" 200 OK
-2026-07-15 23:09:24 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=178753244
+INFO:     127.0.0.1:9677 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9679 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9681 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9680 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9684 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6917 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9374 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7881 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2849 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2850 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1136 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3646 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3647 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4185 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7303 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7304 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7306 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3018 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10851 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10853 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10852 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10854 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12176 - "POST /api/sync/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7645 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3235 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13910 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3614 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13298 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12785 - "GET /api/tags HTTP/1.1" 200 OK
+2026-07-15 23:31:36 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=178753244
 Traceback (most recent call last):
   File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
     info = _fetcher.fetch_creator_info(uid)
@@ -67,7 +80,7 @@ playwright._impl._errors.Error: BrowserType.launch: Executable doesn't exist at 
 ║                                                            ║
 ║ <3 Playwright Team                                         ║
 ╚════════════════════════════════════════════════════════════╝
-2026-07-15 23:09:24 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=474417988
+2026-07-15 23:31:36 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=474417988
 Traceback (most recent call last):
   File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
     info = _fetcher.fetch_creator_info(uid)
@@ -112,8 +125,8 @@ playwright._impl._errors.Error: BrowserType.launch: Executable doesn't exist at 
 ║                                                            ║
 ║ <3 Playwright Team                                         ║
 ╚════════════════════════════════════════════════════════════╝
-INFO:     127.0.0.1:9089 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F178753244 HTTP/1.1" 500 Internal Server Error
-2026-07-15 23:09:24 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=29235818
+INFO:     127.0.0.1:5253 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F178753244 HTTP/1.1" 500 Internal Server Error
+2026-07-15 23:31:36 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=223305228
 Traceback (most recent call last):
   File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
     info = _fetcher.fetch_creator_info(uid)
@@ -158,8 +171,8 @@ playwright._impl._errors.Error: BrowserType.launch: Executable doesn't exist at 
 ║                                                            ║
 ║ <3 Playwright Team                                         ║
 ╚════════════════════════════════════════════════════════════╝
-INFO:     127.0.0.1:9090 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F474417988 HTTP/1.1" 500 Internal Server Error
-2026-07-15 23:09:24 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=223305228
+INFO:     127.0.0.1:5254 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F474417988 HTTP/1.1" 500 Internal Server Error
+2026-07-15 23:31:36 [ERROR] app.routers.creators: 解析 UP 主名称失败 uid=29235818
 Traceback (most recent call last):
   File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 139, in resolve_creator_name
     info = _fetcher.fetch_creator_info(uid)
@@ -204,5 +217,5 @@ playwright._impl._errors.Error: BrowserType.launch: Executable doesn't exist at 
 ║                                                            ║
 ║ <3 Playwright Team                                         ║
 ╚════════════════════════════════════════════════════════════╝
-INFO:     127.0.0.1:9091 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F29235818 HTTP/1.1" 500 Internal Server Error
-INFO:     127.0.0.1:9088 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F223305228 HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:5251 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F223305228 HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:5255 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F29235818 HTTP/1.1" 500 Internal Server Error
