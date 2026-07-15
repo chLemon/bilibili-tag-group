@@ -41,13 +41,13 @@ Write-Host "============================================"
 Write-Host "  Bilibili Tag Group Launcher"
 Write-Host "============================================"
 
-Write-Host "[1/4] Checking Node.js..."
+Write-Host "[1/6] Checking Node.js..."
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
     Write-Host "[ERROR] Node.js not found."
     exit 1
 }
 
-Write-Host "[2/4] Checking Python..."
+Write-Host "[2/6] Checking Python..."
 $PythonExe = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
 if (-not (Test-Path $PythonExe)) {
     Write-Host "       .venv not found, creating..."
@@ -84,7 +84,7 @@ if (-not (Test-Path $PythonExe)) {
     Write-Host "       .venv created and dependencies installed."
 }
 
-Write-Host "[3/5] Checking private-data directory..."
+Write-Host "[3/6] Checking private-data directory..."
 $PrivateDataDir = Join-Path $PSScriptRoot "..\private-data\bilibili-tag-group"
 if (-not (Test-Path $PrivateDataDir)) {
     Write-Host "       Creating $PrivateDataDir ..."
@@ -97,7 +97,7 @@ if (Test-Path $DbFile) {
     Write-Host "       Database not found, will be created on first run: $DbFile"
 }
 
-Write-Host "[4/5] Database migration..."
+Write-Host "[4/6] Database migration..."
 $AlembicExe = Join-Path $PSScriptRoot ".venv\Scripts\alembic.exe"
 $MigrationLog = Join-Path $LogDir "migration.log"
 & $AlembicExe upgrade head 2>&1 | Out-File -FilePath $MigrationLog -Encoding UTF8
@@ -108,6 +108,21 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host "       Migration OK"
 
+Write-Host "[5/6] Checking Playwright browsers..."
+$PlaywrightExe = Join-Path $PSScriptRoot ".venv\Scripts\playwright.exe"
+$MsPlaywrightDir = Join-Path $env:LOCALAPPDATA "ms-playwright"
+if (-not (Test-Path $MsPlaywrightDir)) {
+    Write-Host "       Chromium browser not found, installing..."
+    & $PlaywrightExe install chromium 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[WARN] Playwright browser install failed. resolve-name will not work."
+    } else {
+        Write-Host "       Playwright chromium installed."
+    }
+} else {
+    Write-Host "       Playwright browsers found."
+}
+
 # 清空旧日志
 Get-ChildItem -Path $LogDir -Filter "*.log" -ErrorAction SilentlyContinue |
     ForEach-Object { Clear-Content -Path $_.FullName -Force }
@@ -115,7 +130,7 @@ Get-ChildItem -Path $LogDir -Filter "*.log" -ErrorAction SilentlyContinue |
 # ============================================================
 # 启动服务
 # ============================================================
-Write-Host "[5/5] Starting services..."
+Write-Host "[6/6] Starting services..."
 
 $UvicornExe = Join-Path $PSScriptRoot ".venv\Scripts\uvicorn.exe"
 $FrontendDir = Join-Path $PSScriptRoot "frontend"
