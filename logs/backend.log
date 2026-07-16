@@ -1,23 +1,102 @@
-INFO:     Started server process [21768]
+INFO:     Started server process [23096]
 INFO:     Waiting for application startup.
-2026-07-16 00:30:30 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
-2026-07-16 00:30:30 [INFO] apscheduler.scheduler: Added job "_make_sync_job" to job store "default"
-2026-07-16 00:30:30 [INFO] apscheduler.scheduler: Scheduler started
+2026-07-16 00:57:18 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-07-16 00:57:18 [INFO] apscheduler.scheduler: Added job "_make_sync_job" to job store "default"
+2026-07-16 00:57:18 [INFO] apscheduler.scheduler: Scheduler started
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:8407 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8409 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:8411 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6642 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6644 - "GET /api/tags HTTP/1.1" 200 OK
-INFO:     127.0.0.1:6641 - "GET /api/creators HTTP/1.1" 200 OK
-INFO:     127.0.0.1:10339 - "GET /api/creators HTTP/1.1" 200 OK
-2026-07-16 01:30:30 [INFO] apscheduler.executors.default: Running job "_make_sync_job (trigger: interval[1:00:00], next run at: 2026-07-16 01:30:30 CST)" (scheduled at 2026-07-16 01:30:30.810939+08:00)
-2026-07-16 01:30:53 [INFO] app.fetcher.playwright_fetcher: µÚ 1 Ò³£¬µ±Ò³ 36 ¸öÊÓÆµ£¬ÀÛ¼Æ 36 ¸ö
-2026-07-16 01:32:14 [INFO] app.fetcher.playwright_fetcher: µÚ 1 Ò³£¬µ±Ò³ 42 ¸öÊÓÆµ£¬ÀÛ¼Æ 42 ¸ö
-2026-07-16 01:32:37 [INFO] app.fetcher.playwright_fetcher: µÚ 1 Ò³£¬µ±Ò³ 42 ¸öÊÓÆµ£¬ÀÛ¼Æ 42 ¸ö
-2026-07-16 01:32:41 [INFO] app.fetcher.playwright_fetcher: µÚ 2 Ò³£¬µ±Ò³ 42 ¸öÊÓÆµ£¬ÀÛ¼Æ 42 ¸ö
-2026-07-16 01:32:47 [INFO] app.fetcher.playwright_fetcher: µÚ 3 Ò³£¬µ±Ò³ 42 ¸öÊÓÆµ£¬ÀÛ¼Æ 42 ¸ö
-2026-07-16 01:32:52 [INFO] app.fetcher.playwright_fetcher: µÚ 4 Ò³£¬µ±Ò³ 42 ¸öÊÓÆµ£¬ÀÛ¼Æ 84 ¸ö
-2026-07-16 01:32:57 [INFO] app.fetcher.playwright_fetcher: µÚ 5 Ò³£¬µ±Ò³ 42 ¸öÊÓÆµ£¬ÀÛ¼Æ 84 ¸ö
-2026-07-16 01:32:57 [INFO] apscheduler.executors.default: Job "_make_sync_job (trigger: interval[1:00:00], next run at: 2026-07-16 02:30:30 CST)" executed successfully
+INFO:     127.0.0.1:6037 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6039 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6041 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4872 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2991 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1871 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11160 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7185 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10867 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10868 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10869 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5504 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10870 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8148 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8151 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8150 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10051 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8884 - "POST /api/sync/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1248 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4049 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5066 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9166 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12468 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4705 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4706 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4708 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4707 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3808 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12040 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12043 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12041 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12042 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6561 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9026 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:01:12 [INFO] app.fetcher.playwright_fetcher: ï¿½ï¿½ 1 Ò³ï¿½ï¿½ï¿½ï¿½Ò³ 36 ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Û¼ï¿½ 36 ï¿½ï¿½
+INFO:     127.0.0.1:4876 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7413 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2844 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9468 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2006 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1639 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9706 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14597 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2800 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8947 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3096 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4865 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5883 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11814 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4128 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12028 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12736 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12736 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10411 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3986 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4536 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6484 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7339 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:02:20 [INFO] app.fetcher.playwright_fetcher: ï¿½ï¿½ 1 Ò³ï¿½ï¿½ï¿½ï¿½Ò³ 42 ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Û¼ï¿½ 42 ï¿½ï¿½
+INFO:     127.0.0.1:9414 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10238 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5930 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10845 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3521 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13263 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9343 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5519 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13510 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7510 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3779 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9946 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:02:58 [INFO] app.fetcher.playwright_fetcher: ï¿½ï¿½ 1 Ò³ï¿½ï¿½ï¿½ï¿½Ò³ 42 ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Û¼ï¿½ 42 ï¿½ï¿½
+INFO:     127.0.0.1:5510 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8798 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:03:05 [INFO] app.fetcher.playwright_fetcher: ï¿½ï¿½ 2 Ò³ï¿½ï¿½ï¿½ï¿½Ò³ 42 ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Û¼ï¿½ 42 ï¿½ï¿½
+INFO:     127.0.0.1:8921 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4920 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5448 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:03:12 [INFO] app.fetcher.playwright_fetcher: ï¿½ï¿½ 3 Ò³ï¿½ï¿½ï¿½ï¿½Ò³ 42 ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Û¼ï¿½ 84 ï¿½ï¿½
+INFO:     127.0.0.1:3790 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2945 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:03:18 [INFO] app.fetcher.playwright_fetcher: ï¿½ï¿½ 4 Ò³ï¿½ï¿½ï¿½ï¿½Ò³ 42 ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Û¼ï¿½ 126 ï¿½ï¿½
+INFO:     127.0.0.1:6011 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13271 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-16 01:03:24 [INFO] app.fetcher.playwright_fetcher: ï¿½ï¿½ 5 Ò³ï¿½ï¿½ï¿½ï¿½Ò³ 33 ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Û¼ï¿½ 159 ï¿½ï¿½
+INFO:     127.0.0.1:6647 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6762 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2993 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12501 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9187 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8781 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11464 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10528 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9368 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10530 - "GET /api/creators HTTP/1.1" 200 OK
