@@ -12,3 +12,12 @@ INFO:     127.0.0.1:6642 - "GET /api/tags HTTP/1.1" 200 OK
 INFO:     127.0.0.1:6644 - "GET /api/tags HTTP/1.1" 200 OK
 INFO:     127.0.0.1:6641 - "GET /api/creators HTTP/1.1" 200 OK
 INFO:     127.0.0.1:10339 - "GET /api/creators HTTP/1.1" 200 OK
+2026-07-16 01:30:30 [INFO] apscheduler.executors.default: Running job "_make_sync_job (trigger: interval[1:00:00], next run at: 2026-07-16 01:30:30 CST)" (scheduled at 2026-07-16 01:30:30.810939+08:00)
+2026-07-16 01:30:53 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 36 个视频，累计 36 个
+2026-07-16 01:32:14 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个
+2026-07-16 01:32:37 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个
+2026-07-16 01:32:41 [INFO] app.fetcher.playwright_fetcher: 第 2 页，当页 42 个视频，累计 42 个
+2026-07-16 01:32:47 [INFO] app.fetcher.playwright_fetcher: 第 3 页，当页 42 个视频，累计 42 个
+2026-07-16 01:32:52 [INFO] app.fetcher.playwright_fetcher: 第 4 页，当页 42 个视频，累计 84 个
+2026-07-16 01:32:57 [INFO] app.fetcher.playwright_fetcher: 第 5 页，当页 42 个视频，累计 84 个
+2026-07-16 01:32:57 [INFO] apscheduler.executors.default: Job "_make_sync_job (trigger: interval[1:00:00], next run at: 2026-07-16 02:30:30 CST)" executed successfully
