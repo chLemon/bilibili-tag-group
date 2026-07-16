@@ -1,6 +1,6 @@
 """测试抓取层：PlaywrightBilibiliFetcher 与 FetchedVideo 标准化逻辑。"""
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -84,28 +84,30 @@ class TestParseCard:
             m = MagicMock()
             if selector == "a":
                 mock_link = MagicMock()
-                mock_link.get_attribute.return_value = (
+                mock_link.get_attribute = AsyncMock(return_value=(
                     f"https://www.bilibili.com/video/{bvid}?spm_id_from=xxx"
-                )
+                ))
                 m.first = mock_link
             elif "bili-video-card__title" in selector:
-                m.text_content.return_value = title
+                m.text_content = AsyncMock(return_value=title)
             elif "bili-video-card__subtitle" in selector:
-                m.text_content.return_value = date_str
+                m.text_content = AsyncMock(return_value=date_str)
             elif "bili-cover-card__stat" in selector:
-                m.count.return_value = 3
+                m.count = AsyncMock(return_value=3)
                 m_dur = MagicMock()
-                m_dur.text_content.return_value = duration_str
-                m.nth.return_value = m_dur
+                m_dur.text_content = AsyncMock(return_value=duration_str)
+                m.nth = MagicMock(return_value=m_dur)
+            elif "bili-video-card__cover" in selector:
+                m.count = AsyncMock(return_value=0)
             return m
 
         card.locator.side_effect = locator_side_effect
 
         return card
 
-    def test_basic_conversion(self):
+    async def test_basic_conversion(self):
         card = self._make_card_mock()
-        video = _parse_card(card)
+        video = await _parse_card(card)
         assert video is not None
         assert video.bvid == "BV1xx411c7mD"
         assert video.title == "测试视频"
@@ -114,19 +116,19 @@ class TestParseCard:
         assert video.published_at == datetime(2023, 11, 15)
         assert video.published_at.tzinfo is None
 
-    def test_no_bvid_returns_none(self):
+    async def test_no_bvid_returns_none(self):
         card = MagicMock()
 
         def locator_side_effect(selector):
             m = MagicMock()
             if selector == "a":
                 mock_link = MagicMock()
-                mock_link.get_attribute.return_value = "https://space.bilibili.com/546195"
+                mock_link.get_attribute = AsyncMock(return_value="https://space.bilibili.com/546195")
                 m.first = mock_link
             return m
 
         card.locator.side_effect = locator_side_effect
-        assert _parse_card(card) is None
+        assert await _parse_card(card) is None
 
 
 class TestFetchedVideo:
@@ -152,21 +154,38 @@ class TestPlaywrightBilibiliFetcher:
     """测试 PlaywrightBilibiliFetcher 方法（mock 浏览器部分）。"""
 
     @staticmethod
+    def _make_mock_locator(text="", count_val=0):
+        """构造一个支持异步 locator 方法的 mock。"""
+        m = MagicMock()
+        m.text_content = AsyncMock(return_value=text)
+        m.get_attribute = AsyncMock(return_value="")
+        m.count = AsyncMock(return_value=count_val)
+        m.first = m
+        m.nth = MagicMock(return_value=m)
+        return m
+
+    @staticmethod
     def _make_mock_context():
-        """构造 mock context/page。"""
+        """构造 mock context/page，所有 Playwright 方法均为 AsyncMock。"""
         mock_page = MagicMock()
+        mock_page.goto = AsyncMock()
+        mock_page.close = AsyncMock()
+        mock_page.wait_for_selector = AsyncMock()
+        mock_page.locator = MagicMock(return_value=TestPlaywrightBilibiliFetcher._make_mock_locator())
+        mock_page.reload = AsyncMock()
         mock_context = MagicMock()
-        mock_context.new_page.return_value = mock_page
+        mock_context.close = AsyncMock()
+        mock_context.new_page = AsyncMock(return_value=mock_page)
         return mock_context, mock_page
 
-    def test_fetch_videos_success(self):
+    async def test_fetch_videos_success(self):
         mock_ctx, mock_page = self._make_mock_context()
 
-        with patch.object(PlaywrightBilibiliFetcher, "_create_context", return_value=mock_ctx), \
+        with patch.object(PlaywrightBilibiliFetcher, "_create_context", new_callable=AsyncMock, return_value=mock_ctx), \
              patch.object(PlaywrightBilibiliFetcher, "_get_cached", return_value=None), \
              patch.object(PlaywrightBilibiliFetcher, "_set_cache"), \
-             patch.object(PlaywrightBilibiliFetcher, "_wait_for_cards", return_value=True), \
-             patch.object(PlaywrightBilibiliFetcher, "_extract_all_pages") as mock_extract:
+             patch.object(PlaywrightBilibiliFetcher, "_wait_for_cards", new_callable=AsyncMock, return_value=True), \
+             patch.object(PlaywrightBilibiliFetcher, "_extract_all_pages", new_callable=AsyncMock) as mock_extract:
             mock_extract.return_value = [
                 FetchedVideo(
                     bvid="BV1xx411c7mD",
@@ -177,72 +196,80 @@ class TestPlaywrightBilibiliFetcher:
                 )
             ]
             fetcher = PlaywrightBilibiliFetcher()
-            videos = fetcher.fetch_videos("12345", ttl_cache=False)
+            videos = await fetcher.fetch_videos("12345", ttl_cache=False)
 
         assert len(videos) == 1
         assert all(isinstance(v, FetchedVideo) for v in videos)
         assert videos[0].bvid == "BV1xx411c7mD"
 
-    def test_fetch_videos_empty_page_raises(self):
+    async def test_fetch_videos_empty_page_raises(self):
         mock_ctx, mock_page = self._make_mock_context()
 
-        with patch.object(PlaywrightBilibiliFetcher, "_create_context", return_value=mock_ctx), \
+        with patch.object(PlaywrightBilibiliFetcher, "_create_context", new_callable=AsyncMock, return_value=mock_ctx), \
              patch.object(PlaywrightBilibiliFetcher, "_get_cached", return_value=None), \
-             patch.object(PlaywrightBilibiliFetcher, "_wait_for_cards", return_value=True), \
-             patch.object(PlaywrightBilibiliFetcher, "_extract_all_pages", return_value=[]), \
+             patch.object(PlaywrightBilibiliFetcher, "_wait_for_cards", new_callable=AsyncMock, return_value=True), \
+             patch.object(PlaywrightBilibiliFetcher, "_extract_all_pages", new_callable=AsyncMock, return_value=[]), \
              patch.object(PlaywrightBilibiliFetcher, "_set_cache"):
             fetcher = PlaywrightBilibiliFetcher()
 
             with pytest.raises(FetchError):
-                fetcher.fetch_videos("12345", ttl_cache=False)
+                await fetcher.fetch_videos("12345", ttl_cache=False)
 
-    def test_fetch_creator_name(self):
+    async def test_fetch_creator_name(self):
         mock_nickname_el = MagicMock()
-        mock_nickname_el.text_content.return_value = "测试UP主"
+        mock_nickname_el.text_content = AsyncMock(return_value="测试UP主")
 
         mock_page = MagicMock()
+        mock_page.goto = AsyncMock()
+        mock_page.close = AsyncMock()
         mock_page.locator.return_value.first = mock_nickname_el
 
         mock_context = MagicMock()
-        mock_context.new_page.return_value = mock_page
+        mock_context.close = AsyncMock()
+        mock_context.new_page = AsyncMock(return_value=mock_page)
 
-        with patch.object(PlaywrightBilibiliFetcher, "_create_context", return_value=mock_context), \
+        with patch.object(PlaywrightBilibiliFetcher, "_create_context", new_callable=AsyncMock, return_value=mock_context), \
              patch.object(PlaywrightBilibiliFetcher, "_get_cached", return_value=None), \
              patch.object(PlaywrightBilibiliFetcher, "_set_cache"):
             fetcher = PlaywrightBilibiliFetcher()
-            name = fetcher.fetch_creator_name("12345")
+            name = await fetcher.fetch_creator_name("12345")
 
         assert name == "测试UP主"
 
-    def test_fetch_creator_name_empty_text_raises(self):
+    async def test_fetch_creator_name_empty_text_raises(self):
         mock_nickname_el = MagicMock()
-        mock_nickname_el.text_content.return_value = "   "
+        mock_nickname_el.text_content = AsyncMock(return_value="   ")
 
         mock_page = MagicMock()
+        mock_page.goto = AsyncMock()
+        mock_page.close = AsyncMock()
         mock_page.locator.return_value.first = mock_nickname_el
 
         mock_context = MagicMock()
-        mock_context.new_page.return_value = mock_page
+        mock_context.close = AsyncMock()
+        mock_context.new_page = AsyncMock(return_value=mock_page)
 
-        with patch.object(PlaywrightBilibiliFetcher, "_create_context", return_value=mock_context), \
+        with patch.object(PlaywrightBilibiliFetcher, "_create_context", new_callable=AsyncMock, return_value=mock_context), \
              patch.object(PlaywrightBilibiliFetcher, "_get_cached", return_value=None), \
              patch.object(PlaywrightBilibiliFetcher, "_set_cache"):
             fetcher = PlaywrightBilibiliFetcher()
 
             with pytest.raises(FetchError, match="未能提取到 UP 主昵称"):
-                fetcher.fetch_creator_name("12345")
+                await fetcher.fetch_creator_name("12345")
 
-    def test_fetch_creator_name_page_failure_raises(self):
+    async def test_fetch_creator_name_page_failure_raises(self):
         mock_page = MagicMock()
-        mock_page.goto.side_effect = Exception("连接超时")
+        mock_page.goto = AsyncMock(side_effect=Exception("连接超时"))
+        mock_page.close = AsyncMock()
 
         mock_context = MagicMock()
-        mock_context.new_page.return_value = mock_page
+        mock_context.close = AsyncMock()
+        mock_context.new_page = AsyncMock(return_value=mock_page)
 
-        with patch.object(PlaywrightBilibiliFetcher, "_create_context", return_value=mock_context), \
+        with patch.object(PlaywrightBilibiliFetcher, "_create_context", new_callable=AsyncMock, return_value=mock_context), \
              patch.object(PlaywrightBilibiliFetcher, "_get_cached", return_value=None), \
              patch.object(PlaywrightBilibiliFetcher, "_set_cache"):
             fetcher = PlaywrightBilibiliFetcher()
 
             with pytest.raises(FetchError, match="获取 UP 主信息失败"):
-                fetcher.fetch_creator_name("12345")
+                await fetcher.fetch_creator_name("12345")
