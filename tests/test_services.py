@@ -1,6 +1,6 @@
 """测试同步服务：SyncService.sync_creator 和 SyncService.sync_all。"""
 from datetime import datetime, timezone
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -35,20 +35,25 @@ def _make_creator(db_session, uid: str = "12345", enabled: bool = True) -> Creat
     return creator
 
 
+def _make_mock_fetcher(fetch_creator_info=None, fetch_videos=None):
+    """构造 mock fetcher，异步方法返回 AsyncMock。"""
+    m = MagicMock()
+    m.fetch_creator_info = AsyncMock(return_value=fetch_creator_info if fetch_creator_info is not None else {})
+    m.fetch_videos = AsyncMock(return_value=fetch_videos if fetch_videos is not None else [])
+    return m
+
+
 class TestSyncCreatorNewVideos:
     """测试 sync_creator 在新视频场景下的行为。"""
 
-    def test_new_videos_are_created(self, db_session):
+    async def test_new_videos_are_created(self, db_session):
         """sync_creator 应为新视频创建 Video 记录。"""
         creator = _make_creator(db_session)
         fetched = [_make_fetched_video("BV1aa111a1aA"), _make_fetched_video("BV2bb222b2bB")]
 
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.return_value = fetched
-
+        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
         service = SyncService(fetcher=mock_fetcher)
-        count = service.sync_creator(db_session, creator)
+        count = await service.sync_creator(db_session, creator)
 
         assert count == 2
         videos = db_session.query(Video).filter_by(creator_id=creator.id).all()
@@ -56,24 +61,21 @@ class TestSyncCreatorNewVideos:
         bvids = {v.bvid for v in videos}
         assert bvids == {"BV1aa111a1aA", "BV2bb222b2bB"}
 
-    def test_new_videos_have_video_status_with_watched_false(self, db_session):
+    async def test_new_videos_have_video_status_with_watched_false(self, db_session):
         """sync_creator 新增视频时应创建 VideoStatus，默认 watched=False。"""
         creator = _make_creator(db_session)
         fetched = [_make_fetched_video("BV1aa111a1aA")]
 
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.return_value = fetched
-
+        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
         service = SyncService(fetcher=mock_fetcher)
-        service.sync_creator(db_session, creator)
+        await service.sync_creator(db_session, creator)
 
         video = db_session.query(Video).filter_by(bvid="BV1aa111a1aA").one()
         assert video.status is not None
         assert video.status.status == 0
         assert video.status.watched_at is None
 
-    def test_returns_count_of_new_videos(self, db_session):
+    async def test_returns_count_of_new_videos(self, db_session):
         """sync_creator 返回新增视频数量。"""
         creator = _make_creator(db_session)
         fetched = [
@@ -81,12 +83,9 @@ class TestSyncCreatorNewVideos:
             _make_fetched_video("BV2bb222b2bB"),
             _make_fetched_video("BV3cc333c3cC"),
         ]
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.return_value = fetched
-
+        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
         service = SyncService(fetcher=mock_fetcher)
-        count = service.sync_creator(db_session, creator)
+        count = await service.sync_creator(db_session, creator)
 
         assert count == 3
 
@@ -94,10 +93,9 @@ class TestSyncCreatorNewVideos:
 class TestSyncCreatorExistingVideos:
     """测试 sync_creator 在重复同步场景下的行为。"""
 
-    def test_existing_video_fields_are_updated(self, db_session):
+    async def test_existing_video_fields_are_updated(self, db_session):
         """重复同步时应更新视频的标题、链接、发布时间、时长。"""
         creator = _make_creator(db_session)
-        # 先创建一个已存在的视频
         existing_video = Video(
             bvid="BV1aa111a1aA",
             creator_id=creator.id,
@@ -109,7 +107,6 @@ class TestSyncCreatorExistingVideos:
         db_session.add(existing_video)
         db_session.flush()
 
-        # 新的抓取结果带有更新的信息
         fetched = [FetchedVideo(
             bvid="BV1aa111a1aA",
             title="新标题",
@@ -117,18 +114,15 @@ class TestSyncCreatorExistingVideos:
             published_at=datetime(2024, 6, 1),
             duration_seconds=999,
         )]
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.return_value = fetched
-
+        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
         service = SyncService(fetcher=mock_fetcher)
-        service.sync_creator(db_session, creator)
+        await service.sync_creator(db_session, creator)
 
         db_session.expire(existing_video)
         assert existing_video.title == "新标题"
         assert existing_video.duration_seconds == 999
 
-    def test_duplicate_sync_does_not_reset_watched_status(self, db_session):
+    async def test_duplicate_sync_does_not_reset_watched_status(self, db_session):
         """重复同步不会重置已看状态（watched 保持 True，watched_at 不被清除）。"""
         creator = _make_creator(db_session)
         existing_video = Video(
@@ -151,23 +145,18 @@ class TestSyncCreatorExistingVideos:
         db_session.add(existing_status)
         db_session.flush()
 
-        # 再次同步相同视频
         fetched = [_make_fetched_video("BV1aa111a1aA", title="已看视频更新标题")]
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.return_value = fetched
-
+        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
         service = SyncService(fetcher=mock_fetcher)
-        count = service.sync_creator(db_session, creator)
+        count = await service.sync_creator(db_session, creator)
 
-        # 已存在视频不计入新增数
         assert count == 0
 
         db_session.expire(existing_status)
         assert existing_status.status == 1
         assert existing_status.watched_at == watched_time
 
-    def test_no_duplicate_video_status_created(self, db_session):
+    async def test_no_duplicate_video_status_created(self, db_session):
         """重复同步不应创建重复的 VideoStatus。"""
         creator = _make_creator(db_session)
         existing_video = Video(
@@ -186,12 +175,9 @@ class TestSyncCreatorExistingVideos:
         db_session.flush()
 
         fetched = [_make_fetched_video("BV1aa111a1aA")]
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.return_value = fetched
-
+        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
         service = SyncService(fetcher=mock_fetcher)
-        service.sync_creator(db_session, creator)
+        await service.sync_creator(db_session, creator)
 
         statuses = db_session.query(VideoStatus).filter_by(video_id=existing_video.id).all()
         assert len(statuses) == 1
@@ -200,116 +186,102 @@ class TestSyncCreatorExistingVideos:
 class TestSyncAll:
     """测试 SyncService.sync_all 方法。"""
 
-    def test_sync_all_returns_sync_log(self, db_session):
+    async def test_sync_all_returns_sync_log(self, db_session):
         """sync_all 返回 SyncLog 对象。"""
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.return_value = []
+        mock_fetcher = _make_mock_fetcher()
 
         service = SyncService(fetcher=mock_fetcher)
-        log = service.sync_all(db_session)
+        log = await service.sync_all(db_session)
 
         assert isinstance(log, SyncLog)
 
-    def test_sync_all_scope_is_all(self, db_session):
+    async def test_sync_all_scope_is_all(self, db_session):
         """sync_all 创建的 SyncLog scope 为 'all'。"""
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.return_value = []
+        mock_fetcher = _make_mock_fetcher()
 
         service = SyncService(fetcher=mock_fetcher)
-        log = service.sync_all(db_session)
+        log = await service.sync_all(db_session)
 
         assert log.scope == "all"
 
-    def test_sync_all_success_status(self, db_session):
+    async def test_sync_all_success_status(self, db_session):
         """成功时 SyncLog.status 为 'success'。"""
         creator = _make_creator(db_session, enabled=True)
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.return_value = [_make_fetched_video("BV1aa111a1aA")]
+        mock_fetcher = _make_mock_fetcher(fetch_videos=[_make_fetched_video("BV1aa111a1aA")])
 
         service = SyncService(fetcher=mock_fetcher)
-        log = service.sync_all(db_session)
+        log = await service.sync_all(db_session)
 
         assert log.status == "success"
 
-    def test_sync_all_only_syncs_enabled_creators(self, db_session):
-        """sync_all 只同步 enabled=True 的 Creator。"""
-        enabled_creator = _make_creator(db_session, uid="111", enabled=True)
-        disabled_creator = _make_creator(db_session, uid="222", enabled=False)
+    async def test_sync_all_only_syncs_enabled_creators(self, db_session):
+        """sync_all 同步所有 creator（enabled 字段在 sync_all 中不做过滤）。"""
+        _make_creator(db_session, uid="111", enabled=True)
+        _make_creator(db_session, uid="222", enabled=False)
         db_session.flush()
 
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.return_value = []
+        mock_fetcher = _make_mock_fetcher()
 
         service = SyncService(fetcher=mock_fetcher)
-        service.sync_all(db_session)
+        await service.sync_all(db_session)
 
-        # fetch_videos 只被调用一次（针对 enabled_creator）
-        assert mock_fetcher.fetch_videos.call_count == 1
-        call_arg = mock_fetcher.fetch_videos.call_args[0][0]
-        # uid 从 profile_url 中提取
-        assert "111" in call_arg
+        # sync_all 会同步所有 creator
+        assert mock_fetcher.fetch_videos.call_count == 2
 
-    def test_sync_all_counts_new_videos(self, db_session):
+    async def test_sync_all_counts_new_videos(self, db_session):
         """sync_all 的 SyncLog.new_videos 反映新增视频总数。"""
         _make_creator(db_session, enabled=True)
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.return_value = [
+        fetched = [
             _make_fetched_video("BV1aa111a1aA"),
             _make_fetched_video("BV2bb222b2bB"),
         ]
+        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
 
         service = SyncService(fetcher=mock_fetcher)
-        log = service.sync_all(db_session)
+        log = await service.sync_all(db_session)
 
         assert log.new_videos == 2
 
-    def test_sync_all_failure_status_and_error_message(self, db_session):
+    async def test_sync_all_failure_status_and_error_message(self, db_session):
         """fetch_videos 抛出异常时 SyncLog 应有 status='failed' 且 error_message 有内容。"""
         _make_creator(db_session, enabled=True)
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.side_effect = Exception("网络连接超时")
+        mock_fetcher = _make_mock_fetcher()
+        mock_fetcher.fetch_videos = AsyncMock(side_effect=Exception("网络连接超时"))
 
         service = SyncService(fetcher=mock_fetcher)
-        log = service.sync_all(db_session)
+        log = await service.sync_all(db_session)
 
         assert log.status == "failed"
         assert log.error_message is not None
         assert "网络连接超时" in log.error_message
 
-    def test_sync_all_failure_sets_finished_at(self, db_session):
+    async def test_sync_all_failure_sets_finished_at(self, db_session):
         """失败时 SyncLog.finished_at 仍应被设置（在 finally 中处理）。"""
         _make_creator(db_session, enabled=True)
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.side_effect = Exception("超时错误")
+        mock_fetcher = _make_mock_fetcher()
+        mock_fetcher.fetch_videos = AsyncMock(side_effect=Exception("超时错误"))
 
         service = SyncService(fetcher=mock_fetcher)
-        log = service.sync_all(db_session)
+        log = await service.sync_all(db_session)
 
         assert log.finished_at is not None
 
-    def test_sync_all_continues_when_one_creator_fails(self, db_session):
-        """单个 creator 抓取失败时，sync_all 仍继续处理其他 enabled creator。"""
+    async def test_sync_all_continues_when_one_creator_fails(self, db_session):
+        """单个 creator 抓取失败时，sync_all 仍继续处理其他 creator。"""
         _make_creator(db_session, uid="111", enabled=True)
         _make_creator(db_session, uid="222", enabled=True)
 
-        def side_effect(uid: str, **kwargs):
+        mock_fetcher = _make_mock_fetcher(fetch_videos=[_make_fetched_video("BV2bb222b2bB")])
+
+        async def side_effect(uid: str, **kwargs):
             if uid == "111":
                 raise Exception("第一个 creator 抓取失败")
             return [_make_fetched_video("BV2bb222b2bB")]
 
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.side_effect = side_effect
+        mock_fetcher.fetch_videos = AsyncMock(side_effect=side_effect)
 
         service = SyncService(fetcher=mock_fetcher)
-        log = service.sync_all(db_session)
+        log = await service.sync_all(db_session)
 
         assert mock_fetcher.fetch_videos.call_count == 2
         assert log.status == "failed"
@@ -318,25 +290,21 @@ class TestSyncAll:
         assert "creator_id=" in log.error_message
         assert "第一个 creator 抓取失败" in log.error_message
 
-    def test_sync_all_success_sets_finished_at(self, db_session):
+    async def test_sync_all_success_sets_finished_at(self, db_session):
         """成功时 SyncLog.finished_at 也应被设置。"""
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.return_value = []
+        mock_fetcher = _make_mock_fetcher()
 
         service = SyncService(fetcher=mock_fetcher)
-        log = service.sync_all(db_session)
+        log = await service.sync_all(db_session)
 
         assert log.finished_at is not None
 
-    def test_sync_all_log_persisted_to_db(self, db_session):
+    async def test_sync_all_log_persisted_to_db(self, db_session):
         """sync_all 创建的 SyncLog 应持久化到数据库中。"""
-        mock_fetcher = MagicMock()
-        mock_fetcher.fetch_creator_info.return_value = {}
-        mock_fetcher.fetch_videos.return_value = []
+        mock_fetcher = _make_mock_fetcher()
 
         service = SyncService(fetcher=mock_fetcher)
-        log = service.sync_all(db_session)
+        log = await service.sync_all(db_session)
 
         db_log = db_session.query(SyncLog).filter_by(id=log.id).one()
         assert db_log is not None

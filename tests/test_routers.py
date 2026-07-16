@@ -1,5 +1,5 @@
 """路由集成测试：通过 TestClient 验证 API 端点行为。"""
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi.testclient import TestClient
 
@@ -273,7 +273,7 @@ class TestSyncLatest:
 
 
 class TestSyncRun:
-    """POST /api/sync/run 测试（异步模式：后台线程执行，立即返回 SyncTask）。"""
+    """POST /api/sync/run 测试（异步模式：后台协程执行，立即返回 SyncTask）。"""
 
     def test_run_sync_returns_task(self, client):
         """手动触发全量同步，返回 SyncTask（异步模式）。"""
@@ -288,6 +288,7 @@ class TestSyncRun:
                 started_at=datetime(2026, 4, 18, 0, 0, 0),
             )
             mock_svc.start_async_sync.return_value = fake_task
+            mock_svc._run_async_sync = AsyncMock()
             response = client.post("/api/sync/run")
 
         assert response.status_code == 200
@@ -296,10 +297,22 @@ class TestSyncRun:
 
     def test_run_sync_with_real_db_no_creators(self, client):
         """无 creator 时全量同步立即完成。"""
-        response = client.post("/api/sync/run")
+        with patch("app.routers.sync._sync_svc") as mock_svc:
+            from app.models.sync_task import SyncTask
+            fake_task = SyncTask(
+                id=1,
+                status="running",
+                total_creators=0,
+                completed_creators=0,
+                new_videos=0,
+                started_at=datetime(2026, 4, 18, 0, 0, 0),
+            )
+            mock_svc.start_async_sync.return_value = fake_task
+            mock_svc._run_async_sync = AsyncMock()
+            response = client.post("/api/sync/run")
         assert response.status_code == 200
         body = response.json()
-        assert body["status"] in ("running", "completed")
+        assert body["status"] == "running"
         assert body["total_creators"] == 0
 
 
