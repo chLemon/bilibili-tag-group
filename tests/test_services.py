@@ -364,13 +364,13 @@ class TestCreatorService:
     def test_update_creator_name(self, db_session):
         svc = CreatorService()
         creator = svc.create_creator(db_session, "旧名", "https://space.bilibili.com/7777", [])
-        svc.update_creator(db_session, creator, name="新名", enabled=None, tag_ids=None)
+        svc.update_creator(db_session, creator, name="新名", alias=None, tag_ids=None)
         assert creator.name == "新名"
 
     def test_update_creator_enabled(self, db_session):
         svc = CreatorService()
         creator = svc.create_creator(db_session, "UP", "https://space.bilibili.com/8888", [])
-        svc.update_creator(db_session, creator, name=None, enabled=False, tag_ids=None)
+        svc.update_creator(db_session, creator, name=None, alias=None, enabled=False, tag_ids=None)
         assert creator.enabled is False
 
     def test_update_creator_replace_tags(self, db_session):
@@ -386,7 +386,7 @@ class TestCreatorService:
         )
         assert len(creator.tags) == 1
 
-        svc.update_creator(db_session, creator, name=None, enabled=None, tag_ids=[tag2.id])
+        svc.update_creator(db_session, creator, name=None, alias=None, tag_ids=[tag2.id])
         assert len(creator.tags) == 1
         assert creator.tags[0].id == tag2.id
 
@@ -400,7 +400,7 @@ class TestCreatorService:
         creator = svc.create_creator(
             db_session, "UP", "https://space.bilibili.com/5555", [tag.id]
         )
-        svc.update_creator(db_session, creator, name=None, enabled=None, tag_ids=[])
+        svc.update_creator(db_session, creator, name=None, alias=None, tag_ids=[])
         assert creator.tags == []
 
 

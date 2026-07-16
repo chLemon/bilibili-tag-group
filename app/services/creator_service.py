@@ -55,6 +55,7 @@ class CreatorService:
         name: Optional[str],
         alias: Optional[str],
         tag_ids: Optional[list[int]],
+        enabled: Optional[bool] = None,
     ) -> Creator:
         """更新 UP 主字段（只修改非 None 的字段）。
 
@@ -64,6 +65,8 @@ class CreatorService:
             creator.name = name
         if alias is not None:
             creator.alias = alias
+        if enabled is not None:
+            creator.enabled = enabled
         if tag_ids is not None:
             tags = db.query(Tag).filter(Tag.id.in_(tag_ids)).all()
             creator.tags = tags

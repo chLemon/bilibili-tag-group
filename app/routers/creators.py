@@ -57,6 +57,7 @@ def _to_creator_read(creator) -> CreatorRead:
         profile_url=creator.profile_url,
         avatar_url=creator.avatar_url,
         tag_ids=[tag.id for tag in creator.tags],
+        enabled=creator.enabled,
         video_count=creator.video_count or 0,
         synced_video_count=len(videos),
         unwatched_count=unwatched,
@@ -226,6 +227,7 @@ def update_creator(
         creator=creator,
         name=payload.name,
         alias=payload.alias,
+        enabled=payload.enabled,
         tag_ids=payload.tag_ids,
     )
     return _to_creator_read(creator)

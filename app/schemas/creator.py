@@ -20,6 +20,7 @@ class CreatorUpdate(BaseModel):
 
     name: Optional[str] = None
     alias: Optional[str] = None
+    enabled: Optional[bool] = None
     tag_ids: Optional[list[int]] = None
 
 
@@ -32,6 +33,7 @@ class CreatorRead(BaseModel):
     profile_url: str
     avatar_url: Optional[str] = None
     tag_ids: list[int] = []
+    enabled: bool = True
     video_count: int = 0
     synced_video_count: int = 0
     unwatched_count: int = 0

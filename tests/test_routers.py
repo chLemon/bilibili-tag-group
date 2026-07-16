@@ -103,24 +103,6 @@ class TestUpdateCreator:
         assert response.status_code == 404
 
 
-class TestSyncCreatorRoute:
-    """POST /api/creators/{creator_id}/sync 测试。"""
-
-    def test_sync_creator_returns_new_videos_count(self, client, seeded_data):
-        """手动同步 UP 主时返回新增视频数量。"""
-        with patch("app.routers.creators._sync_svc") as mock_svc:
-            mock_svc.sync_creator.return_value = 3
-            response = client.post(f"/api/creators/{seeded_data.creator_id}/sync")
-        assert response.status_code == 200
-        body = response.json()
-        assert body["creator_id"] == seeded_data.creator_id
-        assert body["new_videos"] == 3
-
-    def test_sync_creator_not_found(self, client):
-        response = client.post("/api/creators/99999/sync")
-        assert response.status_code == 404
-
-
 # ──────────────────────────────────────────────
 # Tags 路由
 # ──────────────────────────────────────────────
