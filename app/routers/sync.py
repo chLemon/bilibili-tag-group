@@ -1,4 +1,5 @@
 """同步路由：查询最近同步状态、手动触发全量同步、查询调度配置、管理立即同步标签。"""
+import asyncio
 import logging
 from typing import Annotated, Any, Optional
 
@@ -6,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.database import SessionLocal
 from app.dependencies import get_db
 from app.fetcher.playwright_fetcher import PlaywrightBilibiliFetcher
 from app.models.sync_log import SyncLog
@@ -19,20 +21,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sync", tags=["sync"])
 _sync_svc = SyncService(fetcher=PlaywrightBilibiliFetcher(cookie=settings.bilibili_cookie or None))
 
-# 由 main.py 的 lifespan 在应用启动后注入，供 /settings 接口读取
-_scheduler: Any = None
+# 由 main.py 的 lifespan 在应用启动后注入
+_sync_loop_running: bool = False
 _sync_interval_minutes: int = 60
 
 
-def set_scheduler_context(scheduler: Any, interval_minutes: int) -> None:
-    """由 lifespan 调用，将调度器实例与间隔配置注入路由模块。
+def set_sync_context(loop_running: bool, interval_minutes: int) -> None:
+    """由 lifespan 调用，将同步循环状态与间隔配置注入路由模块。
 
     参数：
-        scheduler: 已构造（可能已启动）的 BackgroundScheduler
+        loop_running: 定时同步协程是否在运行
         interval_minutes: 配置的同步间隔分钟数
     """
-    global _scheduler, _sync_interval_minutes
-    _scheduler = scheduler
+    global _sync_loop_running, _sync_interval_minutes
+    _sync_loop_running = loop_running
     _sync_interval_minutes = interval_minutes
 
 
@@ -69,11 +71,12 @@ def get_latest_sync(
 
 
 @router.post("/run", response_model=SyncTaskRead)
-def run_sync(
+async def run_sync(
     db: Annotated[Session, Depends(get_db)],
 ) -> SyncTaskRead:
-    """手动触发全量同步：创建同步任务，后台执行，立即返回任务进度。"""
+    """手动触发全量同步：创建同步任务，后台协程执行，立即返回任务进度。"""
     task = _sync_svc.start_async_sync(db)
+    asyncio.create_task(_sync_svc._run_async_sync(task.id, SessionLocal))
     return SyncTaskRead(
         id=task.id,
         status=task.status,
@@ -122,20 +125,15 @@ def get_sync_settings() -> dict[str, Any]:
     """查询定时同步的调度配置与状态。
 
     返回字段：
-    - enabled: bool，sync-all job 是否已注册
+    - enabled: bool，定时同步任务是否已启用
     - interval_minutes: int，配置的同步间隔分钟数
     - job_id: str，固定为 'sync-all'
     """
-    from app.scheduler import SYNC_JOB_ID, get_sync_job_info
-
-    # 测试环境或 lifespan 未执行时 _scheduler 可能为 None，返回 enabled=False 兜底
-    if _scheduler is None:
-        return {
-            "enabled": False,
-            "interval_minutes": _sync_interval_minutes,
-            "job_id": SYNC_JOB_ID,
-        }
-    return get_sync_job_info(_scheduler, _sync_interval_minutes)
+    return {
+        "enabled": _sync_loop_running,
+        "interval_minutes": _sync_interval_minutes,
+        "job_id": "sync-all",
+    }
 
 
 # ── 立即同步标签管理 ─────────────────────────────────────────────
