@@ -5,6 +5,7 @@
 
 浏览器实例存储在 fetcher 实例上，在单个事件循环内复用。
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -20,12 +21,15 @@ from sqlalchemy import text
 from app.database import SessionLocal
 from app.fetcher.models import FetchedVideo
 
-
 _logger = logging.getLogger(__name__)
 
 
 class FetchError(Exception):
     """抓取失败时抛出此异常。"""
+
+
+class CanRetryError(Exception):
+    """可以重试的异常"""
 
 
 # ── CSS 选择器 ────────────────────────────────────────────────────
@@ -36,6 +40,9 @@ _SUBTITLE_CLASS = ".bili-video-card__subtitle"
 _DURATION_CLASS = ".bili-cover-card__stat"
 _NEXT_PAGE_SELECTOR = ".vui_pagenation--btn-side"
 _VIDEO_COUNT_SELECTOR = ".side-nav__item.active .side-nav__item__sub-text"
+_PAGE_COUNT_CSS_SELECTOR = ".vui_pagenation-go__count"
+_CURRENT_PAGE_NUM_SELECTOR = ".vui_pagenation--btns .vui_button--active"
+_NEXT_BUTTON_SELECTOR = ".vui_pagenation--btns button:has-text('下一页')"
 
 # ── 时间与重试配置 ────────────────────────────────────────────────
 
@@ -43,7 +50,7 @@ _DELAY_MIN = 1.0
 _DELAY_MAX = 2.5
 _PAGE_TIMEOUT = 30_000
 _CARD_WAIT_TIMEOUT = 10_000
-_MAX_PAGES = 300
+_MAX_PAGES = 1000
 _RETRY_COUNT = 4
 _RETRY_BACKOFF = 2
 
@@ -84,15 +91,20 @@ class PlaywrightBilibiliFetcher:
 
     async def _get_browser(self) -> Browser:
         """获取浏览器实例，断开时自动重连。"""
-        if self._browser is None:
+        # 合并条件：如果浏览器不存在，或者已经断开连接，都需要彻底重建
+        if self._browser is None or not self._browser.is_connected():
+            # 防御性清理：如果旧的 playwright 还在运行，先把它安全关闭
+            if self._playwright is not None:
+                try:
+                    await self._playwright.stop()
+                except Exception:
+                    pass  # 忽略关闭旧实例时的异常
+
             self._playwright = await async_playwright().start()
             self._browser = await self._playwright.chromium.launch(
                 headless=self._headless, args=_BROWSER_ARGS
             )
-        elif not self._browser.is_connected():
-            self._browser = await self._playwright.chromium.launch(
-                headless=self._headless, args=_BROWSER_ARGS
-            )
+
         return self._browser
 
     async def close_browser(self) -> None:
@@ -126,12 +138,14 @@ class PlaywrightBilibiliFetcher:
                 part = part.strip()
                 if "=" in part:
                     name, _, value = part.partition("=")
-                    cookies.append({
-                        "name": name.strip(),
-                        "value": value.strip(),
-                        "domain": ".bilibili.com",
-                        "path": "/",
-                    })
+                    cookies.append(
+                        {
+                            "name": name.strip(),
+                            "value": value.strip(),
+                            "domain": ".bilibili.com",
+                            "path": "/",
+                        }
+                    )
             if cookies:
                 await context.add_cookies(cookies)
         return context
@@ -167,17 +181,14 @@ class PlaywrightBilibiliFetcher:
         try:
             data = json.dumps(
                 {
-                    "ts": datetime.now(timezone.utc)
-                    .replace(tzinfo=None)
-                    .isoformat(),
+                    "ts": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
                     "payload": payload,
                 },
                 ensure_ascii=False,
             )
             db.execute(
                 text(
-                    "INSERT OR REPLACE INTO cache (key, value) "
-                    "VALUES (:key, :value)"
+                    "INSERT OR REPLACE INTO cache (key, value) " "VALUES (:key, :value)"
                 ),
                 {"key": self._cache_key(uid, kind), "value": data},
             )
@@ -189,87 +200,69 @@ class PlaywrightBilibiliFetcher:
 
     # ── 公开抓取方法 ────────────────────────────────────────────
 
-    async def fetch_videos(
-        self, uid: str, ttl_cache: bool = True
-    ) -> list[FetchedVideo]:
-        if ttl_cache:
-            cached = self._get_cached(uid, "videos")
-            if cached is not None:
-                return [
-                    FetchedVideo(
-                        bvid=v["bvid"],
-                        title=v["title"],
-                        video_url=v["video_url"],
-                        published_at=datetime.fromisoformat(v["published_at"])
-                        if v.get("published_at")
-                        else None,
-                        duration_seconds=v["duration_seconds"],
-                        cover_url=v.get("cover_url"),
-                    )
-                    for v in cached
-                ]
+    async def fetch_new_videos(self, uid: str) -> list[FetchedVideo]:
+        """抓取某个 up 主的视频列表
 
-        last_error: Exception | None = None
 
-        for attempt in range(_RETRY_COUNT + 1):
-            if attempt > 0:
-                await asyncio.sleep(_RETRY_BACKOFF * attempt)
+        1. 访问 /upload/video
+        2. 抓取视频
+        3. 从前往后翻页继续抓取，直到完成
 
-            context = await self._create_context()
-            page = await context.new_page()
-            try:
-                await page.goto(
-                    f"https://space.bilibili.com/{uid}/upload/video",
-                    wait_until="networkidle",
-                    timeout=_PAGE_TIMEOUT,
-                )
+        如果某页抓取失败，则整个失败。
+        """
+
+        context = await self._create_context()
+        page = await context.new_page()
+        try:
+            _logger.info(f"开始抓取 {uid} 的视频")
+            # 前往页面
+            await page.goto(
+                f"https://space.bilibili.com/{uid}/upload/video",
+                wait_until="networkidle",
+                timeout=_PAGE_TIMEOUT,
+            )
+
+            videos: list[FetchedVideo] = []
+
+            # 翻页抓取
+            while True:
+                # 刷新直到有视频卡片
                 if not await self._wait_for_cards(page):
-                    last_error = FetchError(
-                        f"未能从页面提取到视频数据，uid={uid}"
-                    )
-                    continue
+                    raise FetchError
 
-                videos = await self._extract_all_pages(page)
-                if videos:
-                    self._set_cache(
-                        uid,
-                        "videos",
-                        [
-                            {
-                                "bvid": v.bvid,
-                                "title": v.title,
-                                "video_url": v.video_url,
-                                "published_at": v.published_at.isoformat()
-                                if v.published_at
-                                else None,
-                                "duration_seconds": v.duration_seconds,
-                            }
-                            for v in videos
-                        ],
-                    )
-                    return videos
+                # 当前激活页码
+                current_page_num = self._extract_current_page_num(page)
+                _logger.info(f"抓取第 {current_page_num} 页的数据")
 
-                last_error = FetchError(
-                    f"未能从页面提取到视频数据，uid={uid}"
-                )
-            except Exception as exc:
-                last_error = FetchError(
-                    f"页面加载失败，uid={uid}: {exc}"
-                )
-            finally:
-                await page.close()
-                await context.close()
+                page_bvids: set[str] = set()
+                for video in await self._extract_videos_from_page(page):
+                    videos.append(video)
+                    page_bvids.add(video.bvid)
 
-        raise last_error  # type: ignore[return-value]
+                if page_bvids and self._any_known(page_bvids):
+                    # 已经获取到了db里有的视频，那么提前返回即可
+                    break
 
-    async def fetch_creator_info(
-        self, uid: str, ttl_cache: bool = True
-    ) -> dict:
-        if ttl_cache:
-            cached = self._get_cached(uid, "name")
-            if cached is not None:
-                return cached
+                next_button = page.locator(_NEXT_BUTTON_SELECTOR)
+                if await next_button.is_disabled():
+                    # 已到了最后一页
+                    break
 
+                # 翻页
+                await next_button.click()
+                # 模拟延迟
+                delay = random.uniform(2.0, 4.0)
+                await asyncio.sleep(delay)
+
+            return videos
+        except Exception as exc:
+            raise exc
+        finally:
+            await page.close()
+            await context.close()
+
+    async def fetch_creator_info(self, uid: str) -> dict:
+        """获取up主信息"""
         context = await self._create_context()
         page = await context.new_page()
         try:
@@ -286,13 +279,15 @@ class PlaywrightBilibiliFetcher:
 
             avatar_url: str | None = None
             try:
-                avatar_img = page.locator("#h-avatar img, .avatar img, .b-avatar img").first
+                avatar_img = page.locator(
+                    "#h-avatar img, .avatar img, .b-avatar img"
+                ).first
                 if await avatar_img.count() > 0:
                     raw = await avatar_img.get_attribute("src") or ""
                     if raw:
                         avatar_url = f"https:{raw}" if raw.startswith("//") else raw
             except Exception:
-                pass
+                raise FetchError(f"未能提取到 UP 主头像，uid={uid}")
 
             video_count: int | None = None
             try:
@@ -301,32 +296,33 @@ class PlaywrightBilibiliFetcher:
                 for i in range(count):
                     item = nav_items.nth(i)
                     text_el = item.locator(".side-nav__item__main-text")
-                    if await text_el.count() > 0 and "视频" in (await text_el.text_content() or ""):
+                    if await text_el.count() > 0 and "视频" in (
+                        await text_el.text_content() or ""
+                    ):
                         count_el = item.locator(".side-nav__item__sub-text")
                         if await count_el.count() > 0:
                             count_text = (await count_el.text_content() or "").strip()
                             video_count = int(count_text)
                         break
             except Exception:
-                pass
+                raise FetchError(f"未能提取到 UP 主视频数量，uid={uid}")
 
-            result = {"name": name, "avatar_url": avatar_url, "video_count": video_count}
-            self._set_cache(uid, "name", result)
+            result = {
+                "name": name,
+                "avatar_url": avatar_url,
+                "video_count": video_count,
+            }
             return result
         except FetchError:
             raise
         except Exception as exc:
-            raise FetchError(
-                f"获取 UP 主信息失败，uid={uid}: {exc}"
-            ) from exc
+            raise FetchError(f"获取 UP 主信息失败，uid={uid}: {exc}") from exc
         finally:
             await page.close()
             await context.close()
 
-    async def fetch_creator_name(
-        self, uid: str, ttl_cache: bool = True
-    ) -> str:
-        info = await self.fetch_creator_info(uid, ttl_cache)
+    async def fetch_creator_name(self, uid: str) -> str:
+        info = await self.fetch_creator_info(uid)
         return info["name"]
 
     # ── 页面交互 ────────────────────────────────────────────────
@@ -334,57 +330,13 @@ class PlaywrightBilibiliFetcher:
     async def _wait_for_cards(self, page, max_refresh: int = 4) -> bool:
         for refresh in range(max_refresh + 1):
             try:
-                await page.wait_for_selector(
-                    _TITLE_CLASS, timeout=_CARD_WAIT_TIMEOUT
-                )
+                await page.wait_for_selector(_TITLE_CLASS, timeout=_CARD_WAIT_TIMEOUT)
                 return True
             except Exception:
                 if refresh < max_refresh:
                     await asyncio.sleep(random.uniform(_DELAY_MIN, _DELAY_MAX))
-                    await page.reload(
-                        wait_until="networkidle", timeout=_PAGE_TIMEOUT
-                    )
+                    await page.reload(wait_until="networkidle", timeout=_PAGE_TIMEOUT)
         return False
-
-    async def _extract_all_pages(self, page) -> list[FetchedVideo]:
-        seen: set[str] = set()
-        videos: list[FetchedVideo] = []
-
-        count_el = page.locator(_VIDEO_COUNT_SELECTOR).first
-        count_text = (await count_el.text_content() or "")
-        total_count = int(count_text.strip())
-
-        for page_num in range(_MAX_PAGES):
-            await asyncio.sleep(random.uniform(_DELAY_MIN, _DELAY_MAX))
-
-            page_bvids: set[str] = set()
-            for video in await self._extract_videos_from_page(page):
-                if video.bvid not in seen:
-                    seen.add(video.bvid)
-                    videos.append(video)
-                page_bvids.add(video.bvid)
-
-            _logger.info("第 %d 页，当页 %d 个视频，累计 %d 个", page_num + 1, len(page_bvids), len(videos))
-
-            if total_count and len(videos) >= total_count:
-                break
-
-            if page_bvids and self._any_known(page_bvids):
-                break
-
-            next_btn = page.locator(_NEXT_PAGE_SELECTOR).last
-            btn_class = await next_btn.get_attribute("class") or ""
-            if "disabled" in btn_class:
-                break
-
-            await next_btn.click()
-            if not await self._wait_for_cards(page):
-                break
-            await asyncio.sleep(
-                random.uniform(_DELAY_MIN + 1, _DELAY_MAX + 1)
-            )
-
-        return videos
 
     # ── 数据提取 ────────────────────────────────────────────────
 
@@ -403,18 +355,19 @@ class PlaywrightBilibiliFetcher:
         return videos
 
     @staticmethod
+    async def _extract_current_page_num(page) -> str:
+        """获取当前页数"""
+        active_page_locator = page.locator(_CURRENT_PAGE_NUM_SELECTOR)
+        return (await active_page_locator.text_content() or "").strip()
+
+    @staticmethod
     def _any_known(bvids: set[str]) -> bool:
         db = SessionLocal()
         try:
-            placeholders = ",".join(
-                f":b{i}" for i in range(len(bvids))
-            )
+            placeholders = ",".join(f":b{i}" for i in range(len(bvids)))
             params = {f"b{i}": b for i, b in enumerate(bvids)}
             row = db.execute(
-                text(
-                    f"SELECT COUNT(*) FROM videos "
-                    f"WHERE bvid IN ({placeholders})"
-                ),
+                text(f"SELECT COUNT(*) FROM videos " f"WHERE bvid IN ({placeholders})"),
                 params,
             ).fetchone()
             return row is not None and row[0] > 0
@@ -503,9 +456,9 @@ def _parse_date(date_str: str) -> datetime | None:
             delta_seconds = num * 30 * 86400
         else:
             return None
-        return (
-            now - timedelta(seconds=delta_seconds)
-        ).replace(hour=0, minute=0, second=0, microsecond=0)
+        return (now - timedelta(seconds=delta_seconds)).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
     return None
 

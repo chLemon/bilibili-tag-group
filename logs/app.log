@@ -1,10 +1,5 @@
-2026-07-16 00:57:18 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
-2026-07-16 00:57:18 [INFO] apscheduler.scheduler: Added job "_make_sync_job" to job store "default"
-2026-07-16 00:57:18 [INFO] apscheduler.scheduler: Scheduler started
-2026-07-16 01:01:12 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 36 个视频，累计 36 个
-2026-07-16 01:02:20 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个
-2026-07-16 01:02:58 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个
-2026-07-16 01:03:05 [INFO] app.fetcher.playwright_fetcher: 第 2 页，当页 42 个视频，累计 42 个
-2026-07-16 01:03:12 [INFO] app.fetcher.playwright_fetcher: 第 3 页，当页 42 个视频，累计 84 个
-2026-07-16 01:03:18 [INFO] app.fetcher.playwright_fetcher: 第 4 页，当页 42 个视频，累计 126 个
-2026-07-16 01:03:24 [INFO] app.fetcher.playwright_fetcher: 第 5 页，当页 33 个视频，累计 159 个
+2026-07-17 00:38:53 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 36 个视频，累计 36 个
+2026-07-17 00:39:03 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个
+2026-07-17 00:40:07 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个
+2026-07-17 00:41:11 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个
+2026-07-17 00:44:02 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个

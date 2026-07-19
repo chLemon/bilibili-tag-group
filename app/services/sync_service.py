@@ -60,6 +60,9 @@ class SyncService:
         uid = _uid_from_profile_url(creator.profile_url)
 
         try:
+            """1. 大部分up主，50分后才能抓1次
+            2. 所有up主，5分钟后才能抓1次
+            3. 失败了的，不记录时间，可以继续抓"""
             info = await self._fetcher.fetch_creator_info(uid, ttl_cache=False)
             if info.get("name"):
                 creator.name = info["name"]
@@ -74,7 +77,7 @@ class SyncService:
         use_ttl = not self._creator_has_immediate_tag(
             db_session, creator.id, immediate_tag_ids
         )
-        fetched_list: list[FetchedVideo] = await self._fetcher.fetch_videos(uid, ttl_cache=use_ttl)
+        fetched_list: list[FetchedVideo] = await self._fetcher.fetch_new_videos(uid)
 
         existing_videos: dict[str, Video] = {
             v.bvid: v
