@@ -13,7 +13,7 @@ from app.fetcher.playwright_fetcher import PlaywrightBilibiliFetcher
 from app.models.sync_log import SyncLog
 from app.models.sync_task import SyncTask
 from app.models.tag_sync_config import TagSyncConfig
-from app.schemas.sync import SyncLogRead, SyncTaskRead
+from app.schemas.sync import SyncTaskVo
 from app.services.sync_service import SyncService
 
 logger = logging.getLogger(__name__)
@@ -38,9 +38,9 @@ def set_sync_context(loop_running: bool, interval_minutes: int) -> None:
     _sync_interval_minutes = interval_minutes
 
 
-def _to_sync_log_read(log: SyncLog) -> SyncLogRead:
+def _to_sync_log_read(log: SyncTask) -> SyncTaskVo:
     """将 ORM SyncLog 对象转换为 SyncLogRead schema。"""
-    return SyncLogRead(
+    return SyncTaskVo(
         id=log.id,
         scope=log.scope,
         status=log.status,
@@ -51,18 +51,18 @@ def _to_sync_log_read(log: SyncLog) -> SyncLogRead:
     )
 
 
-@router.get("/latest", response_model=Optional[SyncLogRead])
+@router.get("/latest", response_model=Optional[SyncTaskVo])
 def get_latest_sync(
     db: Annotated[Session, Depends(get_db)],
-) -> Optional[SyncLogRead]:
+) -> Optional[SyncTaskVo]:
     """查询最近一次全量同步的 SyncLog。
 
     尚无同步记录时返回 null。
     """
     log = (
-        db.query(SyncLog)
-        .filter(SyncLog.scope == "all")
-        .order_by(SyncLog.started_at.desc())
+        db.query(SyncTaskVo)
+        .filter(SyncTaskVo.scope == "all")
+        .order_by(SyncTaskVo.started_at.desc())
         .first()
     )
     if log is None:

@@ -1,8 +1,9 @@
 """同步核心服务：将 B 站抓取结果写入本地数据库。"""
+
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
@@ -37,9 +38,8 @@ class SyncService:
     @staticmethod
     def _get_immediate_tag_ids(db_session: Session) -> set[int]:
         from app.models.tag_sync_config import TagSyncConfig
-        return {
-            row[0] for row in db_session.query(TagSyncConfig.tag_id).all()
-        }
+
+        return {row[0] for row in db_session.query(TagSyncConfig.tag_id).all()}
 
     @staticmethod
     def _creator_has_immediate_tag(
@@ -48,22 +48,39 @@ class SyncService:
         if not immediate_tag_ids:
             return False
         from app.models.creator_tag import CreatorTag
+
         creator_tag_ids = {
             row[0]
-            for row in db_session.query(CreatorTag.tag_id).filter_by(
-                creator_id=creator_id
-            ).all()
+            for row in db_session.query(CreatorTag.tag_id)
+            .filter_by(creator_id=creator_id)
+            .all()
         }
         return bool(creator_tag_ids & immediate_tag_ids)
 
     async def sync_creator(self, db_session: Session, creator: Creator) -> int:
+        """同步up主的信息
+        1. 大部分up主，50分后才能抓1次
+        2. 所有up主，5分钟后才能抓1次
+        3. 失败了的，不记录时间，可以继续抓
+        """
+        immediate_tag_ids = self._get_immediate_tag_ids(db_session)
+        if self._creator_has_immediate_tag(db_session, creator.id, immediate_tag_ids):
+            # 有同步标签的，5分钟即可
+            if creator.last_synced_at and (
+                _now_utc() - creator.last_synced_at
+            ) < timedelta(minutes=5):
+                return 0
+        else:
+            # 没有同步标签的，50分钟才可以
+            if creator.last_synced_at and (
+                _now_utc() - creator.last_synced_at
+            ) < timedelta(minutes=50):
+                return 0
+
         uid = _uid_from_profile_url(creator.profile_url)
 
         try:
-            """1. 大部分up主，50分后才能抓1次
-            2. 所有up主，5分钟后才能抓1次
-            3. 失败了的，不记录时间，可以继续抓"""
-            info = await self._fetcher.fetch_creator_info(uid, ttl_cache=False)
+            info = await self._fetcher.fetch_creator_info(uid)
             if info.get("name"):
                 creator.name = info["name"]
             if info.get("avatar_url"):
@@ -73,10 +90,6 @@ class SyncService:
         except Exception:
             pass
 
-        immediate_tag_ids = self._get_immediate_tag_ids(db_session)
-        use_ttl = not self._creator_has_immediate_tag(
-            db_session, creator.id, immediate_tag_ids
-        )
         fetched_list: list[FetchedVideo] = await self._fetcher.fetch_new_videos(uid)
 
         existing_videos: dict[str, Video] = {
@@ -158,7 +171,9 @@ class SyncService:
         request_db.commit()
         return task
 
-    async def _heartbeat_loop(self, task_id: int, SessionLocal, stop_event: asyncio.Event) -> None:
+    async def _heartbeat_loop(
+        self, task_id: int, SessionLocal, stop_event: asyncio.Event
+    ) -> None:
         """独立心跳协程：每隔 _HEARTBEAT_INTERVAL 秒更新 heartbeat_at。"""
         db = SessionLocal()
         try:

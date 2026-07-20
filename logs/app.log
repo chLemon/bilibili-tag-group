@@ -1,5 +1,200 @@
-2026-07-17 00:38:53 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 36 个视频，累计 36 个
-2026-07-17 00:39:03 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个
-2026-07-17 00:40:07 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个
-2026-07-17 00:41:11 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个
-2026-07-17 00:44:02 [INFO] app.fetcher.playwright_fetcher: 第 1 页，当页 42 个视频，累计 42 个
+2026-07-19 20:28:02 [INFO] app.fetcher.playwright_fetcher: 开始抓取 25800310 的视频
+2026-07-19 20:28:39 [INFO] app.fetcher.playwright_fetcher: 开始抓取 474417988 的视频
+2026-07-19 20:28:56 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-19 20:29:00 [INFO] app.fetcher.playwright_fetcher: 开始抓取 223305228 的视频
+2026-07-19 20:30:06 [INFO] app.fetcher.playwright_fetcher: 开始抓取 178753244 的视频
+2026-07-19 20:30:49 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-19 20:30:54 [INFO] app.fetcher.playwright_fetcher: 开始抓取 29235818 的视频
+2026-07-19 20:32:03 [INFO] app.fetcher.playwright_fetcher: 开始抓取 29071700 的视频
+2026-07-19 20:56:31 [INFO] app.fetcher.playwright_fetcher: 开始抓取 25800310 的视频
+2026-07-19 20:57:34 [INFO] app.fetcher.playwright_fetcher: 开始抓取 474417988 的视频
+2026-07-19 20:58:44 [INFO] app.fetcher.playwright_fetcher: 开始抓取 223305228 的视频
+2026-07-19 20:59:38 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-19 20:59:41 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-19 20:59:44 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-19 20:59:48 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-19 20:59:52 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-19 20:59:56 [INFO] app.fetcher.playwright_fetcher: 开始抓取 178753244 的视频
+2026-07-19 21:00:37 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-19 21:00:41 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-19 21:00:46 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-19 21:00:49 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-19 21:00:53 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-19 21:00:56 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-19 21:00:59 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-19 21:01:02 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-19 21:01:07 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-19 21:01:09 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-19 21:01:13 [INFO] app.fetcher.playwright_fetcher: 开始抓取 29235818 的视频
+2026-07-19 21:01:16 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-19 21:01:18 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-19 21:01:22 [INFO] app.fetcher.playwright_fetcher: 开始抓取 29071700 的视频
+2026-07-19 21:01:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-19 21:01:43 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-19 21:01:46 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-19 21:01:50 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-19 21:01:53 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-19 21:01:56 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-19 21:02:00 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-19 21:02:04 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-19 21:02:08 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-19 21:27:46 [INFO] app.fetcher.playwright_fetcher: 开始抓取 25800310 的视频
+2026-07-19 21:29:02 [INFO] app.fetcher.playwright_fetcher: 开始抓取 474417988 的视频
+2026-07-19 21:29:17 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-19 21:29:21 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-19 21:29:24 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-19 21:29:28 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-19 21:29:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-19 21:29:35 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-19 21:29:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-19 21:29:44 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-19 21:29:48 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-19 21:29:52 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-19 21:29:55 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-19 21:29:55 [ERROR] app.scheduler: 定时全量同步失败
+Traceback (most recent call last):
+  File "D:\chen\bilibili-tag-group\app\scheduler.py", line 21, in run_sync_loop
+    db.commit()
+    ~~~~~~~~~^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2035, in commit
+    trans.commit(_to_root=True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<string>", line 2, in commit
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 101, in _go
+    self._raise_for_prerequisite_state(fn.__name__, current_state)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 975, in _raise_for_prerequisite_state
+    raise sa_exc.PendingRollbackError(
+    ...<6 lines>...
+    )
+sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) NOT NULL constraint failed: videos.published_at
+[SQL: INSERT INTO videos (bvid, creator_id, title, video_url, published_at, duration_seconds, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('BV1byKn6sEMG', 2, '我的法宝都是规则系-第三百五十七集：梦湖城！化梦血蛟！', 'https://www.bilibili.com/video/BV1byKn6sEMG', None, 341, 'https://i0.hdslb.com/bfs/archive/2e07cf2a34eccafab83f11fb0954aebbc25e2547.jpg@672w_378h_1c.webp')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2026-07-19 22:29:58 [INFO] app.fetcher.playwright_fetcher: 开始抓取 25800310 的视频
+2026-07-19 22:31:07 [INFO] app.fetcher.playwright_fetcher: 开始抓取 474417988 的视频
+2026-07-19 22:32:13 [INFO] app.fetcher.playwright_fetcher: 开始抓取 223305228 的视频
+2026-07-19 22:33:22 [INFO] app.fetcher.playwright_fetcher: 开始抓取 178753244 的视频
+2026-07-19 22:34:32 [INFO] app.fetcher.playwright_fetcher: 开始抓取 29235818 的视频
+2026-07-19 22:35:40 [INFO] app.fetcher.playwright_fetcher: 开始抓取 29071700 的视频
+2026-07-19 23:36:49 [INFO] app.fetcher.playwright_fetcher: 开始抓取 25800310 的视频
+2026-07-19 23:37:38 [INFO] app.fetcher.playwright_fetcher: 开始抓取 474417988 的视频
+2026-07-19 23:38:46 [INFO] app.fetcher.playwright_fetcher: 开始抓取 223305228 的视频
+2026-07-19 23:38:48 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-19 23:38:52 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-19 23:38:56 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-19 23:38:59 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-19 23:39:03 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-19 23:39:03 [ERROR] app.scheduler: 定时全量同步失败
+Traceback (most recent call last):
+  File "D:\chen\bilibili-tag-group\app\scheduler.py", line 21, in run_sync_loop
+    db.commit()
+    ~~~~~~~~~^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2035, in commit
+    trans.commit(_to_root=True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<string>", line 2, in commit
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 101, in _go
+    self._raise_for_prerequisite_state(fn.__name__, current_state)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 975, in _raise_for_prerequisite_state
+    raise sa_exc.PendingRollbackError(
+    ...<6 lines>...
+    )
+sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) UNIQUE constraint failed: videos.bvid
+[SQL: INSERT INTO videos (bvid, creator_id, title, video_url, published_at, duration_seconds, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('BV1RnKN6REsc', 3, '第23集 之前没有，现在有了', 'https://www.bilibili.com/video/BV1RnKN6REsc', '2026-07-18 00:00:00.000000', 202, 'https://i0.hdslb.com/bfs/archive/ff0e0caf5e9349faf714d4b46200279e8212ff71.jpg@672w_378h_1c.webp')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2026-07-20 00:39:06 [INFO] app.fetcher.playwright_fetcher: 开始抓取 25800310 的视频
+2026-07-20 00:40:15 [INFO] app.fetcher.playwright_fetcher: 开始抓取 474417988 的视频
+2026-07-20 00:40:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-20 00:40:35 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-20 00:40:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-20 00:40:42 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-20 00:40:46 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-20 00:40:50 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-20 00:40:53 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-20 00:40:57 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-20 00:41:00 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-20 00:41:05 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-20 00:41:08 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-20 00:41:09 [ERROR] app.scheduler: 定时全量同步失败
+Traceback (most recent call last):
+  File "D:\chen\bilibili-tag-group\app\scheduler.py", line 21, in run_sync_loop
+    db.commit()
+    ~~~~~~~~~^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2035, in commit
+    trans.commit(_to_root=True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<string>", line 2, in commit
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 101, in _go
+    self._raise_for_prerequisite_state(fn.__name__, current_state)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 975, in _raise_for_prerequisite_state
+    raise sa_exc.PendingRollbackError(
+    ...<6 lines>...
+    )
+sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) UNIQUE constraint failed: videos.bvid
+[SQL: INSERT INTO videos (bvid, creator_id, title, video_url, published_at, duration_seconds, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('BV1ju4y1e7Bq', 2, '第三十三集:小丘村邪祟！', 'https://www.bilibili.com/video/BV1ju4y1e7Bq', '2023-08-24 00:00:00.000000', 203, 'https://i1.hdslb.com/bfs/archive/699b54af78c2178777f3c339c4f5563d9b861f7c.jpg@672w_378h_1c.webp')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2026-07-20 01:41:11 [INFO] app.fetcher.playwright_fetcher: 开始抓取 25800310 的视频
+2026-07-20 01:42:21 [INFO] app.fetcher.playwright_fetcher: 开始抓取 474417988 的视频
+2026-07-20 01:42:24 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-20 01:42:27 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-20 01:42:31 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-20 01:42:35 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-20 01:42:38 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-20 01:42:41 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-20 01:42:45 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-20 01:42:49 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-20 01:42:53 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-20 01:42:56 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-20 01:43:00 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-20 01:43:00 [ERROR] app.scheduler: 定时全量同步失败
+Traceback (most recent call last):
+  File "D:\chen\bilibili-tag-group\app\scheduler.py", line 21, in run_sync_loop
+    db.commit()
+    ~~~~~~~~~^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2035, in commit
+    trans.commit(_to_root=True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<string>", line 2, in commit
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 101, in _go
+    self._raise_for_prerequisite_state(fn.__name__, current_state)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 975, in _raise_for_prerequisite_state
+    raise sa_exc.PendingRollbackError(
+    ...<6 lines>...
+    )
+sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) UNIQUE constraint failed: videos.bvid
+[SQL: INSERT INTO videos (bvid, creator_id, title, video_url, published_at, duration_seconds, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('BV1byKn6sEMG', 2, '我的法宝都是规则系-第三百五十七集：梦湖城！化梦血蛟！', 'https://www.bilibili.com/video/BV1byKn6sEMG', '2026-07-18 00:00:00.000000', 341, 'https://i1.hdslb.com/bfs/archive/2e07cf2a34eccafab83f11fb0954aebbc25e2547.jpg@672w_378h_1c.webp')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2026-07-20 02:43:03 [INFO] app.fetcher.playwright_fetcher: 开始抓取 25800310 的视频
+2026-07-20 02:44:11 [INFO] app.fetcher.playwright_fetcher: 开始抓取 474417988 的视频
+2026-07-20 02:45:19 [INFO] app.fetcher.playwright_fetcher: 开始抓取 223305228 的视频
+2026-07-20 02:46:28 [INFO] app.fetcher.playwright_fetcher: 开始抓取 178753244 的视频
+2026-07-20 02:47:38 [INFO] app.fetcher.playwright_fetcher: 开始抓取 29235818 的视频
+2026-07-20 02:48:07 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-20 02:48:11 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-20 02:48:11 [ERROR] app.scheduler: 定时全量同步失败
+Traceback (most recent call last):
+  File "D:\chen\bilibili-tag-group\app\scheduler.py", line 21, in run_sync_loop
+    db.commit()
+    ~~~~~~~~~^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2035, in commit
+    trans.commit(_to_root=True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<string>", line 2, in commit
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 101, in _go
+    self._raise_for_prerequisite_state(fn.__name__, current_state)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 975, in _raise_for_prerequisite_state
+    raise sa_exc.PendingRollbackError(
+    ...<6 lines>...
+    )
+sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) UNIQUE constraint failed: videos.bvid
+[SQL: INSERT INTO videos (bvid, creator_id, title, video_url, published_at, duration_seconds, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('BV1Z6KJ6MEZW', 5, '绝望九州双江亦', 'https://www.bilibili.com/video/BV1Z6KJ6MEZW', '2026-07-17 00:00:00.000000', 251, 'https://i0.hdslb.com/bfs/archive/66fb05435bdd49665d160cfc0908ad724c2aa360.jpg@672w_378h_1c.webp')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)

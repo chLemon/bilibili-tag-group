@@ -231,7 +231,7 @@ class PlaywrightBilibiliFetcher:
                     raise FetchError
 
                 # 当前激活页码
-                current_page_num = self._extract_current_page_num(page)
+                current_page_num = await self._extract_current_page_num(page)
                 _logger.info(f"抓取第 {current_page_num} 页的数据")
 
                 page_bvids: set[str] = set()

@@ -3,35 +3,33 @@ from typing import Optional
 
 from app.schemas._datetime import BeijingDateTime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
-class SyncLogRead(BaseModel):
+class SyncTaskVo(BaseModel):
     """同步日志读取响应体（对应 SyncLog ORM 字段）。"""
 
+    # 主键
     id: int
+    # 范围
     scope: str
+    # 状态
     status: str
-    new_videos: int
-    error_message: Optional[str]
+    # 开始时间
     started_at: BeijingDateTime
-    finished_at: Optional[BeijingDateTime]
-
-    model_config = {"from_attributes": True}
-
-
-class SyncTaskRead(BaseModel):
-    """同步任务进度响应体。"""
-
-    id: int
-    status: str
-    total_creators: int
-    completed_creators: int
-    current_creator_name: Optional[str] = None
-    new_videos: int
-    error_message: Optional[str] = None
-    started_at: BeijingDateTime
+    # 结束时间
     finished_at: Optional[BeijingDateTime] = None
+    # 最近心跳时间
     heartbeat_at: Optional[BeijingDateTime] = None
+    # 新视频的数量
+    new_videos_count: int
+    # 总共更新up数
+    total_creators: int
+    # 更新成功up数
+    completed_creators: int
+    # 当前更新up
+    current_creator_name: Optional[str] = None
+    # 失败信息，json，up和对应失败原因
+    error_message: Optional[str] = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
