@@ -1,10 +1,9 @@
 """路由集成测试：通过 TestClient 验证 API 端点行为。"""
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.fetcher.models import FetchedVideo
 from datetime import datetime
 
 
@@ -233,43 +232,47 @@ class TestSyncLatest:
         assert response.status_code == 200
         assert response.json() is None
 
-    def test_returns_latest_sync_log(self, client, db_session, seeded_data):
+    async def test_returns_latest_sync_log(self, client, store, seeded_data):
         """有同步记录时返回最近一条。"""
-        from app.models.sync_log import SyncLog
-        log = SyncLog(
+        from app.models.sync_task import SyncTask
+        task = SyncTask(
             scope="all",
-            status="success",
+            status="completed",
             new_videos=2,
+            total_creators=0,
+            completed_creators=0,
             started_at=datetime(2026, 1, 1, 10, 0, 0),
             finished_at=datetime(2026, 1, 1, 10, 1, 0),
+            heartbeat_at=datetime(2026, 1, 1, 10, 1, 0),
         )
-        db_session.add(log)
-        db_session.commit()
+        await store.sync_tasks.add(task)
 
         response = client.get("/api/sync/latest")
         assert response.status_code == 200
         body = response.json()
         assert body["scope"] == "all"
-        assert body["status"] == "success"
+        assert body["status"] == "completed"
         assert body["new_videos"] == 2
 
 
 class TestSyncRun:
-    """POST /api/sync/run 测试（异步模式：后台协程执行，立即返回 SyncTask）。"""
+    """POST /api/sync/run 测试。"""
 
     def test_run_sync_returns_task(self, client):
-        """手动触发全量同步，返回 SyncTask（异步模式）。"""
+        """手动触发全量同步，返回 SyncTask。"""
         with patch("app.routers.sync._sync_svc") as mock_svc:
             from app.models.sync_task import SyncTask
             fake_task = SyncTask(
                 id=1,
+                scope="all",
                 status="running",
                 total_creators=0,
                 completed_creators=0,
                 new_videos=0,
                 started_at=datetime(2026, 4, 18, 0, 0, 0),
+                heartbeat_at=datetime(2026, 4, 18, 0, 0, 0),
             )
-            mock_svc.start_async_sync.return_value = fake_task
+            mock_svc.start_async_sync = AsyncMock(return_value=fake_task)
             mock_svc._run_async_sync = AsyncMock()
             response = client.post("/api/sync/run")
 
@@ -283,13 +286,15 @@ class TestSyncRun:
             from app.models.sync_task import SyncTask
             fake_task = SyncTask(
                 id=1,
+                scope="all",
                 status="running",
                 total_creators=0,
                 completed_creators=0,
                 new_videos=0,
                 started_at=datetime(2026, 4, 18, 0, 0, 0),
+                heartbeat_at=datetime(2026, 4, 18, 0, 0, 0),
             )
-            mock_svc.start_async_sync.return_value = fake_task
+            mock_svc.start_async_sync = AsyncMock(return_value=fake_task)
             mock_svc._run_async_sync = AsyncMock()
             response = client.post("/api/sync/run")
         assert response.status_code == 200
@@ -299,7 +304,7 @@ class TestSyncRun:
 
 
 class TestSyncSettings:
-    """GET /api/sync/settings 测试：返回调度配置与状态。"""
+    """GET /api/sync/settings 测试。"""
 
     def test_returns_200(self, client):
         """接口应正常返回 200。"""
@@ -307,7 +312,7 @@ class TestSyncSettings:
         assert response.status_code == 200
 
     def test_returns_required_fields(self, client):
-        """响应体应包含 enabled、interval_minutes、job_id 三个字段。"""
+        """响应体应包含 enabled、interval_minutes、job_id。"""
         response = client.get("/api/sync/settings")
         body = response.json()
         assert "enabled" in body

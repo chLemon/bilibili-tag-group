@@ -1,11 +1,10 @@
 """视频服务：管理本地视频观看状态。"""
-from datetime import datetime, timezone
-from typing import Optional
+from __future__ import annotations
 
-from sqlalchemy import update
-from sqlalchemy.orm import Session
+from datetime import datetime, timezone
 
 from app.models.video_status import VideoStatus
+from app.store.store import DataStore
 
 
 def _now_utc() -> datetime:
@@ -14,44 +13,38 @@ def _now_utc() -> datetime:
 
 
 class VideoService:
-    """视频本地状态业务逻辑。
+    """视频本地状态业务逻辑。"""
 
-    只负责 watched / watched_at 的读写，不修改视频公开信息。
-    """
-
-    def set_status(self, db: Session, video_id: int, status_value: int) -> Optional[VideoStatus]:
-        """更新视频状态（0=未看, 1=已看, 2=不看）。
-
-        - status=1：同步写入 watched_at（当前 UTC 时间）
-        - 其他状态：清空 watched_at
-        """
-        video_status = db.get(VideoStatus, video_id)
-        if video_status is None:
+    async def set_status(self, store: DataStore, video_id: int, status_value: int) -> VideoStatus | None:
+        """更新视频状态（0=未看, 1=已看, 2=不看）。"""
+        vs = store.video_statuses.get(video_id)
+        if vs is None:
             return None
 
-        video_status.status = status_value
+        updates: dict[str, object] = {"status": status_value}
         if status_value == 1:
-            video_status.watched_at = _now_utc()
+            updates["watched_at"] = _now_utc()
         else:
-            video_status.watched_at = None
+            updates["watched_at"] = None
+        await store.video_statuses.update(vs.id, **updates)
+        return store.video_statuses.get(vs.id)
 
-        db.flush()
-        return video_status
-
-    def batch_set_status_by_creator(
-        self, db: Session, creator_id: int, status_value: int
+    async def batch_set_status_by_creator(
+        self, store: DataStore, creator_id: int, status_value: int
     ) -> int:
         """批量将某个 UP 主的所有未看视频标记为指定状态，返回更新行数。"""
         watched_at = _now_utc() if status_value == 1 else None
-        result = db.execute(
-            update(VideoStatus)
-            .where(VideoStatus.video_id.in_(
-                db.query(VideoStatus.video_id)
-                .filter(VideoStatus.status == 0)
-                .filter(VideoStatus.video.has(creator_id=creator_id))
-                .subquery()
-            ))
-            .values(status=status_value, watched_at=watched_at)
-        )
-        db.flush()
-        return result.rowcount
+        all_video_statuses = store.video_statuses.all()
+        all_videos = store.videos.filter(creator_id=creator_id)
+        creator_video_ids = {v.id for v in all_videos}
+
+        count = 0
+        for vs in all_video_statuses:
+            if vs.video_id not in creator_video_ids:
+                continue
+            if vs.status != 0:
+                continue
+            updates: dict[str, object] = {"status": status_value, "watched_at": watched_at}
+            await store.video_statuses.update(vs.id, **updates)
+            count += 1
+        return count

@@ -10,14 +10,18 @@ import * as client from "../src/api/client";
 
 vi.mock("../src/api/client");
 
-const mockLog: client.SyncLog = {
+const mockLatestTask: client.SyncTask = {
   id: 1,
   scope: "all",
-  status: "success",
+  status: "completed",
+  total_creators: 2,
+  completed_creators: 2,
+  current_creator_name: null,
   new_videos: 5,
   error_message: null,
   started_at: "2024-06-01T08:00:00",
   finished_at: "2024-06-01T08:01:00",
+  heartbeat_at: "2024-06-01T08:01:00",
 };
 
 const mockSettings: client.SyncSettings = {
@@ -37,6 +41,7 @@ const mockImmediateTags: client.ImmediateTag[] = [
 
 const completedTask: client.SyncTask = {
   id: 1,
+  scope: "all",
   status: "completed",
   total_creators: 2,
   completed_creators: 2,
@@ -49,7 +54,7 @@ const completedTask: client.SyncTask = {
 };
 
 beforeEach(() => {
-  vi.mocked(client.fetchLatestSync).mockResolvedValue(mockLog);
+  vi.mocked(client.fetchLatestSync).mockResolvedValue(mockLatestTask);
   vi.mocked(client.fetchSyncSettings).mockResolvedValue(mockSettings);
   vi.mocked(client.fetchImmediateTags).mockResolvedValue(mockImmediateTags);
   vi.mocked(client.fetchTags).mockResolvedValue(mockTags);

@@ -72,20 +72,10 @@ export interface VideoDetail {
   status: number; // 0=未看, 1=已看, 2=不看
 }
 
-/** 同步日志 */
-export interface SyncLog {
-  id: number;
-  scope: string;
-  status: string;
-  new_videos: number;
-  error_message: string | null;
-  started_at: string;
-  finished_at: string | null;
-}
-
 /** 同步任务进度 */
 export interface SyncTask {
   id: number;
+  scope: string;
   status: string;
   total_creators: number;
   completed_creators: number;
@@ -257,9 +247,9 @@ export function batchUpdateCreatorVideos(
 
 // ---- 同步 API ----
 
-/** 获取最近一次全量同步日志（无记录时返回 null） */
-export function fetchLatestSync(): Promise<SyncLog | null> {
-  return request<SyncLog | null>("/api/sync/latest");
+/** 获取最近一次全量同步任务（无记录时返回 null） */
+export function fetchLatestSync(): Promise<SyncTask | null> {
+  return request<SyncTask | null>("/api/sync/latest");
 }
 
 /** 手动触发全量同步（异步，立即返回 SyncTask） */

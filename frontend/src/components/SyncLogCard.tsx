@@ -2,7 +2,7 @@
  * SyncLogCard：展示最近一次同步日志记录，无记录时显示空状态。
  */
 import { Clock, FileVideo, CalendarClock, CheckCircle2, XCircle } from "lucide-react";
-import { SyncLog } from "../api/client";
+import { SyncTask } from "../api/client";
 
 /** 格式化为本地时间字符串 */
 function formatTime(iso: string): string {
@@ -10,11 +10,11 @@ function formatTime(iso: string): string {
 }
 
 interface Props {
-  latestLog: SyncLog | null;
+  latestTask: SyncTask | null;
 }
 
-export default function SyncLogCard({ latestLog }: Props) {
-  if (!latestLog) {
+export default function SyncLogCard({ latestTask }: Props) {
+  if (!latestTask) {
     return (
       <div className="empty-state" style={{ paddingTop: "var(--space-4)", marginBottom: "var(--space-4)" }}>
         <Clock size={36} />
@@ -29,7 +29,7 @@ export default function SyncLogCard({ latestLog }: Props) {
       <div className="sync-log-header">
         <Clock size={16} />
         <span>最近同步记录</span>
-        {latestLog.status === "success" ? (
+        {latestTask.status === "completed" ? (
           <span className="badge badge-success">
             <CheckCircle2 size={12} /> 成功
           </span>
@@ -43,18 +43,18 @@ export default function SyncLogCard({ latestLog }: Props) {
         <div className="sync-log-stat">
           <FileVideo size={14} />
           <span>新增视频</span>
-          <strong>{latestLog.new_videos} 条</strong>
+          <strong>{latestTask.new_videos} 条</strong>
         </div>
         <div className="sync-log-stat">
           <CalendarClock size={14} />
           <span>开始时间</span>
-          <span>{formatTime(latestLog.started_at)}</span>
+          <span>{formatTime(latestTask.started_at)}</span>
         </div>
-        {latestLog.finished_at && (
+        {latestTask.finished_at && (
           <div className="sync-log-stat">
             <CalendarClock size={14} />
             <span>结束时间</span>
-            <span>{formatTime(latestLog.finished_at)}</span>
+            <span>{formatTime(latestTask.finished_at)}</span>
           </div>
         )}
       </div>

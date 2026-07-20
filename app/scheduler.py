@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-async def run_sync_loop(sync_service, session_factory, interval_minutes: int) -> None:
+async def run_sync_loop(sync_service, store, interval_minutes: int) -> None:
     """每隔 interval_minutes 分钟执行一次全量同步。
 
     通过 asyncio.sleep 实现周期调度，与 FastAPI 共用同一事件循环。
@@ -15,12 +15,7 @@ async def run_sync_loop(sync_service, session_factory, interval_minutes: int) ->
     """
     while True:
         await asyncio.sleep(interval_minutes * 60)
-        db = session_factory()
         try:
-            await sync_service.sync_all(db)
-            db.commit()
+            await sync_service.sync_all(store)
         except Exception:
-            db.rollback()
             logger.exception("定时全量同步失败")
-        finally:
-            db.close()

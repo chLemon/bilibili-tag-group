@@ -27,7 +27,7 @@ python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 # 执行数据库迁移
 .venv/bin/alembic upgrade head
 
-# 启动 API
+# 启动 API（首次启动会自动创建 data/ 目录）
 .venv/bin/uvicorn app.main:app --reload
 ```
 
@@ -88,8 +88,7 @@ cd frontend && npm run dev
 - **CreatorTag**：UP 主与标签的多对多关联
 - **Video**：视频信息（bvid、标题、发布时间、时长）
 - **VideoStatus**：视频观看状态（已看/未看、标记时间）
-- **SyncLog**：同步操作历史日志
-- **SyncTask**：异步同步任务（进度追踪、探活心跳）
+- **SyncTask**：同步任务（进度追踪、探活心跳、历史记录）
 - **TagSyncConfig**：标签同步模式配置（TTL 缓存 / 立即同步）
 
 ## 同步模式

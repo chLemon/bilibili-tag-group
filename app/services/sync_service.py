@@ -1,19 +1,16 @@
 """同步核心服务：将 B 站抓取结果写入本地数据库。"""
-
 from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy.orm import Session
-
 from app.fetcher.models import FetchedVideo
 from app.fetcher.playwright_fetcher import PlaywrightBilibiliFetcher
 from app.models.creator import Creator
-from app.models.sync_log import SyncLog
 from app.models.sync_task import SyncTask
 from app.models.video import Video
 from app.models.video_status import VideoStatus
+from app.store.store import DataStore
 
 
 def _now_utc() -> datetime:
@@ -27,51 +24,38 @@ def _uid_from_profile_url(profile_url: str) -> str:
 class SyncService:
     """同步服务：协调抓取与数据库写入，保持本地视频数据与 B 站同步。"""
 
-    # 心跳更新间隔，对应前端轮询周期
     _HEARTBEAT_INTERVAL = 15
-    # 心跳超过此秒数视为进程已崩溃
     _HEARTBEAT_DEAD_SEC = 45
 
     def __init__(self, fetcher: PlaywrightBilibiliFetcher | None = None) -> None:
         self._fetcher = fetcher if fetcher is not None else PlaywrightBilibiliFetcher()
 
     @staticmethod
-    def _get_immediate_tag_ids(db_session: Session) -> set[int]:
-        from app.models.tag_sync_config import TagSyncConfig
-
-        return {row[0] for row in db_session.query(TagSyncConfig.tag_id).all()}
+    def _get_immediate_tag_ids(store: DataStore) -> set[int]:
+        configs = store.tag_sync_configs.all()
+        return {row.tag_id for row in configs}
 
     @staticmethod
     def _creator_has_immediate_tag(
-        db_session: Session, creator_id: int, immediate_tag_ids: set[int]
+        store: DataStore, creator_id: int, immediate_tag_ids: set[int]
     ) -> bool:
         if not immediate_tag_ids:
             return False
-        from app.models.creator_tag import CreatorTag
-
         creator_tag_ids = {
-            row[0]
-            for row in db_session.query(CreatorTag.tag_id)
-            .filter_by(creator_id=creator_id)
-            .all()
+            row.tag_id
+            for row in store.creator_tags.filter(creator_id=creator_id)
         }
         return bool(creator_tag_ids & immediate_tag_ids)
 
-    async def sync_creator(self, db_session: Session, creator: Creator) -> int:
-        """同步up主的信息
-        1. 大部分up主，50分后才能抓1次
-        2. 所有up主，5分钟后才能抓1次
-        3. 失败了的，不记录时间，可以继续抓
-        """
-        immediate_tag_ids = self._get_immediate_tag_ids(db_session)
-        if self._creator_has_immediate_tag(db_session, creator.id, immediate_tag_ids):
-            # 有同步标签的，5分钟即可
+    async def sync_creator(self, store: DataStore, creator: Creator) -> int:
+        """同步 UP 主的信息。"""
+        immediate_tag_ids = self._get_immediate_tag_ids(store)
+        if self._creator_has_immediate_tag(store, creator.id, immediate_tag_ids):
             if creator.last_synced_at and (
                 _now_utc() - creator.last_synced_at
             ) < timedelta(minutes=5):
                 return 0
         else:
-            # 没有同步标签的，50分钟才可以
             if creator.last_synced_at and (
                 _now_utc() - creator.last_synced_at
             ) < timedelta(minutes=50):
@@ -92,21 +76,21 @@ class SyncService:
 
         fetched_list: list[FetchedVideo] = await self._fetcher.fetch_new_videos(uid)
 
-        existing_videos: dict[str, Video] = {
-            v.bvid: v
-            for v in db_session.query(Video).filter_by(creator_id=creator.id).all()
-        }
+        existing_videos_list = store.videos.filter(creator_id=creator.id)
+        existing_videos: dict[str, Video] = {v.bvid: v for v in existing_videos_list}
 
         new_count = 0
         for fv in fetched_list:
             if fv.bvid in existing_videos:
                 video = existing_videos[fv.bvid]
-                video.title = fv.title
-                video.video_url = fv.video_url
-                video.published_at = fv.published_at
-                video.duration_seconds = fv.duration_seconds
-                if fv.cover_url:
-                    video.cover_url = fv.cover_url
+                await store.videos.update(
+                    video.id,
+                    title=fv.title,
+                    video_url=fv.video_url,
+                    published_at=fv.published_at,
+                    duration_seconds=fv.duration_seconds,
+                    cover_url=fv.cover_url,
+                )
             else:
                 video = Video(
                     bvid=fv.bvid,
@@ -117,46 +101,36 @@ class SyncService:
                     duration_seconds=fv.duration_seconds,
                     cover_url=fv.cover_url,
                 )
-                db_session.add(video)
-                db_session.flush()
+                await store.videos.add(video)
                 status = VideoStatus(video_id=video.id)
-                video.status = status
-                db_session.add(status)
+                await store.video_statuses.add(status)
                 new_count += 1
 
-        creator.last_synced_at = _now_utc()
-        db_session.flush()
+        await store.creators.update(creator.id, last_synced_at=_now_utc())
         return new_count
 
     # ── 异步全量同步（后台协程） ──────────────────────────────────
 
-    def start_async_sync(self, request_db: Session) -> SyncTask:
-        """创建 SyncTask 记录并提交，返回 task（协程由调用方启动）。
-
-        如果已有正在运行且心跳正常的任务，直接返回该任务（幂等）。
-        如果旧任务心跳已超时（进程崩溃），将其标记为 failed 并创建新任务。
-        """
-        existing = (
-            request_db.query(SyncTask)
-            .filter_by(status="running")
-            .order_by(SyncTask.started_at.desc())
-            .first()
-        )
-        if existing is not None:
+    async def start_async_sync(self, store: DataStore) -> SyncTask:
+        """创建 SyncTask 记录并返回 task。"""
+        all_tasks = store.sync_tasks.filter(status="running")
+        if all_tasks:
+            existing = max(all_tasks, key=lambda t: t.started_at)
             if existing.heartbeat_at is not None:
                 age_sec = (_now_utc() - existing.heartbeat_at).total_seconds()
                 if age_sec >= self._HEARTBEAT_DEAD_SEC:
-                    existing.status = "failed"
-                    existing.error_message = "任务进程崩溃，心跳超时未更新"
-                    existing.finished_at = _now_utc()
-                    request_db.flush()
+                    await store.sync_tasks.update(
+                        existing.id,
+                        status="failed",
+                        error_message="任务进程崩溃，心跳超时未更新",
+                        finished_at=_now_utc(),
+                    )
                 else:
                     return existing
             else:
                 return existing
 
-        total = request_db.query(Creator).count()
-
+        total = len(store.creators.all())
         task = SyncTask(
             status="running",
             total_creators=total,
@@ -165,50 +139,34 @@ class SyncService:
             started_at=_now_utc(),
             heartbeat_at=_now_utc(),
         )
-        request_db.add(task)
-        request_db.flush()
-        task_id = task.id
-        request_db.commit()
+        await store.sync_tasks.add(task)
         return task
 
     async def _heartbeat_loop(
-        self, task_id: int, SessionLocal, stop_event: asyncio.Event
+        self, task_id: int, store: DataStore, stop_event: asyncio.Event
     ) -> None:
         """独立心跳协程：每隔 _HEARTBEAT_INTERVAL 秒更新 heartbeat_at。"""
-        db = SessionLocal()
-        try:
-            while not stop_event.is_set():
-                await asyncio.sleep(self._HEARTBEAT_INTERVAL)
-                if stop_event.is_set():
-                    break
-                try:
-                    task = db.query(SyncTask).filter_by(id=task_id).first()
-                    if task is None:
-                        return
-                    task.heartbeat_at = _now_utc()
-                    db.commit()
-                except Exception:
-                    db.rollback()
-        finally:
-            db.close()
+        while not stop_event.is_set():
+            await asyncio.sleep(self._HEARTBEAT_INTERVAL)
+            if stop_event.is_set():
+                break
+            await store.sync_tasks.update(task_id, heartbeat_at=_now_utc())
 
-    async def _run_async_sync(self, task_id: int, SessionLocal) -> None:
+    async def _run_async_sync(self, task_id: int, store: DataStore) -> None:
         """后台协程：逐个同步 UP 主，更新 SyncTask 进度。"""
-        db = SessionLocal()
         heartbeat_stop = asyncio.Event()
         hb_task = None
         try:
-            task = db.query(SyncTask).filter_by(id=task_id).first()
+            task = store.sync_tasks.get(task_id)
             if task is None:
                 return
 
             hb_task = asyncio.create_task(
-                self._heartbeat_loop(task_id, SessionLocal, heartbeat_stop)
+                self._heartbeat_loop(task_id, store, heartbeat_stop)
             )
 
-            creators = db.query(Creator).all()
-            task.total_creators = len(creators)
-            db.commit()
+            creators = store.creators.all()
+            await store.sync_tasks.update(task_id, total_creators=len(creators))
 
             total_new = 0
             errors: list[str] = []
@@ -217,61 +175,57 @@ class SyncService:
                 if idx > 0:
                     await asyncio.sleep(1)
 
-                task = db.query(SyncTask).filter_by(id=task_id).first()
+                task = store.sync_tasks.get(task_id)
                 if task is None:
                     return
-                task.current_creator_name = creator.name
-                db.commit()
+                await store.sync_tasks.update(task_id, current_creator_name=creator.name)
 
                 try:
-                    new_count = await self.sync_creator(db, creator)
+                    new_count = await self.sync_creator(store, creator)
                     total_new += new_count
-                    db.commit()
                 except Exception as exc:
-                    db.rollback()
                     errors.append(f"{creator.name}: {exc}")
 
-                task = db.query(SyncTask).filter_by(id=task_id).first()
+                task = store.sync_tasks.get(task_id)
                 if task is None:
                     return
-                task.completed_creators += 1
-                task.new_videos = total_new
-                task.current_creator_name = None
-                db.commit()
+                await store.sync_tasks.update(
+                    task_id,
+                    completed_creators=(task.completed_creators + 1),
+                    new_videos=total_new,
+                    current_creator_name=None,
+                )
 
-            task = db.query(SyncTask).filter_by(id=task_id).first()
+            task = store.sync_tasks.get(task_id)
             if task is None:
                 return
-            task.current_creator_name = None
-            task.new_videos = total_new
-            task.finished_at = _now_utc()
+            finished_at = _now_utc()
             if errors:
-                task.status = "failed"
-                task.error_message = "\n".join(errors)
+                await store.sync_tasks.update(
+                    task_id,
+                    status="failed",
+                    current_creator_name=None,
+                    new_videos=total_new,
+                    finished_at=finished_at,
+                    error_message="\n".join(errors),
+                )
             else:
-                task.status = "completed"
-            db.commit()
-
-            log = SyncLog(
-                scope="all",
-                status="success" if not errors else "failed",
-                new_videos=total_new,
-                error_message="\n".join(errors) if errors else None,
-                started_at=task.started_at,
-                finished_at=task.finished_at,
-            )
-            db.add(log)
-            db.commit()
+                await store.sync_tasks.update(
+                    task_id,
+                    status="completed",
+                    current_creator_name=None,
+                    new_videos=total_new,
+                    finished_at=finished_at,
+                )
 
         except Exception as exc:
-            db.rollback()
             try:
-                task = db.query(SyncTask).filter_by(id=task_id).first()
-                if task is not None:
-                    task.status = "failed"
-                    task.error_message = str(exc)
-                    task.finished_at = _now_utc()
-                    db.commit()
+                await store.sync_tasks.update(
+                    task_id,
+                    status="failed",
+                    error_message=str(exc),
+                    finished_at=_now_utc(),
+                )
             except Exception:
                 pass
         finally:
@@ -282,46 +236,56 @@ class SyncService:
                     await hb_task
                 except asyncio.CancelledError:
                     pass
-            db.close()
 
     # ── 调度器用同步方法 ──────────────────────────────────────
 
-    async def sync_all(self, db_session: Session) -> SyncLog:
-        """供调度器使用：异步执行全量同步，完成后返回 SyncLog。"""
-        log = SyncLog(
+    async def sync_all(self, store: DataStore) -> SyncTask:
+        """供调度器使用：异步执行全量同步，完成后返回 SyncTask。"""
+        creators = store.creators.all()
+        task = SyncTask(
             scope="all",
-            status="failed",
+            status="running",
+            total_creators=len(creators),
+            completed_creators=0,
             new_videos=0,
             started_at=_now_utc(),
+            heartbeat_at=_now_utc(),
         )
-        db_session.add(log)
-        db_session.flush()
+        await store.sync_tasks.add(task)
 
-        try:
-            creators = db_session.query(Creator).all()
-            total_new = 0
-            errors: list[str] = []
-            for idx, creator in enumerate(creators):
-                if idx > 0:
-                    await asyncio.sleep(1)
-                try:
-                    total_new += await self.sync_creator(db_session, creator)
-                except Exception as exc:
-                    errors.append(f"creator_id={creator.id}: {exc}")
+        total_new = 0
+        errors: list[str] = []
+        for idx, creator in enumerate(creators):
+            if idx > 0:
+                await asyncio.sleep(1)
+            try:
+                total_new += await self.sync_creator(store, creator)
+                await store.sync_tasks.update(
+                    task.id, completed_creators=(task.completed_creators + 1)
+                )
+                task.completed_creators += 1
+            except Exception as exc:
+                errors.append(f"creator_id={creator.id}: {exc}")
+                await store.sync_tasks.update(
+                    task.id, completed_creators=(task.completed_creators + 1)
+                )
+                task.completed_creators += 1
 
-            log.new_videos = total_new
-            if errors:
-                log.status = "failed"
-                log.error_message = "\n".join(errors)
-            else:
-                log.status = "success"
+        finished_at = _now_utc()
+        if errors:
+            await store.sync_tasks.update(
+                task.id,
+                status="failed",
+                new_videos=total_new,
+                error_message="\n".join(errors),
+                finished_at=finished_at,
+            )
+        else:
+            await store.sync_tasks.update(
+                task.id,
+                status="completed",
+                new_videos=total_new,
+                finished_at=finished_at,
+            )
 
-        except Exception as exc:
-            log.status = "failed"
-            log.error_message = str(exc)
-
-        finally:
-            log.finished_at = _now_utc()
-
-        db_session.flush()
-        return log
+        return store.sync_tasks.get(task.id) or task

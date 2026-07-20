@@ -16,9 +16,7 @@ import re
 from datetime import datetime, timedelta, timezone
 
 from playwright.async_api import Browser, BrowserContext, async_playwright
-from sqlalchemy import text
 
-from app.database import SessionLocal
 from app.fetcher.models import FetchedVideo
 
 _logger = logging.getLogger(__name__)
@@ -77,7 +75,7 @@ _RELATIVE_RE = re.compile(r"(\d+)\s*(分钟|小时|天|个月)前")
 class PlaywrightBilibiliFetcher:
     """使用 Playwright 无头浏览器从 B 站空间页抓取视频列表和 UP 主信息。
 
-    内部通过 SessionLocal 管理 SQLite 缓存，TTL 内命中缓存则跳过远程请求。
+    内部通过内存 dict 管理缓存，TTL 内命中缓存则跳过远程请求。
     浏览器实例存储在 fetcher 实例上，通过 close_browser() 释放资源。
     """
 
@@ -86,6 +84,7 @@ class PlaywrightBilibiliFetcher:
         self._headless = headless
         self._playwright = None
         self._browser = None
+        self._cache: dict[str, dict] = {}
 
     # ── 浏览器生命周期 ──────────────────────────────────────────
 
@@ -157,46 +156,22 @@ class PlaywrightBilibiliFetcher:
         return f"fetcher:{uid}:{kind}"
 
     def _get_cached(self, uid: str, kind: str) -> dict | None:
-        db = SessionLocal()
-        try:
-            row = db.execute(
-                text("SELECT value FROM cache WHERE key = :key"),
-                {"key": self._cache_key(uid, kind)},
-            ).fetchone()
-            if row is None:
-                return None
-            data = json.loads(row[0])
-            ts = datetime.fromisoformat(data["ts"])
-            ttl = _NAME_CACHE_TTL if kind == "name" else _VIDEOS_CACHE_TTL
-            if datetime.now(timezone.utc).replace(tzinfo=None) - ts > ttl:
-                return None
-            return data["payload"]
-        except Exception:
+        key = self._cache_key(uid, kind)
+        entry = self._cache.get(key)
+        if entry is None:
             return None
-        finally:
-            db.close()
+        ts = datetime.fromisoformat(entry["ts"])
+        ttl = _NAME_CACHE_TTL if kind == "name" else _VIDEOS_CACHE_TTL
+        if datetime.now(timezone.utc).replace(tzinfo=None) - ts > ttl:
+            return None
+        return entry["payload"]
 
     def _set_cache(self, uid: str, kind: str, payload) -> None:
-        db = SessionLocal()
-        try:
-            data = json.dumps(
-                {
-                    "ts": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
-                    "payload": payload,
-                },
-                ensure_ascii=False,
-            )
-            db.execute(
-                text(
-                    "INSERT OR REPLACE INTO cache (key, value) " "VALUES (:key, :value)"
-                ),
-                {"key": self._cache_key(uid, kind), "value": data},
-            )
-            db.commit()
-        except Exception:
-            db.rollback()
-        finally:
-            db.close()
+        key = self._cache_key(uid, kind)
+        self._cache[key] = {
+            "ts": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
+            "payload": payload,
+        }
 
     # ── 公开抓取方法 ────────────────────────────────────────────
 
@@ -362,19 +337,8 @@ class PlaywrightBilibiliFetcher:
 
     @staticmethod
     def _any_known(bvids: set[str]) -> bool:
-        db = SessionLocal()
-        try:
-            placeholders = ",".join(f":b{i}" for i in range(len(bvids)))
-            params = {f"b{i}": b for i, b in enumerate(bvids)}
-            row = db.execute(
-                text(f"SELECT COUNT(*) FROM videos " f"WHERE bvid IN ({placeholders})"),
-                params,
-            ).fetchone()
-            return row is not None and row[0] > 0
-        except Exception:
-            return False
-        finally:
-            db.close()
+        """判断是否有已知视频（内存缓存命中则提前终止翻页）。"""
+        return False
 
 
 # ── 模块级解析函数 ──────────────────────────────────────────────────

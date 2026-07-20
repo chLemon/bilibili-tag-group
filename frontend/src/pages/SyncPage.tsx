@@ -9,8 +9,8 @@ import ImmediateTagsSection from "../components/ImmediateTagsSection";
 export default function SyncPage() {
   // ── 数据与操作 ──
   const { task, setTask, isStarting, startSync, error: taskError } = useSyncTask();
-  const { settings, latestLog, isLoading: settingsLoading, error: settingsError, refreshLatestLog } = useSyncSettings();
-  const { isRunning, isDead, progress } = useSyncPolling(task, setTask, refreshLatestLog);
+  const { settings, latestTask, isLoading: settingsLoading, error: settingsError, refreshLatestTask } = useSyncSettings();
+  const { isRunning, isDead, progress } = useSyncPolling(task, setTask, refreshLatestTask);
   const {
     immediateTags,
     availableTags,
@@ -145,7 +145,7 @@ export default function SyncPage() {
       )}
 
       {/* 最近同步记录 */}
-      <SyncLogCard latestLog={latestLog} />
+      <SyncLogCard latestTask={latestTask} />
 
       {/* 立即同步标签管理 */}
       <ImmediateTagsSection

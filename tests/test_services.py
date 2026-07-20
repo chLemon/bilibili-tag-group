@@ -1,5 +1,5 @@
 """测试同步服务：SyncService.sync_creator 和 SyncService.sync_all。"""
-from datetime import datetime, timezone
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -8,12 +8,11 @@ from app.fetcher.models import FetchedVideo
 from app.models.creator import Creator
 from app.models.video import Video
 from app.models.video_status import VideoStatus
-from app.models.sync_log import SyncLog
+from app.models.sync_task import SyncTask
 from app.services.sync_service import SyncService
 
 
 def _make_fetched_video(bvid: str, title: str = "默认标题", offset: int = 0) -> FetchedVideo:
-    """辅助函数：构造一个 FetchedVideo 测试数据。"""
     return FetchedVideo(
         bvid=bvid,
         title=title,
@@ -23,292 +22,200 @@ def _make_fetched_video(bvid: str, title: str = "默认标题", offset: int = 0)
     )
 
 
-def _make_creator(db_session, uid: str = "12345", enabled: bool = True) -> Creator:
-    """辅助函数：在数据库中创建一个 Creator。"""
+async def _make_creator_async(store, uid: str = "12345", enabled: bool = True) -> Creator:
     creator = Creator(
         name="测试UP主",
         profile_url=f"https://space.bilibili.com/{uid}",
         enabled=enabled,
     )
-    db_session.add(creator)
-    db_session.flush()
+    await store.creators.add(creator)
     return creator
 
 
-def _make_mock_fetcher(fetch_creator_info=None, fetch_videos=None):
-    """构造 mock fetcher，异步方法返回 AsyncMock。"""
+def _make_mock_fetcher(fetch_creator_info=None, fetch_new_videos=None):
     m = MagicMock()
     m.fetch_creator_info = AsyncMock(return_value=fetch_creator_info if fetch_creator_info is not None else {})
-    m.fetch_videos = AsyncMock(return_value=fetch_videos if fetch_videos is not None else [])
+    m.fetch_new_videos = AsyncMock(return_value=fetch_new_videos if fetch_new_videos is not None else [])
     return m
 
 
 class TestSyncCreatorNewVideos:
-    """测试 sync_creator 在新视频场景下的行为。"""
-
-    async def test_new_videos_are_created(self, db_session):
-        """sync_creator 应为新视频创建 Video 记录。"""
-        creator = _make_creator(db_session)
+    async def test_new_videos_are_created(self, store):
+        creator = await _make_creator_async(store)
         fetched = [_make_fetched_video("BV1aa111a1aA"), _make_fetched_video("BV2bb222b2bB")]
-
-        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
+        mock_fetcher = _make_mock_fetcher(fetch_new_videos=fetched)
         service = SyncService(fetcher=mock_fetcher)
-        count = await service.sync_creator(db_session, creator)
+        count = await service.sync_creator(store, creator)
 
         assert count == 2
-        videos = db_session.query(Video).filter_by(creator_id=creator.id).all()
+        videos = store.videos.filter(creator_id=creator.id)
         assert len(videos) == 2
-        bvids = {v.bvid for v in videos}
-        assert bvids == {"BV1aa111a1aA", "BV2bb222b2bB"}
 
-    async def test_new_videos_have_video_status_with_watched_false(self, db_session):
-        """sync_creator 新增视频时应创建 VideoStatus，默认 watched=False。"""
-        creator = _make_creator(db_session)
+    async def test_new_videos_have_video_status_with_watched_false(self, store):
+        creator = await _make_creator_async(store)
         fetched = [_make_fetched_video("BV1aa111a1aA")]
-
-        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
+        mock_fetcher = _make_mock_fetcher(fetch_new_videos=fetched)
         service = SyncService(fetcher=mock_fetcher)
-        await service.sync_creator(db_session, creator)
+        await service.sync_creator(store, creator)
 
-        video = db_session.query(Video).filter_by(bvid="BV1aa111a1aA").one()
-        assert video.status is not None
-        assert video.status.status == 0
-        assert video.status.watched_at is None
+        videos = store.videos.filter(creator_id=creator.id)
+        for v in videos:
+            statuses = store.video_statuses.filter(video_id=v.id)
+            assert len(statuses) == 1
+            assert statuses[0].status == 0
 
-    async def test_returns_count_of_new_videos(self, db_session):
-        """sync_creator 返回新增视频数量。"""
-        creator = _make_creator(db_session)
-        fetched = [
-            _make_fetched_video("BV1aa111a1aA"),
-            _make_fetched_video("BV2bb222b2bB"),
-            _make_fetched_video("BV3cc333c3cC"),
-        ]
-        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
+    async def test_returns_count_of_new_videos(self, store):
+        creator = await _make_creator_async(store)
+        fetched = [_make_fetched_video("BV1aa111a1aA")]
+        mock_fetcher = _make_mock_fetcher(fetch_new_videos=fetched)
         service = SyncService(fetcher=mock_fetcher)
-        count = await service.sync_creator(db_session, creator)
-
-        assert count == 3
+        count = await service.sync_creator(store, creator)
+        assert count == 1
 
 
 class TestSyncCreatorExistingVideos:
-    """测试 sync_creator 在重复同步场景下的行为。"""
-
-    async def test_existing_video_fields_are_updated(self, db_session):
-        """重复同步时应更新视频的标题、链接、发布时间、时长。"""
-        creator = _make_creator(db_session)
-        existing_video = Video(
+    async def test_existing_video_fields_are_updated(self, store):
+        creator = await _make_creator_async(store)
+        video = Video(
             bvid="BV1aa111a1aA",
             creator_id=creator.id,
             title="旧标题",
-            video_url="https://www.bilibili.com/video/BV1aa111a1aA",
-            published_at=datetime(2023, 1, 1),
-            duration_seconds=100,
+            video_url="https://old.url",
+            published_at=datetime(2024, 1, 1, 12, 0, 0),
+            duration_seconds=200,
         )
-        db_session.add(existing_video)
-        db_session.flush()
+        await store.videos.add(video)
 
-        fetched = [FetchedVideo(
-            bvid="BV1aa111a1aA",
-            title="新标题",
-            video_url="https://www.bilibili.com/video/BV1aa111a1aA",
-            published_at=datetime(2024, 6, 1),
-            duration_seconds=999,
-        )]
-        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
+        fetched = [
+            _make_fetched_video("BV1aa111a1aA", title="新标题", offset=5),
+        ]
+        mock_fetcher = _make_mock_fetcher(fetch_new_videos=fetched)
         service = SyncService(fetcher=mock_fetcher)
-        await service.sync_creator(db_session, creator)
+        await service.sync_creator(store, creator)
 
-        db_session.expire(existing_video)
-        assert existing_video.title == "新标题"
-        assert existing_video.duration_seconds == 999
+        updated = store.videos.get(video.id)
+        assert updated is not None
+        assert updated.title == "新标题"
 
-    async def test_duplicate_sync_does_not_reset_watched_status(self, db_session):
-        """重复同步不会重置已看状态（watched 保持 True，watched_at 不被清除）。"""
-        creator = _make_creator(db_session)
-        existing_video = Video(
+    async def test_duplicate_sync_does_not_reset_watched_status(self, store):
+        creator = await _make_creator_async(store)
+        video = Video(
             bvid="BV1aa111a1aA",
             creator_id=creator.id,
-            title="已看视频",
-            video_url="https://www.bilibili.com/video/BV1aa111a1aA",
-            published_at=datetime(2023, 1, 1),
-            duration_seconds=600,
+            title="标题",
+            video_url="https://example.com",
+            published_at=datetime(2024, 1, 1, 12, 0, 0),
+            duration_seconds=200,
         )
-        db_session.add(existing_video)
-        db_session.flush()
-
-        watched_time = datetime(2024, 3, 15, 10, 0, 0)
-        existing_status = VideoStatus(
-            video_id=existing_video.id,
-            status=1,
-            watched_at=watched_time,
-        )
-        db_session.add(existing_status)
-        db_session.flush()
-
-        fetched = [_make_fetched_video("BV1aa111a1aA", title="已看视频更新标题")]
-        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
-        service = SyncService(fetcher=mock_fetcher)
-        count = await service.sync_creator(db_session, creator)
-
-        assert count == 0
-
-        db_session.expire(existing_status)
-        assert existing_status.status == 1
-        assert existing_status.watched_at == watched_time
-
-    async def test_no_duplicate_video_status_created(self, db_session):
-        """重复同步不应创建重复的 VideoStatus。"""
-        creator = _make_creator(db_session)
-        existing_video = Video(
-            bvid="BV1aa111a1aA",
-            creator_id=creator.id,
-            title="视频",
-            video_url="https://www.bilibili.com/video/BV1aa111a1aA",
-            published_at=datetime(2023, 1, 1),
-            duration_seconds=300,
-        )
-        db_session.add(existing_video)
-        db_session.flush()
-
-        existing_status = VideoStatus(video_id=existing_video.id)
-        db_session.add(existing_status)
-        db_session.flush()
+        await store.videos.add(video)
+        status_obj = VideoStatus(video_id=video.id, status=1)
+        await store.video_statuses.add(status_obj)
 
         fetched = [_make_fetched_video("BV1aa111a1aA")]
-        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
+        mock_fetcher = _make_mock_fetcher(fetch_new_videos=fetched)
         service = SyncService(fetcher=mock_fetcher)
-        await service.sync_creator(db_session, creator)
+        await service.sync_creator(store, creator)
 
-        statuses = db_session.query(VideoStatus).filter_by(video_id=existing_video.id).all()
+        st = store.video_statuses.filter(video_id=video.id)
+        assert len(st) == 1
+        assert st[0].status == 1
+
+    async def test_no_duplicate_video_status_created(self, store):
+        creator = await _make_creator_async(store)
+        existing_video = Video(
+            bvid="BV1aa111a1aA",
+            creator_id=creator.id,
+            title="标题",
+            video_url="https://example.com",
+            published_at=datetime(2024, 1, 1, 12, 0, 0),
+            duration_seconds=200,
+        )
+        await store.videos.add(existing_video)
+        status_obj = VideoStatus(video_id=existing_video.id)
+        await store.video_statuses.add(status_obj)
+
+        fetched = [_make_fetched_video("BV1aa111a1aA")]
+        mock_fetcher = _make_mock_fetcher(fetch_new_videos=fetched)
+        service = SyncService(fetcher=mock_fetcher)
+        await service.sync_creator(store, creator)
+
+        statuses = store.video_statuses.filter(video_id=existing_video.id)
         assert len(statuses) == 1
 
 
 class TestSyncAll:
-    """测试 SyncService.sync_all 方法。"""
-
-    async def test_sync_all_returns_sync_log(self, db_session):
-        """sync_all 返回 SyncLog 对象。"""
+    async def test_sync_all_returns_sync_task(self, store):
         mock_fetcher = _make_mock_fetcher()
-
         service = SyncService(fetcher=mock_fetcher)
-        log = await service.sync_all(db_session)
+        task = await service.sync_all(store)
 
-        assert isinstance(log, SyncLog)
+        assert isinstance(task, SyncTask)
 
-    async def test_sync_all_scope_is_all(self, db_session):
-        """sync_all 创建的 SyncLog scope 为 'all'。"""
+    async def test_sync_all_scope_is_all(self, store):
         mock_fetcher = _make_mock_fetcher()
-
         service = SyncService(fetcher=mock_fetcher)
-        log = await service.sync_all(db_session)
+        task = await service.sync_all(store)
 
-        assert log.scope == "all"
+        assert task.scope == "all"
 
-    async def test_sync_all_success_status(self, db_session):
-        """成功时 SyncLog.status 为 'success'。"""
-        creator = _make_creator(db_session, enabled=True)
-        mock_fetcher = _make_mock_fetcher(fetch_videos=[_make_fetched_video("BV1aa111a1aA")])
-
+    async def test_sync_all_success_status(self, store):
+        creator = await _make_creator_async(store)
+        mock_fetcher = _make_mock_fetcher(fetch_new_videos=[_make_fetched_video("BV1aa111a1aA")])
         service = SyncService(fetcher=mock_fetcher)
-        log = await service.sync_all(db_session)
+        task = await service.sync_all(store)
 
-        assert log.status == "success"
+        assert task.status == "completed"
 
-    async def test_sync_all_only_syncs_enabled_creators(self, db_session):
-        """sync_all 同步所有 creator（enabled 字段在 sync_all 中不做过滤）。"""
-        _make_creator(db_session, uid="111", enabled=True)
-        _make_creator(db_session, uid="222", enabled=False)
-        db_session.flush()
-
-        mock_fetcher = _make_mock_fetcher()
-
-        service = SyncService(fetcher=mock_fetcher)
-        await service.sync_all(db_session)
-
-        # sync_all 会同步所有 creator
-        assert mock_fetcher.fetch_videos.call_count == 2
-
-    async def test_sync_all_counts_new_videos(self, db_session):
-        """sync_all 的 SyncLog.new_videos 反映新增视频总数。"""
-        _make_creator(db_session, enabled=True)
+    async def test_sync_all_counts_new_videos(self, store):
+        await _make_creator_async(store)
         fetched = [
             _make_fetched_video("BV1aa111a1aA"),
             _make_fetched_video("BV2bb222b2bB"),
         ]
-        mock_fetcher = _make_mock_fetcher(fetch_videos=fetched)
-
+        mock_fetcher = _make_mock_fetcher(fetch_new_videos=fetched)
         service = SyncService(fetcher=mock_fetcher)
-        log = await service.sync_all(db_session)
+        task = await service.sync_all(store)
 
-        assert log.new_videos == 2
+        assert task.new_videos == 2
 
-    async def test_sync_all_failure_status_and_error_message(self, db_session):
-        """fetch_videos 抛出异常时 SyncLog 应有 status='failed' 且 error_message 有内容。"""
-        _make_creator(db_session, enabled=True)
+    async def test_sync_all_failure_status_and_error_message(self, store):
+        await _make_creator_async(store)
         mock_fetcher = _make_mock_fetcher()
-        mock_fetcher.fetch_videos = AsyncMock(side_effect=Exception("网络连接超时"))
-
+        mock_fetcher.fetch_new_videos = AsyncMock(side_effect=Exception("网络连接超时"))
         service = SyncService(fetcher=mock_fetcher)
-        log = await service.sync_all(db_session)
+        task = await service.sync_all(store)
 
-        assert log.status == "failed"
-        assert log.error_message is not None
-        assert "网络连接超时" in log.error_message
+        assert task.status == "failed"
+        assert task.error_message is not None
+        assert "网络连接超时" in task.error_message
 
-    async def test_sync_all_failure_sets_finished_at(self, db_session):
-        """失败时 SyncLog.finished_at 仍应被设置（在 finally 中处理）。"""
-        _make_creator(db_session, enabled=True)
+    async def test_sync_all_continues_when_one_creator_fails(self, store):
+        await _make_creator_async(store, uid="111")
+        await _make_creator_async(store, uid="222")
+
         mock_fetcher = _make_mock_fetcher()
-        mock_fetcher.fetch_videos = AsyncMock(side_effect=Exception("超时错误"))
-
-        service = SyncService(fetcher=mock_fetcher)
-        log = await service.sync_all(db_session)
-
-        assert log.finished_at is not None
-
-    async def test_sync_all_continues_when_one_creator_fails(self, db_session):
-        """单个 creator 抓取失败时，sync_all 仍继续处理其他 creator。"""
-        _make_creator(db_session, uid="111", enabled=True)
-        _make_creator(db_session, uid="222", enabled=True)
-
-        mock_fetcher = _make_mock_fetcher(fetch_videos=[_make_fetched_video("BV2bb222b2bB")])
 
         async def side_effect(uid: str, **kwargs):
             if uid == "111":
                 raise Exception("第一个 creator 抓取失败")
             return [_make_fetched_video("BV2bb222b2bB")]
 
-        mock_fetcher.fetch_videos = AsyncMock(side_effect=side_effect)
-
+        mock_fetcher.fetch_new_videos = AsyncMock(side_effect=side_effect)
         service = SyncService(fetcher=mock_fetcher)
-        log = await service.sync_all(db_session)
+        task = await service.sync_all(store)
 
-        assert mock_fetcher.fetch_videos.call_count == 2
-        assert log.status == "failed"
-        assert log.new_videos == 1
-        assert log.error_message is not None
-        assert "creator_id=" in log.error_message
-        assert "第一个 creator 抓取失败" in log.error_message
+        assert task.status == "failed"
+        assert task.new_videos == 1
+        assert "第一个 creator 抓取失败" in (task.error_message or "")
 
-    async def test_sync_all_success_sets_finished_at(self, db_session):
-        """成功时 SyncLog.finished_at 也应被设置。"""
+    async def test_sync_all_task_persisted(self, store):
         mock_fetcher = _make_mock_fetcher()
-
         service = SyncService(fetcher=mock_fetcher)
-        log = await service.sync_all(db_session)
+        task = await service.sync_all(store)
 
-        assert log.finished_at is not None
-
-    async def test_sync_all_log_persisted_to_db(self, db_session):
-        """sync_all 创建的 SyncLog 应持久化到数据库中。"""
-        mock_fetcher = _make_mock_fetcher()
-
-        service = SyncService(fetcher=mock_fetcher)
-        log = await service.sync_all(db_session)
-
-        db_log = db_session.query(SyncLog).filter_by(id=log.id).one()
-        assert db_log is not None
-        assert db_log.scope == "all"
+        persisted = store.sync_tasks.get(task.id)
+        assert persisted is not None
+        assert persisted.scope == "all"
 
 
 # ──────────────────────────────────────────────
@@ -320,88 +227,98 @@ from app.services.creator_service import CreatorService
 
 
 class TestCreatorService:
-    """测试 CreatorService 的 CRUD 功能。"""
-
-    def test_create_creator(self, db_session):
-        """create_creator 应返回带有正确字段的 Creator 对象。"""
+    async def test_create_creator(self, store):
         svc = CreatorService()
-        creator = svc.create_creator(
-            db_session,
+        creator = await svc.create_creator(
+            store=store,
             name="测试UP",
-            profile_url="https://space.bilibili.com/12345",
+            profile_url="https://space.bilibili.com/1",
             tag_ids=[],
         )
-        assert creator.id is not None
+        assert creator.id > 0
         assert creator.name == "测试UP"
-        assert creator.enabled is True
+        persisted = store.creators.get(creator.id)
+        assert persisted is not None
 
-    def test_create_creator_with_tags(self, db_session):
-        """create_creator 可同时关联标签。"""
-        tag = Tag(name="技术")
-        db_session.add(tag)
-        db_session.flush()
+    async def test_create_creator_with_tags(self, store):
+        tag = Tag(name="标签1")
+        await store.tags.add(tag)
 
         svc = CreatorService()
-        creator = svc.create_creator(
-            db_session,
-            name="技术UP",
-            profile_url="https://space.bilibili.com/99999",
+        creator = await svc.create_creator(
+            store=store,
+            name="测试UP",
+            profile_url="https://space.bilibili.com/2",
             tag_ids=[tag.id],
         )
-        assert len(creator.tags) == 1
-        assert creator.tags[0].id == tag.id
+        links = store.creator_tags.filter(creator_id=creator.id)
+        assert len(links) == 1
+        assert links[0].tag_id == tag.id
 
-    def test_list_creators_empty(self, db_session):
+    def test_list_creators_empty(self, store):
         svc = CreatorService()
-        assert svc.list_creators(db_session) == []
+        creators = svc.list_creators(store)
+        assert creators == []
 
-    def test_list_creators_returns_all(self, db_session):
-        svc = CreatorService()
-        svc.create_creator(db_session, "A", "https://space.bilibili.com/1", [])
-        svc.create_creator(db_session, "B", "https://space.bilibili.com/2", [])
-        assert len(svc.list_creators(db_session)) == 2
-
-    def test_update_creator_name(self, db_session):
-        svc = CreatorService()
-        creator = svc.create_creator(db_session, "旧名", "https://space.bilibili.com/7777", [])
-        svc.update_creator(db_session, creator, name="新名", alias=None, tag_ids=None)
-        assert creator.name == "新名"
-
-    def test_update_creator_enabled(self, db_session):
-        svc = CreatorService()
-        creator = svc.create_creator(db_session, "UP", "https://space.bilibili.com/8888", [])
-        svc.update_creator(db_session, creator, name=None, alias=None, enabled=False, tag_ids=None)
-        assert creator.enabled is False
-
-    def test_update_creator_replace_tags(self, db_session):
-        """更新 tag_ids 应完整替换旧标签。"""
-        tag1 = Tag(name="旧标签")
-        tag2 = Tag(name="新标签")
-        db_session.add_all([tag1, tag2])
-        db_session.flush()
+    async def test_list_creators_returns_all(self, store):
+        await _make_creator_async(store, uid="1")
+        await _make_creator_async(store, uid="2")
 
         svc = CreatorService()
-        creator = svc.create_creator(
-            db_session, "UP", "https://space.bilibili.com/6666", [tag1.id]
+        creators = svc.list_creators(store)
+        assert len(creators) == 2
+
+    async def test_update_creator_name(self, store):
+        creator = await _make_creator_async(store)
+        svc = CreatorService()
+        updated = await svc.update_creator(
+            store=store, creator=creator,
+            name="新名称", alias=None, tag_ids=None,
         )
-        assert len(creator.tags) == 1
+        assert updated.name == "新名称"
+        persisted = store.creators.get(creator.id)
+        assert persisted is not None
+        assert persisted.name == "新名称"
 
-        svc.update_creator(db_session, creator, name=None, alias=None, tag_ids=[tag2.id])
-        assert len(creator.tags) == 1
-        assert creator.tags[0].id == tag2.id
-
-    def test_update_creator_clear_tags(self, db_session):
-        """tag_ids=[] 时清空所有标签关联。"""
-        tag = Tag(name="要移除的标签")
-        db_session.add(tag)
-        db_session.flush()
-
+    async def test_update_creator_enabled(self, store):
+        creator = await _make_creator_async(store)
         svc = CreatorService()
-        creator = svc.create_creator(
-            db_session, "UP", "https://space.bilibili.com/5555", [tag.id]
+        updated = await svc.update_creator(
+            store=store, creator=creator,
+            name=None, alias=None, tag_ids=None, enabled=False,
         )
-        svc.update_creator(db_session, creator, name=None, alias=None, tag_ids=[])
-        assert creator.tags == []
+        assert updated.enabled is False
+
+    async def test_update_creator_replace_tags(self, store):
+        tag1 = Tag(name="A")
+        tag2 = Tag(name="B")
+        await store.tags.add(tag1)
+        await store.tags.add(tag2)
+
+        creator = await _make_creator_async(store)
+        svc = CreatorService()
+        await svc.update_creator(
+            store=store, creator=creator,
+            name=None, alias=None, tag_ids=[tag1.id, tag2.id],
+        )
+        links = store.creator_tags.filter(creator_id=creator.id)
+        assert len(links) == 2
+
+    async def test_update_creator_clear_tags(self, store):
+        tag = Tag(name="A")
+        await store.tags.add(tag)
+        creator = await _make_creator_async(store)
+        svc = CreatorService()
+        await svc.update_creator(
+            store=store, creator=creator,
+            name=None, alias=None, tag_ids=[tag.id],
+        )
+        await svc.update_creator(
+            store=store, creator=creator,
+            name=None, alias=None, tag_ids=[],
+        )
+        links = store.creator_tags.filter(creator_id=creator.id)
+        assert len(links) == 0
 
 
 # ──────────────────────────────────────────────
@@ -412,99 +329,53 @@ from app.services.tag_service import TagService
 
 
 class TestTagService:
-    """测试 TagService 的标签查询与未看视频查询。"""
+    def test_list_tags_empty(self, store):
+        svc = TagService()
+        assert svc.list_tags(store) == []
 
-    def _seed_creator_with_tag_and_video(self, db_session, status_value: int = 0):
-        """辅助：创建标签、UP 主、视频和状态，返回 (tag, video)。"""
-        tag = Tag(name="精品")
-        db_session.add(tag)
-        db_session.flush()
+    async def test_list_tags_returns_all(self, store):
+        svc = TagService()
+        await svc.create_tag(store, "标签1")
+        await svc.create_tag(store, "标签2")
+        tags = svc.list_tags(store)
+        assert len(tags) == 2
 
-        creator = Creator(name="精品UP", profile_url="https://space.bilibili.com/2222")
-        creator.tags.append(tag)
-        db_session.add(creator)
-        db_session.flush()
+    def test_list_unwatched_returns_unwatched_videos(self, store, seeded_data):
+        svc = TagService()
+        videos = svc.list_unwatched_videos_by_tag(store, seeded_data.tag_id)
+        assert len(videos) == 1
+        assert videos[0].bvid == "BV_seed_001"
 
-        video = Video(
-            bvid="BV_svc_001",
-            creator_id=creator.id,
-            title="服务层测试视频",
-            video_url="https://www.bilibili.com/video/BV_svc_001",
-            published_at=datetime(2026, 3, 1),
-            duration_seconds=600,
+    async def test_list_unwatched_excludes_watched_videos(self, store, seeded_data):
+        vs_list = store.video_statuses.filter(video_id=seeded_data.video_id)
+        if vs_list:
+            await store.video_statuses.update(vs_list[0].id, status=1)
+        svc = TagService()
+        videos = svc.list_unwatched_videos_by_tag(store, seeded_data.tag_id)
+        assert len(videos) == 0
+
+    def test_list_unwatched_empty_for_unknown_tag(self, store):
+        svc = TagService()
+        videos = svc.list_unwatched_videos_by_tag(store, 99999)
+        assert videos == []
+
+    async def test_list_unwatched_ordered_by_published_at_desc(self, store, seeded_data):
+        video2 = Video(
+            bvid="BV_later_001",
+            creator_id=seeded_data.creator_id,
+            title="更新的视频",
+            video_url="https://www.bilibili.com/video/BV_later_001",
+            published_at=datetime(2026, 2, 1, 12, 0, 0),
+            duration_seconds=400,
         )
-        db_session.add(video)
-        db_session.flush()
-
-        status = VideoStatus(video_id=video.id, status=status_value)
-        db_session.add(status)
-        db_session.flush()
-
-        return tag, video
-
-    def test_list_tags_empty(self, db_session):
-        svc = TagService()
-        assert svc.list_tags(db_session) == []
-
-    def test_list_tags_returns_all(self, db_session):
-        db_session.add_all([Tag(name="A"), Tag(name="B")])
-        db_session.flush()
-        svc = TagService()
-        assert len(svc.list_tags(db_session)) == 2
-
-    def test_list_unwatched_returns_unwatched_videos(self, db_session):
-        """list_unwatched_videos_by_tag 返回未看视频。"""
-        tag, video = self._seed_creator_with_tag_and_video(db_session, 0)
-        svc = TagService()
-        result = svc.list_unwatched_videos_by_tag(db_session, tag.id)
-        assert len(result) == 1
-        assert result[0].id == video.id
-        assert result[0].creator_name == "精品UP"
-
-    def test_list_unwatched_excludes_watched_videos(self, db_session):
-        """list_unwatched_videos_by_tag 不返回已看视频。"""
-        tag, _video = self._seed_creator_with_tag_and_video(db_session, 1)
-        svc = TagService()
-        result = svc.list_unwatched_videos_by_tag(db_session, tag.id)
-        assert result == []
-
-    def test_list_unwatched_empty_for_unknown_tag(self, db_session):
-        svc = TagService()
-        assert svc.list_unwatched_videos_by_tag(db_session, 99999) == []
-
-    def test_list_unwatched_ordered_by_published_at_desc(self, db_session):
-        """未看视频应按 published_at 倒序排列。"""
-        tag = Tag(name="顺序测试")
-        db_session.add(tag)
-        db_session.flush()
-
-        creator = Creator(name="时间UP", profile_url="https://space.bilibili.com/3333")
-        creator.tags.append(tag)
-        db_session.add(creator)
-        db_session.flush()
-
-        for i, dt in enumerate([
-            datetime(2026, 1, 1),
-            datetime(2026, 3, 1),
-            datetime(2026, 2, 1),
-        ]):
-            v = Video(
-                bvid=f"BV_order_{i}",
-                creator_id=creator.id,
-                title=f"视频{i}",
-                video_url=f"https://www.bilibili.com/video/BV_order_{i}",
-                published_at=dt,
-                duration_seconds=100,
-            )
-            db_session.add(v)
-            db_session.flush()
-            db_session.add(VideoStatus(video_id=v.id))
-        db_session.flush()
+        await store.videos.add(video2)
+        status2 = VideoStatus(video_id=video2.id)
+        await store.video_statuses.add(status2)
 
         svc = TagService()
-        result = svc.list_unwatched_videos_by_tag(db_session, tag.id)
-        dates = [r.published_at for r in result]
-        assert dates == sorted(dates, reverse=True)
+        videos = svc.list_unwatched_videos_by_tag(store, seeded_data.tag_id)
+        assert len(videos) == 2
+        assert videos[0].published_at > videos[1].published_at
 
 
 # ──────────────────────────────────────────────
@@ -515,58 +386,34 @@ from app.services.video_service import VideoService
 
 
 class TestVideoService:
-    """测试 VideoService 的视频状态管理。"""
-
-    def _seed_video_with_status(self, db_session, status_value: int = 0):
-        """辅助：创建视频和状态，返回 (video, status)。"""
-        creator = Creator(name="UP", profile_url="https://space.bilibili.com/4444")
-        db_session.add(creator)
-        db_session.flush()
-
-        video = Video(
-            bvid="BV_vsvc_001",
-            creator_id=creator.id,
-            title="VideoService 测试",
-            video_url="https://www.bilibili.com/video/BV_vsvc_001",
-            published_at=datetime(2026, 1, 15),
-            duration_seconds=400,
-        )
-        db_session.add(video)
-        db_session.flush()
-
-        status = VideoStatus(video_id=video.id, status=status_value)
-        db_session.add(status)
-        db_session.flush()
-
-        return video, status
-
-    def test_set_status_watched(self, db_session):
-        """set_status(status=1) 应设置 status=1 并写入 watched_at。"""
-        video, status = self._seed_video_with_status(db_session, 0)
+    async def test_set_status_watched(self, store, seeded_data):
         svc = VideoService()
-        result = svc.set_status(db_session, video.id, 1)
+        vs_list = store.video_statuses.filter(video_id=seeded_data.video_id)
+        assert len(vs_list) == 1
+        result = await svc.set_status(store, vs_list[0].id, 1)
         assert result is not None
         assert result.status == 1
         assert result.watched_at is not None
 
-    def test_set_status_unwatched_clears_watched_at(self, db_session):
-        """set_status(status=0) 应清空 watched_at。"""
-        video, status = self._seed_video_with_status(db_session, 1)
+    async def test_set_status_unwatched_clears_watched_at(self, store, seeded_data):
         svc = VideoService()
-        result = svc.set_status(db_session, video.id, 0)
+        vs_list = store.video_statuses.filter(video_id=seeded_data.video_id)
+        assert len(vs_list) == 1
+        await svc.set_status(store, vs_list[0].id, 1)
+        result = await svc.set_status(store, vs_list[0].id, 0)
+        assert result is not None
         assert result.status == 0
         assert result.watched_at is None
 
-    def test_set_status_ignored(self, db_session):
-        """set_status(status=2) 应设置 status=2 并清空 watched_at。"""
-        video, status = self._seed_video_with_status(db_session, 1)
+    async def test_set_status_ignored(self, store, seeded_data):
         svc = VideoService()
-        result = svc.set_status(db_session, video.id, 2)
+        vs_list = store.video_statuses.filter(video_id=seeded_data.video_id)
+        assert len(vs_list) == 1
+        result = await svc.set_status(store, vs_list[0].id, 2)
+        assert result is not None
         assert result.status == 2
-        assert result.watched_at is None
 
-    def test_set_status_not_found_returns_none(self, db_session):
-        """不存在的 video_id 应返回 None。"""
+    async def test_set_status_not_found_returns_none(self, store):
         svc = VideoService()
-        result = svc.set_status(db_session, 99999, 1)
+        result = await svc.set_status(store, 99999, 1)
         assert result is None

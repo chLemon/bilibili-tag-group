@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.database import SessionLocal, run_migrations
+from app.dependencies import init_store
 from app.routers.creators import router as creators_router
 from app.routers.sync import router as sync_router, set_sync_context
 from app.routers.tags import router as tags_router
@@ -19,6 +19,7 @@ from app.routers.videos import router as videos_router
 from app.scheduler import run_sync_loop
 from app.fetcher.playwright_fetcher import PlaywrightBilibiliFetcher
 from app.services.sync_service import SyncService
+from app.store.store import DataStore
 
 # ── 日志配置 ──────────────────────────────────────────────────────
 
@@ -57,9 +58,11 @@ _sync_svc = SyncService(fetcher=_fetcher)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """管理调度器生命周期：启动时创建定时同步协程，关闭时清理。"""
-    run_migrations()
+    store = DataStore(settings.data_dir)
+    init_store(store)
+
     sync_loop_task = asyncio.create_task(
-        run_sync_loop(_sync_svc, SessionLocal, settings.sync_interval_minutes)
+        run_sync_loop(_sync_svc, store, settings.sync_interval_minutes)
     )
     set_sync_context(True, settings.sync_interval_minutes)
     try:

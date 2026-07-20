@@ -13,7 +13,6 @@ import {
   removeImmediateTag,
   SyncTask,
   SyncSettings,
-  SyncLog,
   ImmediateTag,
   Tag,
 } from "../api/client";
@@ -129,30 +128,30 @@ export function useSyncPolling(
  */
 export function useSyncSettings() {
   const [settings, setSettings] = useState<SyncSettings | null>(null);
-  const [latestLog, setLatestLog] = useState<SyncLog | null>(null);
+  const [latestTask, setLatestTask] = useState<SyncTask | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([fetchSyncSettings(), fetchLatestSync()])
-      .then(([cfg, log]) => {
+      .then(([cfg, task]) => {
         setSettings(cfg);
-        setLatestLog(log);
+        setLatestTask(task);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setIsLoading(false));
   }, []);
 
-  const refreshLatestLog = useCallback(async () => {
+  const refreshLatestTask = useCallback(async () => {
     try {
-      const log = await fetchLatestSync();
-      setLatestLog(log);
+      const task = await fetchLatestSync();
+      setLatestTask(task);
     } catch {
       // 静默失败
     }
   }, []);
 
-  return { settings, latestLog, isLoading, error, refreshLatestLog };
+  return { settings, latestTask, isLoading, error, refreshLatestTask };
 }
 
 // ── useImmediateTags ───────────────────────────────────────────────

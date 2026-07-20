@@ -1,22 +1,14 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.database import Base
+from pydantic import BaseModel, Field
 
 
-class Video(Base):
-    __tablename__ = "videos"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    bvid: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
-    creator_id: Mapped[int] = mapped_column(ForeignKey("creators.id"), nullable=False)
-    title: Mapped[str] = mapped_column(String(255), nullable=False)
-    video_url: Mapped[str] = mapped_column(String(512), nullable=False)
-    published_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    duration_seconds: Mapped[int] = mapped_column(Integer, nullable=False)
-    cover_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
-
-    creator = relationship("Creator", back_populates="videos")
-    status = relationship("VideoStatus", back_populates="video", uselist=False)
+class Video(BaseModel):
+    id: int = Field(default=0)
+    bvid: str
+    creator_id: int
+    title: str
+    video_url: str
+    published_at: datetime
+    duration_seconds: int
+    cover_url: str | None = None
