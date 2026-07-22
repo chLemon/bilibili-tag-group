@@ -2,7 +2,7 @@
  * TagsPage：标签视图页面。
  * 左侧标签列表 + UP 主目录锚点，右侧按 UP 主分组的未看视频列表。
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Hash, AlertCircle, Inbox, Loader2, RefreshCw, Tag, CheckCheck, EyeOff, ChevronsRight, ChevronsLeft } from "lucide-react";
 import { useTags, useTagVideos, useScrollSpy, UNTAGGED_ID } from "../hooks/useTags";
 import VideoCard from "../components/VideoCard";
@@ -12,13 +12,12 @@ export default function TagsPage() {
   const { tags, loading: loadingTags, error: tagsError } = useTags();
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
 
-  // 标签加载完成后自动选中第一个
-  if (selectedTagId === null && tags.length > 0) {
-    setSelectedTagId(tags[0].id);
-  } else if (selectedTagId === null && !loadingTags) {
-    // 标签列表为空时选中"无标签"
-    if (selectedTagId === null) setSelectedTagId(UNTAGGED_ID);
-  }
+  // 标签加载完成后自动选中第一个；无标签时选中"无标签"
+  useEffect(() => {
+    if (selectedTagId === null && !loadingTags) {
+      setSelectedTagId(tags.length > 0 ? tags[0].id : UNTAGGED_ID);
+    }
+  }, [tags, loadingTags, selectedTagId]);
 
   const {
     videos,

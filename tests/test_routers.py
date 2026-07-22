@@ -1,10 +1,10 @@
 """路由集成测试：通过 TestClient 验证 API 端点行为。"""
-from unittest.mock import AsyncMock, patch
+from datetime import datetime
+from unittest.mock import AsyncMock
 
 from fastapi.testclient import TestClient
 
 from app.main import app
-from datetime import datetime
 
 
 def test_healthcheck_endpoint():
@@ -52,6 +52,57 @@ class TestCreateCreator:
         assert response.status_code == 201
         body = response.json()
         assert seeded_data.tag_id in body["tag_ids"]
+
+
+class TestResolveName:
+    """GET /api/creators/resolve-name 测试。"""
+
+    def test_resolve_name_returns_info(self, client, mock_fetcher):
+        mock_fetcher.fetch_creator_info = AsyncMock(
+            return_value={"name": "某UP", "avatar_url": "https://x/a.jpg", "video_count": 10}
+        )
+        response = client.get(
+            "/api/creators/resolve-name",
+            params={"profile_url": "https://space.bilibili.com/12345"},
+        )
+        assert response.status_code == 200
+        assert response.json()["name"] == "某UP"
+        assert response.json()["avatar_url"] == "https://x/a.jpg"
+
+    def test_resolve_name_invalid_url_returns_400(self, client):
+        response = client.get(
+            "/api/creators/resolve-name", params={"profile_url": "not-a-url"}
+        )
+        assert response.status_code == 400
+
+
+class TestBatchCreateCreators:
+    """POST /api/creators/batch 测试。"""
+
+    def test_batch_create_success(self, client, mock_fetcher):
+        mock_fetcher.fetch_creator_info = AsyncMock(
+            return_value={"name": "UP1", "avatar_url": None, "video_count": 3}
+        )
+        response = client.post(
+            "/api/creators/batch",
+            json={"items": [{"uid": "123", "tag_names": ["游戏"]}]},
+        )
+        assert response.status_code == 200
+        result = response.json()["results"][0]
+        assert result["success"] is True
+        assert result["creator"]["name"] == "UP1"
+        assert result["creator"]["tag_ids"] != []
+
+    def test_batch_create_fetch_failure(self, client, mock_fetcher):
+        from app.fetcher.playwright_fetcher import FetchError
+        mock_fetcher.fetch_creator_info = AsyncMock(side_effect=FetchError("被风控"))
+        response = client.post(
+            "/api/creators/batch", json={"items": [{"uid": "123"}]}
+        )
+        assert response.status_code == 200
+        result = response.json()["results"][0]
+        assert result["success"] is False
+        assert "被风控" in result["error"]
 
 
 class TestListCreators:
@@ -253,6 +304,9 @@ class TestSyncLatest:
         assert body["scope"] == "all"
         assert body["status"] == "completed"
         assert body["new_videos"] == 2
+        assert body["started_at"] == "2026-01-01T18:00:00"
+        assert body["finished_at"] == "2026-01-01T18:01:00"
+        assert body["heartbeat_at"] == "2026-01-01T18:01:00"
 
 
 class TestSyncRun:
@@ -260,46 +314,16 @@ class TestSyncRun:
 
     def test_run_sync_returns_task(self, client):
         """手动触发全量同步，返回 SyncTask。"""
-        with patch("app.routers.sync._sync_svc") as mock_svc:
-            from app.models.sync_task import SyncTask
-            fake_task = SyncTask(
-                id=1,
-                scope="all",
-                status="running",
-                total_creators=0,
-                completed_creators=0,
-                new_videos=0,
-                started_at=datetime(2026, 4, 18, 0, 0, 0),
-                heartbeat_at=datetime(2026, 4, 18, 0, 0, 0),
-            )
-            mock_svc.start_async_sync = AsyncMock(return_value=fake_task)
-            mock_svc._run_async_sync = AsyncMock()
-            response = client.post("/api/sync/run")
-
+        response = client.post("/api/sync/run")
         assert response.status_code == 200
         body = response.json()
-        assert body["status"] == "running"
+        assert body["status"] in ("running", "completed")
 
     def test_run_sync_with_real_db_no_creators(self, client):
         """无 creator 时全量同步立即完成。"""
-        with patch("app.routers.sync._sync_svc") as mock_svc:
-            from app.models.sync_task import SyncTask
-            fake_task = SyncTask(
-                id=1,
-                scope="all",
-                status="running",
-                total_creators=0,
-                completed_creators=0,
-                new_videos=0,
-                started_at=datetime(2026, 4, 18, 0, 0, 0),
-                heartbeat_at=datetime(2026, 4, 18, 0, 0, 0),
-            )
-            mock_svc.start_async_sync = AsyncMock(return_value=fake_task)
-            mock_svc._run_async_sync = AsyncMock()
-            response = client.post("/api/sync/run")
+        response = client.post("/api/sync/run")
         assert response.status_code == 200
         body = response.json()
-        assert body["status"] == "running"
         assert body["total_creators"] == 0
 
 

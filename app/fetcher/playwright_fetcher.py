@@ -9,11 +9,10 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import random
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from playwright.async_api import Browser, BrowserContext, async_playwright
 
@@ -162,14 +161,14 @@ class PlaywrightBilibiliFetcher:
             return None
         ts = datetime.fromisoformat(entry["ts"])
         ttl = _NAME_CACHE_TTL if kind == "name" else _VIDEOS_CACHE_TTL
-        if datetime.now(timezone.utc).replace(tzinfo=None) - ts > ttl:
+        if datetime.now(UTC).replace(tzinfo=None) - ts > ttl:
             return None
         return entry["payload"]
 
     def _set_cache(self, uid: str, kind: str, payload) -> None:
         key = self._cache_key(uid, kind)
         self._cache[key] = {
-            "ts": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
+            "ts": datetime.now(UTC).replace(tzinfo=None).isoformat(),
             "payload": payload,
         }
 
@@ -390,7 +389,7 @@ async def _parse_card(card) -> FetchedVideo | None:
 
 def _parse_date(date_str: str) -> datetime | None:
     date_str = date_str.strip()
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = datetime.now(UTC).replace(tzinfo=None)
 
     try:
         return datetime.strptime(date_str, "%Y-%m-%d")

@@ -8,8 +8,11 @@
 app/
 ├── main.py                  # FastAPI 应用入口，lifespan 管理调度器
 ├── config.py                # 配置（数据目录、同步间隔、Cookie）
-├── dependencies.py          # FastAPI 依赖注入（get_store）
+├── dependencies.py          # FastAPI 依赖注入（get_store / get_fetcher / get_sync_service）
+├── logging_config.py        # 日志配置：文件（logs/app.log，滚动）+ 控制台双输出
 ├── scheduler.py             # asyncio 定时同步调度器
+├── utils/
+│   └── time.py              # now_utc()：统一 naive UTC 时间工具
 ├── models/                  # Pydantic 数据模型
 │   ├── creator.py           #   UP 主
 │   ├── tag.py               #   标签
@@ -25,18 +28,19 @@ app/
 │   ├── _datetime.py         #   北京时间序列化类型
 │   ├── creator.py           #   UP 主 schema
 │   ├── tag.py               #   标签 schema
-│   └── video.py             #   视频 schema
-├── routers/                 # HTTP 路由（API 端点）
-│   ├── creators.py          #   /api/creators — UP 主 CRUD
-│   ├── tags.py              #   /api/tags — 标签 CRUD + 标签下未看视频
-│   ├── videos.py            #   /api/videos — 标记已看状态
-│   └── sync.py              #   /api/sync — 全量同步触发 + 任务查询
+│   ├── video.py             #   视频 schema
+│   └── sync.py              #   同步任务 schema（SyncTaskRead + BeijingDateTime）
+├── routers/                 # HTTP 路由：只做参数解析与错误映射
+│   ├── creators.py          #   /api/creators — UP 主管理端点
+│   ├── tags.py              #   /api/tags — 标签列表与标签下未看视频
+│   ├── videos.py            #   /api/videos — 视频状态更新
+│   └── sync.py              #   /api/sync — 同步触发、任务查询、立即同步标签管理
 ├── services/                # 业务逻辑层
 │   ├── creator_service.py   #   UP 主管理
 │   ├── tag_service.py       #   标签与未看视频聚合查询
 │   ├── video_service.py     #   视频观看状态管理
 │   └── sync_service.py      #   同步核心：抓取 → 写入 JSON 文件
-└── fetcher/                 # B 站数据抓取层
+└── fetcher/                 # B 站数据抓取层（已冻结，勿擅动）
     ├── models.py            #   FetchedVideo dataclass
     └── playwright_fetcher.py #  基于 Playwright 无头浏览器的抓取器
 ```
@@ -77,17 +81,25 @@ SyncTask（scope="all" 的全量同步记录，含进度追踪与探活心跳）
 |------|------|------|
 | `GET` | `/health` | 健康检查 |
 | `POST` | `/api/creators` | 添加 UP 主 |
+| `POST` | `/api/creators/batch` | 批量添加 UP 主 |
 | `GET` | `/api/creators` | UP 主列表 |
 | `GET` | `/api/creators/resolve-name` | 根据 URL 获取昵称 |
+| `GET` | `/api/creators/{id}` | 获取单个 UP 主详情 |
 | `PATCH` | `/api/creators/{id}` | 编辑 UP 主 |
+| `GET` | `/api/creators/{id}/videos` | 指定 UP 主的所有视频（含已看状态） |
+| `PATCH` | `/api/creators/{id}/videos/status` | 批量标记该 UP 主所有未看视频的状态 |
 | `POST` | `/api/tags` | 创建标签 |
 | `GET` | `/api/tags` | 标签列表 |
-| `GET` | `/api/tags/{id}/videos` | 标签下未看视频 |
-| `PATCH` | `/api/videos/{id}/status` | 标记已看/未看/不看 |
+| `GET` | `/api/tags/untagged/videos` | 所有无标签 UP 主的未看视频 |
+| `GET` | `/api/tags/{id}/videos` | 指定标签下所有 UP 主的未看视频 |
+| `PATCH` | `/api/videos/{id}/status` | 标记单个视频已看/未看/不看 |
 | `GET` | `/api/sync/latest` | 最近同步任务 |
 | `POST` | `/api/sync/run` | 手动全量同步 |
 | `GET` | `/api/sync/task/current` | 当前同步任务进度 |
 | `GET` | `/api/sync/settings` | 定时同步配置 |
+| `GET` | `/api/sync/immediate-tags` | 查询所有"立即同步"标签 |
+| `POST` | `/api/sync/immediate-tags` | 将标签设为"立即同步"模式 |
+| `DELETE` | `/api/sync/immediate-tags/{tag_id}` | 从"立即同步"中移除标签 |
 
 ## 配置
 
@@ -103,12 +115,12 @@ SyncTask（scope="all" 的全量同步记录，含进度追踪与探活心跳）
 
 ```bash
 # 安装依赖
-python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
+uv sync --extra dev
 
-# 启动 API（首次启动自动创建数据目录）
-.venv/bin/uvicorn app.main:app --reload
+# 启动 API（首次启动自动创建数据目录与 logs/）
+uv run uvicorn app.main:app --reload
 ```
 
 ## 抓取器
 
-使用 **`PlaywrightBilibiliFetcher`** — 通过 Playwright 无头浏览器打开 UP 主空间页面，从 `window.__INITIAL_STATE__` 中提取服务端渲染的视频数据，无需经过 WBI 签名 API，可有效绕过 B 站风控。
+使用 **`PlaywrightBilibiliFetcher`** — 通过 Playwright 无头浏览器打开 UP 主空间投稿页，从 DOM 视频卡片逐页提取数据，绕过 WBI 签名风控；带内存缓存（视频 1h、昵称 24h）。

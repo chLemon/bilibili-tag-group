@@ -15,13 +15,7 @@ dev = [
   "pytest>=8.0,<9.0",
   "pytest-asyncio>=0.24,<1.0",
   "ruff>=0.4,<1.0",
-    "httpx2",
-]
-test = [
-    "pytest",
-    "pytest-playwright",
-    "httpx2",
-    "pytest-asyncio",
+  "httpx>=0.27,<1.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -39,3 +33,14 @@ log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "\u001b[32m%(asctime)s\u001b[0m [\u001b[34m%(levelname)s\u001b[0m] %(message)s"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+addopts = "-m 'not integration'"
+markers = [
+    "integration: 需要真实网络与浏览器的集成测试（默认跳过）",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

@@ -1,25 +1,22 @@
 """视频服务：管理本地视频观看状态。"""
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from app.models.video_status import VideoStatus
 from app.store.store import DataStore
-
-
-def _now_utc() -> datetime:
-    """返回当前 UTC 时间（naive datetime）。"""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+from app.utils.time import now_utc as _now_utc
 
 
 class VideoService:
     """视频本地状态业务逻辑。"""
 
-    async def set_status(self, store: DataStore, video_id: int, status_value: int) -> VideoStatus | None:
-        """更新视频状态（0=未看, 1=已看, 2=不看）。"""
-        vs = store.video_statuses.get(video_id)
-        if vs is None:
+    async def set_status(
+        self, store: DataStore, video_id: int, status_value: int
+    ) -> VideoStatus | None:
+        """更新视频状态（0=未看, 1=已看, 2=不看）。video_id 为 Video.id。"""
+        matches = store.video_statuses.filter(video_id=video_id)
+        if not matches:
             return None
+        vs = matches[0]
 
         updates: dict[str, object] = {"status": status_value}
         if status_value == 1:

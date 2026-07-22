@@ -1,11 +1,7 @@
 """标签服务：查询标签列表及标签下的未看视频。"""
 from __future__ import annotations
 
-from app.models.creator import Creator
-from app.models.creator_tag import CreatorTag
 from app.models.tag import Tag
-from app.models.video import Video
-from app.models.video_status import VideoStatus
 from app.schemas.video import VideoRead
 from app.store.store import DataStore
 

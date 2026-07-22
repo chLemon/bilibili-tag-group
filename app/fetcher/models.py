@@ -16,8 +16,8 @@ class FetchedVideo:
     video_url: str
     """视频页面 URL，格式：https://www.bilibili.com/video/{bvid}"""
 
-    published_at: datetime
-    """发布时间：UTC 时刻对应的 naive datetime（已去掉 tzinfo，但表示的是 UTC 时间）"""
+    published_at: datetime | None
+    """发布时间：UTC 时刻对应的 naive datetime；无法解析时为 None"""
 
     duration_seconds: int
     """视频时长（秒）"""

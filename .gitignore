@@ -44,6 +44,9 @@ frontend/node_modules/
 # 运行日志（主日志入库，pid 文件忽略）
 logs/*.pid
 
+# 二进制压缩包
+*.zip
+
 # macOS
 .DS_Store
 

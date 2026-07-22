@@ -16,6 +16,8 @@ async def run_sync_loop(sync_service, store, interval_minutes: int) -> None:
     while True:
         await asyncio.sleep(interval_minutes * 60)
         try:
-            await sync_service.sync_all(store)
+            task, created = await sync_service.start_sync(store)
+            if created:
+                await sync_service.run_sync_task(task.id, store)
         except Exception:
             logger.exception("定时全量同步失败")

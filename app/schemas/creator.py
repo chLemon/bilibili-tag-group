@@ -1,6 +1,5 @@
 """UP 主相关的 Pydantic Schema。"""
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, field_validator
 
@@ -10,18 +9,18 @@ class CreatorCreate(BaseModel):
 
     name: str
     profile_url: str
-    avatar_url: Optional[str] = None
-    alias: Optional[str] = None
+    avatar_url: str | None = None
+    alias: str | None = None
     tag_ids: list[int] = []
 
 
 class CreatorUpdate(BaseModel):
     """编辑 UP 主的请求体（PATCH，所有字段可选）。"""
 
-    name: Optional[str] = None
-    alias: Optional[str] = None
-    enabled: Optional[bool] = None
-    tag_ids: Optional[list[int]] = None
+    name: str | None = None
+    alias: str | None = None
+    enabled: bool | None = None
+    tag_ids: list[int] | None = None
 
 
 class CreatorRead(BaseModel):
@@ -29,15 +28,15 @@ class CreatorRead(BaseModel):
 
     id: int
     name: str
-    alias: Optional[str] = None
+    alias: str | None = None
     profile_url: str
-    avatar_url: Optional[str] = None
+    avatar_url: str | None = None
     tag_ids: list[int] = []
     enabled: bool = True
     video_count: int = 0
     synced_video_count: int = 0
     unwatched_count: int = 0
-    last_synced_at: Optional[datetime] = None
+    last_synced_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 

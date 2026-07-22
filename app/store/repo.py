@@ -4,12 +4,9 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
-from typing import Generic, TypeVar
-
-T = TypeVar("T")
 
 
-class JsonRepo(Generic[T]):
+class JsonRepo[T]:
     """按需 IO 的 JSON 文件存储仓库。
 
     读操作不加锁，写操作使用 asyncio.Lock 保证 read-modify-write 原子性。

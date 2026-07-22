@@ -1,17 +1,18 @@
 """测试抓取层：PlaywrightBilibiliFetcher 与 FetchedVideo 标准化逻辑。"""
-from datetime import datetime, timezone
 import logging
-from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 
 from app.fetcher.models import FetchedVideo
 from app.fetcher.playwright_fetcher import (
     PlaywrightBilibiliFetcher,
 )
 
+
 class TestPlaywrightBilibiliFetcher:
     """测试 PlaywrightBilibiliFetcher 方法（mock 浏览器部分）。"""
 
+    @pytest.mark.integration
     async def test_fetch_videos_success(self):
         uid = "1024129080"  # 东哥，视频多
 
@@ -21,6 +22,7 @@ class TestPlaywrightBilibiliFetcher:
         logging.info(videos[0])
         logging.info(len(videos))
 
+    @pytest.mark.integration
     async def test_fetch_creator_info(self):
         uid = "1024129080" # 东哥，视频多
 

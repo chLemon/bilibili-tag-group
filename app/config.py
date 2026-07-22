@@ -4,7 +4,9 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    data_dir: Path = Path(__file__).resolve().parent.parent / ".." / "private-data" / "bilibili-tag-group"
+    data_dir: Path = (
+        Path(__file__).resolve().parent.parent / ".." / "private-data" / "bilibili-tag-group"
+    )
     sync_interval_minutes: int = 60
     bilibili_cookie: str = ""
     """B 站登录 Cookie（可选）。设置有效的 Cookie 可以提高反爬成功率。

@@ -1,9 +1,8 @@
 """视频相关的 Pydantic Schema。"""
-from typing import Optional
-
-from app.schemas._datetime import BeijingDateTime
 
 from pydantic import BaseModel
+
+from app.schemas._datetime import BeijingDateTime
 
 
 class VideoStatusUpdate(BaseModel):
@@ -23,10 +22,10 @@ class VideoRead(BaseModel):
     title: str
     creator_id: int
     creator_name: str
-    creator_alias: Optional[str] = None
-    creator_avatar_url: Optional[str] = None
+    creator_alias: str | None = None
+    creator_avatar_url: str | None = None
     video_url: str
-    cover_url: Optional[str] = None
+    cover_url: str | None = None
     published_at: BeijingDateTime
     duration_seconds: int
 
@@ -41,10 +40,10 @@ class VideoDetail(BaseModel):
     title: str
     creator_id: int
     creator_name: str
-    creator_alias: Optional[str] = None
-    creator_avatar_url: Optional[str] = None
+    creator_alias: str | None = None
+    creator_avatar_url: str | None = None
     video_url: str
-    cover_url: Optional[str] = None
+    cover_url: str | None = None
     published_at: BeijingDateTime
     duration_seconds: int
     status: int = 0

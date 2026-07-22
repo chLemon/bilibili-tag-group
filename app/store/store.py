@@ -23,4 +23,6 @@ class DataStore:
         self.videos = JsonRepo[Video](Video, data_dir / "videos.json")
         self.video_statuses = JsonRepo[VideoStatus](VideoStatus, data_dir / "video_statuses.json")
         self.sync_tasks = JsonRepo[SyncTask](SyncTask, data_dir / "sync_tasks.json")
-        self.tag_sync_configs = JsonRepo[TagSyncConfig](TagSyncConfig, data_dir / "tag_sync_configs.json")
+        self.tag_sync_configs = JsonRepo[TagSyncConfig](
+            TagSyncConfig, data_dir / "tag_sync_configs.json"
+        )

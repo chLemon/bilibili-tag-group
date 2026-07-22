@@ -1,15 +1,18 @@
-"""测试同步服务：SyncService.sync_creator 和 SyncService.sync_all。"""
-from datetime import datetime
+"""测试同步服务：SyncService.sync_creator 和 SyncService.start_sync/run_sync_task。"""
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
-
-import pytest
 
 from app.fetcher.models import FetchedVideo
 from app.models.creator import Creator
+from app.models.sync_task import SyncTask
+from app.models.tag import Tag
 from app.models.video import Video
 from app.models.video_status import VideoStatus
-from app.models.sync_task import SyncTask
+from app.services.creator_service import CreatorService
 from app.services.sync_service import SyncService
+from app.services.tag_service import TagService
+from app.services.video_service import VideoService
+from app.utils.time import now_utc as _now_utc
 
 
 def _make_fetched_video(bvid: str, title: str = "默认标题", offset: int = 0) -> FetchedVideo:
@@ -34,9 +37,23 @@ async def _make_creator_async(store, uid: str = "12345", enabled: bool = True) -
 
 def _make_mock_fetcher(fetch_creator_info=None, fetch_new_videos=None):
     m = MagicMock()
-    m.fetch_creator_info = AsyncMock(return_value=fetch_creator_info if fetch_creator_info is not None else {})
-    m.fetch_new_videos = AsyncMock(return_value=fetch_new_videos if fetch_new_videos is not None else [])
+    m.fetch_creator_info = AsyncMock(
+        return_value=fetch_creator_info if fetch_creator_info is not None else {}
+    )
+    m.fetch_new_videos = AsyncMock(
+        return_value=fetch_new_videos if fetch_new_videos is not None else []
+    )
     return m
+
+
+async def _run_full_sync(service: SyncService, store) -> SyncTask:
+    """创建并执行一次全量同步，返回最终 SyncTask。"""
+    task, created = await service.start_sync(store)
+    assert created
+    await service.run_sync_task(task.id, store)
+    final = store.sync_tasks.get(task.id)
+    assert final is not None
+    return final
 
 
 class TestSyncCreatorNewVideos:
@@ -71,6 +88,31 @@ class TestSyncCreatorNewVideos:
         service = SyncService(fetcher=mock_fetcher)
         count = await service.sync_creator(store, creator)
         assert count == 1
+
+
+class TestSyncCreatorGuards:
+    async def test_disabled_creator_is_skipped(self, store):
+        creator = await _make_creator_async(store, enabled=False)
+        mock_fetcher = _make_mock_fetcher()
+        service = SyncService(fetcher=mock_fetcher)
+        count = await service.sync_creator(store, creator)
+        assert count == 0
+        mock_fetcher.fetch_new_videos.assert_not_called()
+        mock_fetcher.fetch_creator_info.assert_not_called()
+
+    async def test_video_without_published_at_is_skipped(self, store):
+        creator = await _make_creator_async(store)
+        bad = FetchedVideo(
+            bvid="BV_bad_date", title="无日期", video_url="https://example.com",
+            published_at=None, duration_seconds=60,
+        )
+        good = _make_fetched_video("BV_good_date")
+        mock_fetcher = _make_mock_fetcher(fetch_new_videos=[bad, good])
+        service = SyncService(fetcher=mock_fetcher)
+        count = await service.sync_creator(store, creator)
+        assert count == 1
+        bvids = [v.bvid for v in store.videos.filter(creator_id=creator.id)]
+        assert bvids == ["BV_good_date"]
 
 
 class TestSyncCreatorExistingVideos:
@@ -147,22 +189,22 @@ class TestSyncAll:
     async def test_sync_all_returns_sync_task(self, store):
         mock_fetcher = _make_mock_fetcher()
         service = SyncService(fetcher=mock_fetcher)
-        task = await service.sync_all(store)
+        task = await _run_full_sync(service, store)
 
         assert isinstance(task, SyncTask)
 
     async def test_sync_all_scope_is_all(self, store):
         mock_fetcher = _make_mock_fetcher()
         service = SyncService(fetcher=mock_fetcher)
-        task = await service.sync_all(store)
+        task = await _run_full_sync(service, store)
 
         assert task.scope == "all"
 
     async def test_sync_all_success_status(self, store):
-        creator = await _make_creator_async(store)
+        await _make_creator_async(store)
         mock_fetcher = _make_mock_fetcher(fetch_new_videos=[_make_fetched_video("BV1aa111a1aA")])
         service = SyncService(fetcher=mock_fetcher)
-        task = await service.sync_all(store)
+        task = await _run_full_sync(service, store)
 
         assert task.status == "completed"
 
@@ -174,7 +216,7 @@ class TestSyncAll:
         ]
         mock_fetcher = _make_mock_fetcher(fetch_new_videos=fetched)
         service = SyncService(fetcher=mock_fetcher)
-        task = await service.sync_all(store)
+        task = await _run_full_sync(service, store)
 
         assert task.new_videos == 2
 
@@ -183,7 +225,7 @@ class TestSyncAll:
         mock_fetcher = _make_mock_fetcher()
         mock_fetcher.fetch_new_videos = AsyncMock(side_effect=Exception("网络连接超时"))
         service = SyncService(fetcher=mock_fetcher)
-        task = await service.sync_all(store)
+        task = await _run_full_sync(service, store)
 
         assert task.status == "failed"
         assert task.error_message is not None
@@ -202,7 +244,7 @@ class TestSyncAll:
 
         mock_fetcher.fetch_new_videos = AsyncMock(side_effect=side_effect)
         service = SyncService(fetcher=mock_fetcher)
-        task = await service.sync_all(store)
+        task = await _run_full_sync(service, store)
 
         assert task.status == "failed"
         assert task.new_videos == 1
@@ -211,19 +253,53 @@ class TestSyncAll:
     async def test_sync_all_task_persisted(self, store):
         mock_fetcher = _make_mock_fetcher()
         service = SyncService(fetcher=mock_fetcher)
-        task = await service.sync_all(store)
+        task = await _run_full_sync(service, store)
 
         persisted = store.sync_tasks.get(task.id)
         assert persisted is not None
         assert persisted.scope == "all"
 
 
+class TestStartSyncIdempotent:
+    async def test_second_start_returns_existing_task(self, store):
+        service = SyncService(fetcher=_make_mock_fetcher())
+        task1, created1 = await service.start_sync(store)
+        task2, created2 = await service.start_sync(store)
+        assert created1 is True
+        assert created2 is False
+        assert task1.id == task2.id
+
+    async def test_stale_running_task_is_failed_and_new_task_created(self, store):
+        """running 任务心跳超时（>= 45 秒未更新）时，旧任务标记失败并新建任务。"""
+        service = SyncService(fetcher=_make_mock_fetcher())
+
+        started = _now_utc()
+        stale = SyncTask(
+            status="running",
+            total_creators=0,
+            completed_creators=0,
+            new_videos=0,
+            started_at=started,
+            heartbeat_at=started - timedelta(seconds=60),
+        )
+        await store.sync_tasks.add(stale)
+        stale_id = stale.id
+
+        task, created = await service.start_sync(store)
+
+        assert created is True
+        assert task.id != stale_id
+
+        old = store.sync_tasks.get(stale_id)
+        assert old is not None
+        assert old.status == "failed"
+        assert old.error_message == "任务进程崩溃，心跳超时未更新"
+        assert old.finished_at is not None
+
+
 # ──────────────────────────────────────────────
 # CreatorService 测试
 # ──────────────────────────────────────────────
-
-from app.models.tag import Tag
-from app.services.creator_service import CreatorService
 
 
 class TestCreatorService:
@@ -325,8 +401,6 @@ class TestCreatorService:
 # TagService 测试
 # ──────────────────────────────────────────────
 
-from app.services.tag_service import TagService
-
 
 class TestTagService:
     def test_list_tags_empty(self, store):
@@ -382,34 +456,26 @@ class TestTagService:
 # VideoService 测试
 # ──────────────────────────────────────────────
 
-from app.services.video_service import VideoService
-
 
 class TestVideoService:
     async def test_set_status_watched(self, store, seeded_data):
         svc = VideoService()
-        vs_list = store.video_statuses.filter(video_id=seeded_data.video_id)
-        assert len(vs_list) == 1
-        result = await svc.set_status(store, vs_list[0].id, 1)
+        result = await svc.set_status(store, seeded_data.video_id, 1)
         assert result is not None
         assert result.status == 1
         assert result.watched_at is not None
 
     async def test_set_status_unwatched_clears_watched_at(self, store, seeded_data):
         svc = VideoService()
-        vs_list = store.video_statuses.filter(video_id=seeded_data.video_id)
-        assert len(vs_list) == 1
-        await svc.set_status(store, vs_list[0].id, 1)
-        result = await svc.set_status(store, vs_list[0].id, 0)
+        await svc.set_status(store, seeded_data.video_id, 1)
+        result = await svc.set_status(store, seeded_data.video_id, 0)
         assert result is not None
         assert result.status == 0
         assert result.watched_at is None
 
     async def test_set_status_ignored(self, store, seeded_data):
         svc = VideoService()
-        vs_list = store.video_statuses.filter(video_id=seeded_data.video_id)
-        assert len(vs_list) == 1
-        result = await svc.set_status(store, vs_list[0].id, 2)
+        result = await svc.set_status(store, seeded_data.video_id, 2)
         assert result is not None
         assert result.status == 2
 
@@ -417,3 +483,29 @@ class TestVideoService:
         svc = VideoService()
         result = await svc.set_status(store, 99999, 1)
         assert result is None
+
+    async def test_set_status_uses_video_id_not_status_id(self, store):
+        """Video.id 与 VideoStatus.id 错位时，仍按 video_id 正确定位。"""
+        video1 = Video(
+            bvid="BV_misalign_1", creator_id=1, title="v1",
+            video_url="https://example.com/1",
+            published_at=datetime(2024, 1, 1), duration_seconds=100,
+        )
+        video2 = Video(
+            bvid="BV_misalign_2", creator_id=1, title="v2",
+            video_url="https://example.com/2",
+            published_at=datetime(2024, 1, 2), duration_seconds=100,
+        )
+        await store.videos.add(video1)
+        await store.videos.add(video2)
+        # 先给 video2 建状态（status id=1），再给 video1 建状态（status id=2），制造错位
+        await store.video_statuses.add(VideoStatus(video_id=video2.id))
+        await store.video_statuses.add(VideoStatus(video_id=video1.id))
+
+        svc = VideoService()
+        result = await svc.set_status(store, video1.id, 1)
+
+        assert result is not None
+        assert result.video_id == video1.id
+        assert result.status == 1
+        assert store.video_statuses.filter(video_id=video2.id)[0].status == 0
