@@ -49,3 +49,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 后端声明 `requires-python = ">=3.12"`。使用 uv 管理依赖，运行测试和脚本统一用 `uv run` 前缀。
 - `app/config.py` 中 `data_dir` 默认指向项目根目录外的 `../private-data/bilibili-tag-group/`，用户自行在该目录下用 git 管理数据版本。
 - 时间字段统一使用 naive UTC；不要再引入 `datetime.utcnow()`。
+- `app/fetcher/` 与 `sync_creator` 的抓取逻辑是用户校准过的冻结基准，不要擅动；改动前先读 `docs/fetcher.md`（行为基准）与 `docs/fetcher-review.md`（疑点与待确认建议），并与用户确认。

@@ -77,6 +77,8 @@ SyncTask（scope="all" 的全量同步记录，含进度追踪与探活心跳）
 
 ## API 端点概览
 
+请求/响应字段的详细说明见 [../docs/api.md](../docs/api.md)。
+
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | `GET` | `/health` | 健康检查 |
@@ -124,3 +126,5 @@ uv run uvicorn app.main:app --reload
 ## 抓取器
 
 使用 **`PlaywrightBilibiliFetcher`** — 通过 Playwright 无头浏览器打开 UP 主空间投稿页，从 DOM 视频卡片逐页提取数据，绕过 WBI 签名风控；带内存缓存（视频 1h、昵称 24h）。
+
+抓取层是校准过的冻结基准，完整行为描述见 [../docs/fetcher.md](../docs/fetcher.md)，疑点与待确认建议见 [../docs/fetcher-review.md](../docs/fetcher-review.md)。

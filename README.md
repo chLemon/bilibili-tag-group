@@ -137,7 +137,7 @@ cd frontend && npm test
 ```
 .
 ├── app/                       # 后端应用（详见 app/README.md）
-├── frontend/                  # 前端应用
+├── frontend/                  # 前端应用（详见 frontend/README.md）
 │   ├── src/
 │   │   ├── App.tsx            # 路由（/ → /tags、/creators、/creators/:id、/sync）
 │   │   ├── api/client.ts      # API 请求封装与类型
@@ -146,10 +146,19 @@ cd frontend && npm test
 │   │   └── pages/             # TagsPage、CreatorsPage、CreatorDetailPage、SyncPage
 │   └── tests/                 # vitest 测试
 ├── tests/                     # 后端 pytest
-├── docs/                      # 需求与设计文档
+├── docs/                      # 项目文档（见下方"文档索引"）
 ├── logs/                      # 运行日志（有意入库，见上文）
 ├── start.ps1 / stop.ps1       # Windows 启停脚本
 ├── start.bat / stop.bat       # Windows 启停入口
 ├── pyproject.toml             # Python 项目配置（uv）
 └── uv.lock
 ```
+
+## 文档索引
+
+- [app/README.md](app/README.md) — 后端架构、目录结构、数据模型、端点概览
+- [frontend/README.md](frontend/README.md) — 前端结构、路由、约定、测试
+- [docs/api.md](docs/api.md) — 全部接口的请求/响应字段详细说明
+- [docs/fetcher.md](docs/fetcher.md) — 抓取层基准行为（已冻结，改动前必读）
+- [docs/fetcher-review.md](docs/fetcher-review.md) — 抓取层疑点与处理建议
+- [docs/docs.md](docs/docs.md) — 原始需求草稿（历史留存）
