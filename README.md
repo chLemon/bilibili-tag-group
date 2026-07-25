@@ -52,7 +52,7 @@ Windows 可双击 `start.bat` / `stop.bat` / `restart.bat`，macOS 可用 `./sta
 
 行为说明：
 
-- `start` 幂等：检测到任一服务存活则只打开浏览器，不重复起进程；失效的 PID 文件会被自动清理
+- `start` 按服务幂等：前后端分别检查，只启动未运行的那个；都在运行则只打开浏览器；失效的 PID 文件会被自动清理
 - `.venv` 缺失时自动 `uv sync --extra dev`，`frontend/node_modules` 缺失时自动 `npm install`，每次启动自动 `playwright install chromium`
 - 端口等待：后端 15 秒、前端 30 秒；**超时也会写入 PID 文件**，保证后续 `stop` 能清理未就绪的进程
 - `stop` 先 SIGTERM 终止整棵进程树，5 秒未退出则 SIGKILL 强杀
