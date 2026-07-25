@@ -65,22 +65,6 @@ def test_read_live_pid_missing_file(tmp_path):
     assert manage.read_live_pid(tmp_path / "a.pid") is None
 
 
-def test_services_running_true_when_any_alive(tmp_path):
-    alive = tmp_path / "a.pid"
-    alive.write_text(str(os.getpid()))
-    dead = tmp_path / "b.pid"
-    dead.write_text(str(spawn_dead_pid()))
-    assert manage.services_running([alive, dead]) is True
-    # 死进程的 PID 文件被顺手清理
-    assert not dead.exists()
-
-
-def test_services_running_false_when_all_dead(tmp_path):
-    dead = tmp_path / "b.pid"
-    dead.write_text(str(spawn_dead_pid()))
-    assert manage.services_running([dead, tmp_path / "missing.pid"]) is False
-
-
 def free_port() -> int:
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
@@ -177,9 +161,24 @@ def test_backup_not_a_repo_returns_false(tmp_path, capsys):
     assert "跳过备份" in capsys.readouterr().out
 
 
+def test_spawn_service_detaches_stdin(paths, monkeypatch):
+    """后台服务不得继承终端 stdin，否则 setsid 后读 tty 会 EIO 崩溃（vite 实测）。"""
+    captured = {}
+
+    class FakePopen:
+        def __init__(self, command, **kwargs):
+            captured.update(kwargs)
+            self.pid = os.getpid()
+
+    monkeypatch.setattr(manage.subprocess, "Popen", FakePopen)
+    manage.spawn_service(["echo", "hi"], paths.log_dir / "x.log", cwd=paths.project_root)
+    assert captured.get("stdin") == subprocess.DEVNULL
+
+
 def test_cmd_start_idempotent_opens_browser_only(paths, monkeypatch):
-    """已有服务在运行时，start 只打开浏览器，不起新进程。"""
+    """前后端都在运行时，start 只打开浏览器，不起新进程。"""
     paths.backend_pid_file.write_text(str(os.getpid()))
+    paths.frontend_pid_file.write_text(str(os.getpid()))
     opened = []
     monkeypatch.setattr(manage.webbrowser, "open", opened.append)
 
@@ -188,6 +187,31 @@ def test_cmd_start_idempotent_opens_browser_only(paths, monkeypatch):
 
     monkeypatch.setattr(manage, "spawn_service", forbidden)
     assert manage.cmd_start(paths) == 0
+    assert opened == [manage.FRONTEND_URL]
+
+
+def test_cmd_start_starts_only_dead_service(paths, monkeypatch):
+    """后端存活、前端已死时，只重启前端并打开浏览器，不重起后端。"""
+    import types as types_mod
+
+    paths.backend_pid_file.write_text(str(os.getpid()))
+    paths.frontend_pid_file.write_text(str(spawn_dead_pid()))
+    (paths.frontend_dir / "node_modules").mkdir(parents=True)
+    monkeypatch.setattr(
+        manage, "shutil", types_mod.SimpleNamespace(which=lambda name: "/usr/bin/node")
+    )
+    monkeypatch.setattr(manage, "wait_for_port", lambda port, timeout: True)
+    opened = []
+    monkeypatch.setattr(manage.webbrowser, "open", opened.append)
+    spawned = []
+
+    def fake_spawn(command, log_file, cwd):
+        spawned.append(command)
+        return types_mod.SimpleNamespace(pid=os.getpid())
+
+    monkeypatch.setattr(manage, "spawn_service", fake_spawn)
+    assert manage.cmd_start(paths) == 0
+    assert spawned == [["npm", "run", "dev"]]
     assert opened == [manage.FRONTEND_URL]
 
 

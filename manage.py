@@ -88,15 +88,6 @@ def read_live_pid(pid_file: Path) -> int | None:
     return None
 
 
-def services_running(pid_files: list[Path]) -> bool:
-    """任一 PID 文件指向存活进程即视为服务在运行；顺手清理失效文件。"""
-    alive = False
-    for f in pid_files:
-        if read_live_pid(f) is not None:
-            alive = True
-    return alive
-
-
 def wait_for_port(port: int, timeout_seconds: float) -> bool:
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
@@ -197,6 +188,8 @@ def spawn_service(command: list[str], log_file: Path, cwd: Path) -> subprocess.P
 
     POSIX 用 start_new_session 让子进程成为进程组组长（PID 即 PGID），
     Windows 走 cmd 包装，stop 时 taskkill /T 连同子进程一起杀。
+    stdin 必须接 DEVNULL：setsid 后进程失去控制终端，继承的 tty 被读会
+    EIO（vite 的 readline 因此崩溃）。
     """
     if IS_WINDOWS:
         cmdline = subprocess.list2cmdline(command)
@@ -204,6 +197,7 @@ def spawn_service(command: list[str], log_file: Path, cwd: Path) -> subprocess.P
             f'{cmdline} >> "{log_file}" 2>&1',
             shell=True,
             cwd=cwd,
+            stdin=subprocess.DEVNULL,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
     log = open(log_file, "a", encoding="utf-8")
@@ -211,6 +205,7 @@ def spawn_service(command: list[str], log_file: Path, cwd: Path) -> subprocess.P
         command,
         stdout=log,
         stderr=subprocess.STDOUT,
+        stdin=subprocess.DEVNULL,
         cwd=cwd,
         start_new_session=True,
     )
@@ -218,75 +213,85 @@ def spawn_service(command: list[str], log_file: Path, cwd: Path) -> subprocess.P
 
 def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
     paths.log_dir.mkdir(exist_ok=True)
-    pid_files = [paths.backend_pid_file, paths.frontend_pid_file]
-    if services_running(pid_files):
+    backend_pid = read_live_pid(paths.backend_pid_file)
+    frontend_pid = read_live_pid(paths.frontend_pid_file)
+    if backend_pid is not None and frontend_pid is not None:
         print("服务已在运行，直接打开浏览器...")
         webbrowser.open(FRONTEND_URL)
         return 0
 
-    if shutil.which("node") is None:
-        print("[ERROR] 未找到 node，请先安装 Node.js")
-        return 1
-
-    if not (paths.project_root / ".venv").exists():
-        print("未找到 .venv，执行 uv sync --extra dev ...")
-        if shutil.which("uv") is None:
-            print("[ERROR] 未找到 uv，请先安装 uv")
-            return 1
-        rc = subprocess.run(
-            ["uv", "sync", "--extra", "dev"], cwd=paths.project_root
-        ).returncode
-        if rc != 0:
-            print("[ERROR] uv sync 失败")
-            return 1
-
-    result = subprocess.run(
-        ["uv", "run", "playwright", "install", "chromium"],
-        cwd=paths.project_root,
-        capture_output=True,
-    )
-    if result.returncode != 0:
-        print("[WARN] Playwright chromium 安装失败，resolve-name 可能不可用")
-
-    if not (paths.frontend_dir / "node_modules").exists():
-        print("未找到 node_modules，执行 npm install ...")
-        if IS_WINDOWS:
-            rc = subprocess.run(
-                "npm install", cwd=paths.frontend_dir, shell=True
-            ).returncode
-        else:
-            rc = subprocess.run(["npm", "install"], cwd=paths.frontend_dir).returncode
-        if rc != 0:
-            print("[ERROR] npm install 失败")
-            return 1
-
     backend_log = paths.log_dir / "backend.log"
     frontend_log = paths.log_dir / "frontend.log"
-    backend = spawn_service(
-        [
-            "uv", "run", "uvicorn", "app.main:app",
-            "--host", "127.0.0.1", "--port", str(BACKEND_PORT),
-        ],
-        backend_log,
-        cwd=paths.project_root,
-    )
-    frontend = spawn_service(["npm", "run", "dev"], frontend_log, cwd=paths.frontend_dir)
 
-    print(f"等待后端端口 {BACKEND_PORT} ...")
-    paths.backend_pid_file.write_text(str(backend.pid))
-    if wait_for_port(BACKEND_PORT, 15):
-        print(f"后端就绪 (PID {backend.pid})")
+    if backend_pid is None:
+        if not (paths.project_root / ".venv").exists():
+            print("未找到 .venv，执行 uv sync --extra dev ...")
+            if shutil.which("uv") is None:
+                print("[ERROR] 未找到 uv，请先安装 uv")
+                return 1
+            rc = subprocess.run(
+                ["uv", "sync", "--extra", "dev"], cwd=paths.project_root
+            ).returncode
+            if rc != 0:
+                print("[ERROR] uv sync 失败")
+                return 1
+
+        result = subprocess.run(
+            ["uv", "run", "playwright", "install", "chromium"],
+            cwd=paths.project_root,
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            print("[WARN] Playwright chromium 安装失败，resolve-name 可能不可用")
+
+        backend = spawn_service(
+            [
+                "uv", "run", "uvicorn", "app.main:app",
+                "--host", "127.0.0.1", "--port", str(BACKEND_PORT),
+            ],
+            backend_log,
+            cwd=paths.project_root,
+        )
+        print(f"等待后端端口 {BACKEND_PORT} ...")
+        paths.backend_pid_file.write_text(str(backend.pid))
+        if wait_for_port(BACKEND_PORT, 15):
+            print(f"后端就绪 (PID {backend.pid})")
+        else:
+            print(f"[WARN] 后端 15 秒内未就绪，见 {backend_log}（PID 已写入，stop 可清理）")
     else:
-        print(f"[WARN] 后端 15 秒内未就绪，见 {backend_log}（PID 已写入，stop 可清理）")
+        print(f"后端已在运行 (PID {backend_pid})")
 
-    print(f"等待前端端口 {FRONTEND_PORT} ...")
-    paths.frontend_pid_file.write_text(str(frontend.pid))
-    if wait_for_port(FRONTEND_PORT, 30):
-        print(f"前端就绪 (PID {frontend.pid})")
+    if frontend_pid is None:
+        if shutil.which("node") is None:
+            print("[ERROR] 未找到 node，请先安装 Node.js")
+            return 1
+        if not (paths.frontend_dir / "node_modules").exists():
+            print("未找到 node_modules，执行 npm install ...")
+            if IS_WINDOWS:
+                rc = subprocess.run(
+                    "npm install", cwd=paths.frontend_dir, shell=True
+                ).returncode
+            else:
+                rc = subprocess.run(["npm", "install"], cwd=paths.frontend_dir).returncode
+            if rc != 0:
+                print("[ERROR] npm install 失败")
+                return 1
+
+        frontend = spawn_service(["npm", "run", "dev"], frontend_log, cwd=paths.frontend_dir)
+        print(f"等待前端端口 {FRONTEND_PORT} ...")
+        paths.frontend_pid_file.write_text(str(frontend.pid))
+        frontend_ready = wait_for_port(FRONTEND_PORT, 30)
+        if frontend_ready:
+            print(f"前端就绪 (PID {frontend.pid})")
+        else:
+            print(f"[WARN] 前端 30 秒内未就绪，见 {frontend_log}（PID 已写入，stop 可清理）")
+    else:
+        print(f"前端已在运行 (PID {frontend_pid})")
+        frontend_ready = True
+
+    if frontend_ready:
         print("打开浏览器...")
         webbrowser.open(FRONTEND_URL)
-    else:
-        print(f"[WARN] 前端 30 秒内未就绪，见 {frontend_log}（PID 已写入，stop 可清理）")
 
     print()
     print(f"  Backend:  http://localhost:{BACKEND_PORT}")
