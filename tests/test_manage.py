@@ -175,3 +175,25 @@ def test_backup_no_changes_returns_true(data_repo):
 def test_backup_not_a_repo_returns_false(tmp_path, capsys):
     assert manage.backup_data_repo(tmp_path) is False
     assert "跳过备份" in capsys.readouterr().out
+
+
+def test_cmd_start_idempotent_opens_browser_only(paths, monkeypatch):
+    """已有服务在运行时，start 只打开浏览器，不起新进程。"""
+    paths.backend_pid_file.write_text(str(os.getpid()))
+    opened = []
+    monkeypatch.setattr(manage.webbrowser, "open", opened.append)
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("不应启动新进程")
+
+    monkeypatch.setattr(manage, "spawn_service", forbidden)
+    assert manage.cmd_start(paths) == 0
+    assert opened == [manage.FRONTEND_URL]
+
+
+def test_cmd_stop_backup_failure_still_returns_zero(paths, capsys):
+    """备份失败（private-data 不是 git 仓库）不影响 stop 的退出码。"""
+    assert manage.cmd_stop(paths) == 0
+    out = capsys.readouterr().out
+    assert "未发现运行中的服务" in out
+    assert "跳过备份" in out

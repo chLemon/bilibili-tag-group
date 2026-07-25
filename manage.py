@@ -5,11 +5,15 @@
     uv run python manage.py stop      # 停止服务 + 备份 ../private-data
     uv run python manage.py restart   # = stop + start
 """
+import argparse
 import os
+import shutil
 import signal
 import socket
 import subprocess
+import sys
 import time
+import webbrowser
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -173,3 +177,135 @@ def backup_data_repo(private_data: Path) -> bool:
         return False
     print("数据仓库已提交并推送")
     return True
+
+
+def spawn_service(command: list[str], log_file: Path, cwd: Path) -> subprocess.Popen:
+    """后台启动服务，输出重定向到日志文件。
+
+    POSIX 用 start_new_session 让子进程成为进程组组长（PID 即 PGID），
+    Windows 走 cmd 包装，stop 时 taskkill /T 连同子进程一起杀。
+    """
+    if IS_WINDOWS:
+        cmdline = subprocess.list2cmdline(command)
+        return subprocess.Popen(
+            f'{cmdline} >> "{log_file}" 2>&1',
+            shell=True,
+            cwd=cwd,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+    log = open(log_file, "a", encoding="utf-8")
+    return subprocess.Popen(
+        command,
+        stdout=log,
+        stderr=subprocess.STDOUT,
+        cwd=cwd,
+        start_new_session=True,
+    )
+
+
+def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
+    paths.log_dir.mkdir(exist_ok=True)
+    pid_files = [paths.backend_pid_file, paths.frontend_pid_file]
+    if services_running(pid_files):
+        print("服务已在运行，直接打开浏览器...")
+        webbrowser.open(FRONTEND_URL)
+        return 0
+
+    if shutil.which("node") is None:
+        print("[ERROR] 未找到 node，请先安装 Node.js")
+        return 1
+
+    if not (paths.project_root / ".venv").exists():
+        print("未找到 .venv，执行 uv sync --extra dev ...")
+        if shutil.which("uv") is None:
+            print("[ERROR] 未找到 uv，请先安装 uv")
+            return 1
+        rc = subprocess.run(
+            ["uv", "sync", "--extra", "dev"], cwd=paths.project_root
+        ).returncode
+        if rc != 0:
+            print("[ERROR] uv sync 失败")
+            return 1
+
+    result = subprocess.run(
+        ["uv", "run", "playwright", "install", "chromium"],
+        cwd=paths.project_root,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        print("[WARN] Playwright chromium 安装失败，resolve-name 可能不可用")
+
+    if not (paths.frontend_dir / "node_modules").exists():
+        print("未找到 node_modules，执行 npm install ...")
+        if IS_WINDOWS:
+            rc = subprocess.run(
+                "npm install", cwd=paths.frontend_dir, shell=True
+            ).returncode
+        else:
+            rc = subprocess.run(["npm", "install"], cwd=paths.frontend_dir).returncode
+        if rc != 0:
+            print("[ERROR] npm install 失败")
+            return 1
+
+    backend_log = paths.log_dir / "backend.log"
+    frontend_log = paths.log_dir / "frontend.log"
+    backend = spawn_service(
+        [
+            "uv", "run", "uvicorn", "app.main:app",
+            "--host", "127.0.0.1", "--port", str(BACKEND_PORT),
+        ],
+        backend_log,
+        cwd=paths.project_root,
+    )
+    frontend = spawn_service(["npm", "run", "dev"], frontend_log, cwd=paths.frontend_dir)
+
+    print(f"等待后端端口 {BACKEND_PORT} ...")
+    if wait_for_port(BACKEND_PORT, 15):
+        paths.backend_pid_file.write_text(str(backend.pid))
+        print(f"后端就绪 (PID {backend.pid})")
+    else:
+        print(f"[WARN] 后端 15 秒内未就绪，见 {backend_log}")
+
+    print(f"等待前端端口 {FRONTEND_PORT} ...")
+    if wait_for_port(FRONTEND_PORT, 30):
+        paths.frontend_pid_file.write_text(str(frontend.pid))
+        print(f"前端就绪 (PID {frontend.pid})")
+        print("打开浏览器...")
+        webbrowser.open(FRONTEND_URL)
+    else:
+        print(f"[WARN] 前端 30 秒内未就绪，见 {frontend_log}")
+
+    print()
+    print(f"  Backend:  http://localhost:{BACKEND_PORT}")
+    print(f"  Frontend: {FRONTEND_URL}")
+    print(f"  Logs:     {paths.log_dir}")
+    return 0
+
+
+def cmd_stop(paths: LauncherPaths = DEFAULT_PATHS) -> int:
+    if stop_services([paths.backend_pid_file, paths.frontend_pid_file]):
+        print("服务已停止")
+    else:
+        print("未发现运行中的服务")
+    backup_data_repo(paths.private_data_dir)
+    return 0
+
+
+def cmd_restart(paths: LauncherPaths = DEFAULT_PATHS) -> int:
+    cmd_stop(paths)
+    return cmd_start(paths)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="manage.py", description="一键启停前后端服务")
+    sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("start", help="幂等启动前后端（已运行则只打开浏览器）")
+    sub.add_parser("stop", help="停止前后端并备份数据仓库")
+    sub.add_parser("restart", help="先 stop 再 start")
+    args = parser.parse_args(argv)
+    handlers = {"start": cmd_start, "stop": cmd_stop, "restart": cmd_restart}
+    return handlers[args.command]()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
