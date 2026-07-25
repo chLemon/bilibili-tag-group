@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 一键启停
 
 - 启动前后端并打开主页：`uv run python manage.py start`（幂等，已运行则只开浏览器）
-- 停止并备份数据仓库：`uv run python manage.py stop`
+- 停止并备份数据仓库：`uv run python manage.py stop`（备份要求 `../private-data` 已 `git init` 并配置 remote，否则跳过；备份失败不阻断停止）
 - 重启：`uv run python manage.py restart`
 
 ## 后端

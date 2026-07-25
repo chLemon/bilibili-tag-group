@@ -50,6 +50,16 @@ uv run python manage.py restart  # 先 stop 再 start
 
 Windows 可双击 `start.bat` / `stop.bat` / `restart.bat`，macOS 可用 `./start.sh` / `./stop.sh`（均为一行转发）。PID 写入 `logs/*.pid`。
 
+行为说明：
+
+- `start` 幂等：检测到任一服务存活则只打开浏览器，不重复起进程；失效的 PID 文件会被自动清理
+- `.venv` 缺失时自动 `uv sync --extra dev`，`frontend/node_modules` 缺失时自动 `npm install`，每次启动自动 `playwright install chromium`
+- 端口等待：后端 15 秒、前端 30 秒；**超时也会写入 PID 文件**，保证后续 `stop` 能清理未就绪的进程
+- `stop` 先 SIGTERM 终止整棵进程树，5 秒未退出则 SIGKILL 强杀
+- `stop` 的备份前置条件：`../private-data` 需已 `git init` 并配置 remote；不满足则打印警告并跳过备份。备份失败（如 push 失败）只警告、不影响停止，退出码仍为 0
+- 备份只提交 `bilibili-tag-group/*.json` 的变更，message 为 `backup: bilibili-tag-group data snapshot (<时间戳>)`
+- Windows 端经过静态审查但未实机冒烟，如双击 `start.bat` 有问题请反馈
+
 ## 数据与日志
 
 - 数据以 JSON 文件存储在 `../private-data/bilibili-tag-group/`（可用 `DATA_DIR` 环境变量覆盖），用户自行在该目录用 git 管理数据版本
