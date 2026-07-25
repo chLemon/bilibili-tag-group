@@ -11,6 +11,7 @@ import socket
 import subprocess
 import time
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -134,3 +135,41 @@ def stop_services(pid_files: list[Path]) -> bool:
         pid_file.unlink(missing_ok=True)
         stopped = True
     return stopped
+
+
+def git_ok(args: list[str], cwd: Path) -> bool:
+    return subprocess.run(["git", *args], cwd=cwd, capture_output=True).returncode == 0
+
+
+def backup_data_repo(private_data: Path) -> bool:
+    """提交并推送 private-data 仓库中的 JSON 变更。失败打印警告并返回 False。"""
+    if not (private_data / ".git").exists():
+        print(f"[WARN] {private_data} 不是 git 仓库，跳过备份")
+        return False
+    git_ok(["pull", "--ff-only"], private_data)  # 失败（如无 remote）不阻断
+    subprocess.run(
+        ["git", "add", "--", f"{PRIVATE_DATA_REPO_SUBDIR}/*.json"],
+        cwd=private_data,
+        capture_output=True,
+    )
+    status = subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=private_data,
+        capture_output=True,
+        text=True,
+    )
+    if not status.stdout.strip():
+        print("数据仓库无变更，跳过备份")
+        return True
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    if not git_ok(
+        ["commit", "-m", f"backup: bilibili-tag-group data snapshot ({timestamp})"],
+        private_data,
+    ):
+        print("[WARN] 数据仓库 commit 失败")
+        return False
+    if not git_ok(["push"], private_data):
+        print("[WARN] 数据仓库 push 失败（已本地提交）")
+        return False
+    print("数据仓库已提交并推送")
+    return True

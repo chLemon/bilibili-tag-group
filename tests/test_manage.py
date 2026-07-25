@@ -4,6 +4,7 @@ import socket
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 import pytest
 
@@ -124,3 +125,53 @@ def test_stop_services_no_running_services(paths):
     assert manage.stop_services(
         [paths.backend_pid_file, paths.frontend_pid_file]
     ) is False
+
+
+GIT_ENV = {
+    "GIT_AUTHOR_NAME": "test",
+    "GIT_AUTHOR_EMAIL": "test@example.com",
+    "GIT_COMMITTER_NAME": "test",
+    "GIT_COMMITTER_EMAIL": "test@example.com",
+}
+
+
+def run_git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True)
+
+
+@pytest.fixture
+def data_repo(tmp_path, monkeypatch):
+    """带 bare remote 的 private-data 仓库，已有一次初始提交并配置好 upstream。"""
+    for key, value in GIT_ENV.items():
+        monkeypatch.setenv(key, value)
+    remote = tmp_path / "remote.git"
+    run_git(["init", "--bare", str(remote)], tmp_path)
+    repo = tmp_path / "private-data"
+    subdir = repo / manage.PRIVATE_DATA_REPO_SUBDIR
+    subdir.mkdir(parents=True)
+    run_git(["init"], repo)
+    run_git(["remote", "add", "origin", str(remote)], repo)
+    (subdir / "creators.json").write_text("[]")
+    run_git(["add", "."], repo)
+    run_git(["commit", "-m", "init"], repo)
+    run_git(["push", "-u", "origin", "HEAD"], repo)
+    return repo
+
+
+def test_backup_commits_and_pushes_json_changes(data_repo):
+    json_file = data_repo / manage.PRIVATE_DATA_REPO_SUBDIR / "creators.json"
+    json_file.write_text('[{"id": 1}]')
+    assert manage.backup_data_repo(data_repo) is True
+    log = run_git(["log", "--oneline"], data_repo).stdout.decode()
+    assert "backup: bilibili-tag-group data snapshot" in log
+
+
+def test_backup_no_changes_returns_true(data_repo):
+    assert manage.backup_data_repo(data_repo) is True
+    log = run_git(["log", "--oneline"], data_repo).stdout.decode()
+    assert "backup:" not in log
+
+
+def test_backup_not_a_repo_returns_false(tmp_path, capsys):
+    assert manage.backup_data_repo(tmp_path) is False
+    assert "跳过备份" in capsys.readouterr().out
