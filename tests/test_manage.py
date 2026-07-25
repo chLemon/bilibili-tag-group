@@ -98,3 +98,29 @@ def test_wait_for_port_timeout():
     start = time.monotonic()
     assert manage.wait_for_port(free_port(), 0.3) is False
     assert time.monotonic() - start < 2
+
+
+def test_stop_services_kills_process_and_removes_pid_file(paths):
+    kwargs = {} if manage.IS_WINDOWS else {"start_new_session": True}
+    proc = subprocess.Popen(
+        [sys.executable, "-c", "import time; time.sleep(60)"], **kwargs
+    )
+    paths.backend_pid_file.write_text(str(proc.pid))
+    try:
+        assert manage.stop_services(
+            [paths.backend_pid_file, paths.frontend_pid_file]
+        ) is True
+        for _ in range(50):
+            if not manage.pid_is_running(proc.pid):
+                break
+            time.sleep(0.1)
+        assert not manage.pid_is_running(proc.pid)
+        assert not paths.backend_pid_file.exists()
+    finally:
+        proc.kill()  # 兜底，防止测试失败遗留进程
+
+
+def test_stop_services_no_running_services(paths):
+    assert manage.stop_services(
+        [paths.backend_pid_file, paths.frontend_pid_file]
+    ) is False

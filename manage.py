@@ -6,6 +6,7 @@
     uv run python manage.py restart   # = stop + start
 """
 import os
+import signal
 import socket
 import subprocess
 import time
@@ -100,3 +101,36 @@ def wait_for_port(port: int, timeout_seconds: float) -> bool:
         except OSError:
             time.sleep(0.5)
     return False
+
+
+def kill_process_tree(pid: int) -> None:
+    """终止整棵进程树。POSIX 杀进程组（失败回退单进程），Windows 用 taskkill。"""
+    if IS_WINDOWS:
+        subprocess.run(
+            ["taskkill", "/T", "/F", "/PID", str(pid)], capture_output=True
+        )
+        return
+    try:
+        os.killpg(pid, signal.SIGTERM)
+    except ProcessLookupError:
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+    try:
+        os.waitpid(pid, 0)
+    except ChildProcessError:
+        pass
+
+
+def stop_services(pid_files: list[Path]) -> bool:
+    """按 PID 文件终止服务并清理文件；有进程被终止则返回 True。"""
+    stopped = False
+    for pid_file in pid_files:
+        pid = read_live_pid(pid_file)
+        if pid is None:
+            continue
+        kill_process_tree(pid)
+        pid_file.unlink(missing_ok=True)
+        stopped = True
+    return stopped
