@@ -6,7 +6,9 @@
     uv run python manage.py restart   # = stop + start
 """
 import os
+import socket
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -87,3 +89,14 @@ def services_running(pid_files: list[Path]) -> bool:
         if read_live_pid(f) is not None:
             alive = True
     return alive
+
+
+def wait_for_port(port: int, timeout_seconds: float) -> bool:
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        try:
+            with socket.create_connection(("127.0.0.1", port), timeout=1):
+                return True
+        except OSError:
+            time.sleep(0.5)
+    return False

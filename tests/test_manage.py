@@ -1,7 +1,9 @@
 """manage.py 一键启停脚本测试。"""
 import os
+import socket
 import subprocess
 import sys
+import time
 
 import pytest
 
@@ -76,3 +78,23 @@ def test_services_running_false_when_all_dead(tmp_path):
     dead = tmp_path / "b.pid"
     dead.write_text(str(spawn_dead_pid()))
     assert manage.services_running([dead, tmp_path / "missing.pid"]) is False
+
+
+def free_port() -> int:
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
+def test_wait_for_port_open():
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        s.listen(1)
+        port = s.getsockname()[1]
+        assert manage.wait_for_port(port, 2) is True
+
+
+def test_wait_for_port_timeout():
+    start = time.monotonic()
+    assert manage.wait_for_port(free_port(), 0.3) is False
+    assert time.monotonic() - start < 2
