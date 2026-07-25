@@ -1,9 +1,9 @@
 """一键启停前后端服务，并在停止时备份数据仓库。
 
 用法：
-    uv run python manage.py start     # 幂等启动：已在运行则只打开浏览器
-    uv run python manage.py stop      # 停止服务 + 备份 ../private-data
-    uv run python manage.py restart   # = stop + start
+    uv run python scripts/manage.py start     # 幂等启动：已在运行则只打开浏览器
+    uv run python scripts/manage.py stop      # 停止服务 + 备份 ../private-data
+    uv run python scripts/manage.py restart   # = stop + start
 """
 import argparse
 import os
@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 LOG_DIR = PROJECT_ROOT / "logs"
 BACKEND_PID_FILE = LOG_DIR / "backend.pid"
 FRONTEND_PID_FILE = LOG_DIR / "frontend.pid"

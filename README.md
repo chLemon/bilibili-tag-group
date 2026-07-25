@@ -43,12 +43,12 @@ cd frontend && npm run dev
 ### 一键启停
 
 ```bash
-uv run python manage.py start    # 幂等启动前后端并打开主页（已运行则只开浏览器）
-uv run python manage.py stop     # 停止服务并提交、推送 ../private-data 数据仓库
-uv run python manage.py restart  # 先 stop 再 start
+uv run python scripts/manage.py start    # 幂等启动前后端并打开主页（已运行则只开浏览器）
+uv run python scripts/manage.py stop     # 停止服务并提交、推送 ../private-data 数据仓库
+uv run python scripts/manage.py restart  # 先 stop 再 start
 ```
 
-Windows 可双击 `start.bat` / `stop.bat` / `restart.bat`，macOS 可用 `./start.sh` / `./stop.sh`（均为一行转发）。PID 写入 `logs/*.pid`。
+Windows 可双击 `scripts/start.bat` / `scripts/stop.bat` / `scripts/restart.bat`，macOS 可用 `./scripts/start.sh` / `./scripts/stop.sh`（均为一行转发）。PID 写入 `logs/*.pid`。
 
 行为说明：
 
@@ -58,7 +58,7 @@ Windows 可双击 `start.bat` / `stop.bat` / `restart.bat`，macOS 可用 `./sta
 - `stop` 先 SIGTERM 终止整棵进程树，5 秒未退出则 SIGKILL 强杀
 - `stop` 的备份前置条件：`../private-data` 需已 `git init` 并配置 remote；不满足则打印警告并跳过备份。备份失败（如 push 失败）只警告、不影响停止，退出码仍为 0
 - 备份只提交 `bilibili-tag-group/*.json` 的变更，message 为 `backup: bilibili-tag-group data snapshot (<时间戳>)`
-- Windows 端经过静态审查但未实机冒烟，如双击 `start.bat` 有问题请反馈
+- Windows 端经过静态审查但未实机冒烟，如双击 `scripts/start.bat` 有问题请反馈
 
 ## 数据与日志
 
@@ -164,9 +164,7 @@ cd frontend && npm test
 ├── tests/                     # 后端 pytest
 ├── docs/                      # 项目文档（见下方"文档索引"）
 ├── logs/                      # 运行日志（有意入库，见上文）
-├── manage.py                  # 一键启停脚本（跨平台，纯标准库）
-├── start.bat / stop.bat / restart.bat   # Windows 双击入口（转发到 manage.py）
-├── start.sh / stop.sh         # macOS 入口（转发到 manage.py）
+├── scripts/                   # 一键启停：manage.py（跨平台，纯标准库）+ bat/sh 入口
 ├── pyproject.toml             # Python 项目配置（uv）
 └── uv.lock
 ```
