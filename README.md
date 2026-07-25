@@ -40,9 +40,15 @@ cd frontend && npm run dev
 
 开发环境下前端 `/api` 请求由 Vite 代理到 `http://localhost:8000`，需先启动后端。
 
-### Windows 一键启停
+### 一键启停
 
-`start.bat` / `stop.bat`（内部调用 `start.ps1` / `stop.ps1`）用于 Windows 环境一键启停前后端，PID 写入 `logs/*.pid`。
+```bash
+uv run python manage.py start    # 幂等启动前后端并打开主页（已运行则只开浏览器）
+uv run python manage.py stop     # 停止服务并提交、推送 ../private-data 数据仓库
+uv run python manage.py restart  # 先 stop 再 start
+```
+
+Windows 可双击 `start.bat` / `stop.bat` / `restart.bat`，macOS 可用 `./start.sh` / `./stop.sh`（均为一行转发）。PID 写入 `logs/*.pid`。
 
 ## 数据与日志
 
@@ -148,8 +154,9 @@ cd frontend && npm test
 ├── tests/                     # 后端 pytest
 ├── docs/                      # 项目文档（见下方"文档索引"）
 ├── logs/                      # 运行日志（有意入库，见上文）
-├── start.ps1 / stop.ps1       # Windows 启停脚本
-├── start.bat / stop.bat       # Windows 启停入口
+├── manage.py                  # 一键启停脚本（跨平台，纯标准库）
+├── start.bat / stop.bat / restart.bat   # Windows 双击入口（转发到 manage.py）
+├── start.sh / stop.sh         # macOS 入口（转发到 manage.py）
 ├── pyproject.toml             # Python 项目配置（uv）
 └── uv.lock
 ```

@@ -9,6 +9,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 常用命令
 
+## 一键启停
+
+- 启动前后端并打开主页：`uv run python manage.py start`（幂等，已运行则只开浏览器）
+- 停止并备份数据仓库：`uv run python manage.py stop`
+- 重启：`uv run python manage.py restart`
+
 ## 后端
 
 - 安装依赖：`uv sync --extra dev`
