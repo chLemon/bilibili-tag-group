@@ -121,7 +121,20 @@ def kill_process_tree(pid: int) -> None:
         try:
             os.kill(pid, signal.SIGTERM)
         except ProcessLookupError:
-            pass
+            return
+    # 等 SIGTERM 起效，最多 5 秒；超时则 SIGKILL 强杀
+    for _ in range(50):
+        if not pid_is_running(pid):
+            break
+        time.sleep(0.1)
+    if pid_is_running(pid):
+        try:
+            os.killpg(pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except (ProcessLookupError, PermissionError):
+                pass
     try:
         os.waitpid(pid, 0)
     except ChildProcessError:
@@ -260,20 +273,20 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
     frontend = spawn_service(["npm", "run", "dev"], frontend_log, cwd=paths.frontend_dir)
 
     print(f"等待后端端口 {BACKEND_PORT} ...")
+    paths.backend_pid_file.write_text(str(backend.pid))
     if wait_for_port(BACKEND_PORT, 15):
-        paths.backend_pid_file.write_text(str(backend.pid))
         print(f"后端就绪 (PID {backend.pid})")
     else:
-        print(f"[WARN] 后端 15 秒内未就绪，见 {backend_log}")
+        print(f"[WARN] 后端 15 秒内未就绪，见 {backend_log}（PID 已写入，stop 可清理）")
 
     print(f"等待前端端口 {FRONTEND_PORT} ...")
+    paths.frontend_pid_file.write_text(str(frontend.pid))
     if wait_for_port(FRONTEND_PORT, 30):
-        paths.frontend_pid_file.write_text(str(frontend.pid))
         print(f"前端就绪 (PID {frontend.pid})")
         print("打开浏览器...")
         webbrowser.open(FRONTEND_URL)
     else:
-        print(f"[WARN] 前端 30 秒内未就绪，见 {frontend_log}")
+        print(f"[WARN] 前端 30 秒内未就绪，见 {frontend_log}（PID 已写入，stop 可清理）")
 
     print()
     print(f"  Backend:  http://localhost:{BACKEND_PORT}")

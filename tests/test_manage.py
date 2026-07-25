@@ -197,3 +197,101 @@ def test_cmd_stop_backup_failure_still_returns_zero(paths, capsys):
     out = capsys.readouterr().out
     assert "未发现运行中的服务" in out
     assert "跳过备份" in out
+
+
+def test_cmd_start_writes_pid_files_even_when_port_timeout(paths, monkeypatch):
+    """端口超时也要写 PID 文件，否则 stop 无法清理孤儿进程。"""
+    backend_proc = subprocess.Popen(
+        [sys.executable, "-c", "import time; time.sleep(30)"]
+    )
+    frontend_proc = subprocess.Popen(
+        [sys.executable, "-c", "import time; time.sleep(30)"]
+    )
+    try:
+        import types as types_mod
+
+        def fake_spawn(command, log_file, cwd):
+            if "uvicorn" in command:
+                return types_mod.SimpleNamespace(pid=backend_proc.pid)
+            return types_mod.SimpleNamespace(pid=frontend_proc.pid)
+
+        monkeypatch.setattr(manage, "spawn_service", fake_spawn)
+        monkeypatch.setattr(manage, "wait_for_port", lambda port, timeout: False)
+        (paths.project_root / ".venv").mkdir()
+        (paths.frontend_dir / "node_modules").mkdir(parents=True)
+        fake_shutil = types_mod.SimpleNamespace(which=lambda name: "/usr/bin/node")
+        monkeypatch.setattr(manage, "shutil", fake_shutil)
+        # 拦截 playwright install 的 subprocess.run（该路径下仅此一处 subprocess.run）
+        real_run = manage.subprocess.run
+
+        def fake_run(args, *rest, **kwargs):
+            if args and "playwright" in " ".join(str(a) for a in args):
+                return types_mod.SimpleNamespace(returncode=0)
+            return real_run(args, *rest, **kwargs)
+
+        monkeypatch.setattr(manage.subprocess, "run", fake_run)
+
+        rc = manage.cmd_start(paths)
+        assert rc == 0
+        assert paths.backend_pid_file.read_text().strip() == str(backend_proc.pid)
+        assert paths.frontend_pid_file.read_text().strip() == str(frontend_proc.pid)
+    finally:
+        for p in (backend_proc, frontend_proc):
+            try:
+                p.kill()
+                p.wait()
+            except Exception:
+                pass
+
+
+def test_kill_process_tree_sigkill_when_sigterm_ignored():
+    """进程忽略 SIGTERM 时，kill_process_tree 应在 5 秒内 SIGKILL 强杀，不挂死。"""
+    if manage.IS_WINDOWS:
+        import pytest
+
+        pytest.skip(reason="POSIX 信号语义")
+    proc = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            "import signal, time; signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+            "time.sleep(60)",
+        ],
+        start_new_session=True,
+    )
+    start = time.monotonic()
+    try:
+        manage.kill_process_tree(proc.pid)
+        elapsed = time.monotonic() - start
+        assert elapsed < 15
+        for _ in range(50):
+            if not manage.pid_is_running(proc.pid):
+                break
+            time.sleep(0.1)
+        assert not manage.pid_is_running(proc.pid)
+    finally:
+        try:
+            proc.kill()
+            proc.wait()
+        except Exception:
+            pass
+
+
+def test_cmd_restart_passes_paths_to_stop_and_start(paths, monkeypatch):
+    """cmd_restart 必须把 paths 透传给 cmd_stop 与 cmd_start。"""
+    received = []
+
+    def fake_stop(p):
+        received.append(("stop", p))
+        return 0
+
+    def fake_start(p):
+        received.append(("start", p))
+        return 0
+
+    monkeypatch.setattr(manage, "cmd_stop", fake_stop)
+    monkeypatch.setattr(manage, "cmd_start", fake_start)
+
+    rc = manage.cmd_restart(paths)
+    assert rc == 0
+    assert received == [("stop", paths), ("start", paths)]
