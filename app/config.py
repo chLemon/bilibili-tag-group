@@ -1,11 +1,13 @@
+"""全局配置：数据目录、同步间隔、B 站 Cookie。可用 .env 覆盖（见 model_config）。"""
 from pathlib import Path
 
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    # 数据目录默认在仓库外的 ../private-data/bilibili-tag-group/，由用户自行用 git 管理
     data_dir: Path = (
-        Path(__file__).resolve().parent.parent / ".." / "private-data" / "bilibili-tag-group"
+        Path(__file__).resolve().parent.parent.parent / "private-data" / "bilibili-tag-group"
     )
     sync_interval_minutes: int = 60
     bilibili_cookie: str = ""

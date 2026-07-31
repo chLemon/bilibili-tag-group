@@ -4,19 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Video } from "../api/client";
 import { Clock, Calendar, ExternalLink, Eye, EyeOff, Image } from "lucide-react";
-
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  const mm = String(m).padStart(2, "0");
-  const ss = String(s).padStart(2, "0");
-  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("zh-CN");
-}
+import { displayName, formatDate, formatDuration } from "../utils/format";
 
 interface VideoCardProps {
   video: Video;
@@ -36,6 +24,8 @@ export default function VideoCard({ video, onMarkWatched, onMarkIgnored }: Video
   }, []);
 
   function handleAction(callback: (id: number) => void) {
+    // 200ms 内连点两个操作按钮时，取消前一个未触发的回调，避免前一次操作丢失
+    if (timerRef.current !== null) clearTimeout(timerRef.current);
     setRemoving(true);
     timerRef.current = setTimeout(() => callback(video.id), 200);
   }
@@ -83,7 +73,7 @@ export default function VideoCard({ video, onMarkWatched, onMarkIgnored }: Video
                   {video.creator_name.charAt(0)}
                 </span>
               )}
-              {video.creator_alias ? `${video.creator_alias}（${video.creator_name}）` : video.creator_name}
+              {displayName({ name: video.creator_name, alias: video.creator_alias })}
             </span>
             <span className="video-card-meta-sep">·</span>
             <span className="video-card-meta-item">

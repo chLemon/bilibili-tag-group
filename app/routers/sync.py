@@ -1,5 +1,7 @@
 """同步路由：查询最近同步状态、手动触发全量同步、查询调度配置、管理立即同步标签。"""
 import asyncio
+import logging
+from collections.abc import Coroutine
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,10 +11,28 @@ from app.schemas.sync import SyncTaskRead
 from app.services.sync_service import SyncService
 from app.store.store import DataStore
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/sync", tags=["sync"])
 
 _sync_loop_running: bool = False
 _sync_interval_minutes: int = 60
+
+# 持有后台任务引用：create_task 的任务若无人引用，可能被 GC 提前取消；
+# 完成回调里统一取出异常，避免"任务静默死亡"
+_background_tasks: set[asyncio.Task] = set()
+
+
+def _spawn_background(coro: Coroutine[Any, Any, None]) -> None:
+    task = asyncio.create_task(coro)
+    _background_tasks.add(task)
+
+    def _on_done(t: asyncio.Task) -> None:
+        _background_tasks.discard(t)
+        if not t.cancelled() and (exc := t.exception()) is not None:
+            logger.error("后台同步任务异常退出：%s", exc, exc_info=exc)
+
+    task.add_done_callback(_on_done)
 
 
 def set_sync_context(loop_running: bool, interval_minutes: int) -> None:
@@ -41,7 +61,7 @@ async def run_sync(
     """手动触发全量同步：幂等创建任务，后台协程执行，立即返回任务进度。"""
     task, created = await sync_svc.start_sync(store)
     if created:
-        asyncio.create_task(sync_svc.run_sync_task(task.id, store))
+        _spawn_background(sync_svc.run_sync_task(task.id, store))
     return task
 
 

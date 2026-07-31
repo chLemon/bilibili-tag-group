@@ -12,14 +12,11 @@ from app.models.sync_task import SyncTask
 from app.models.tag_sync_config import TagSyncConfig
 from app.models.video import Video
 from app.models.video_status import VideoStatus
+from app.services.creator_service import CreatorService
 from app.store.store import DataStore
 from app.utils.time import now_utc as _now_utc
 
 logger = logging.getLogger(__name__)
-
-
-def _uid_from_profile_url(profile_url: str) -> str:
-    return profile_url.rstrip("/").split("/")[-1]
 
 
 class SyncService:
@@ -65,7 +62,7 @@ class SyncService:
             ) < timedelta(minutes=50):
                 return 0
 
-        uid = _uid_from_profile_url(creator.profile_url)
+        uid = CreatorService.uid_from_profile_url(creator.profile_url)
 
         try:
             info = await self._fetcher.fetch_creator_info(uid)
@@ -76,7 +73,11 @@ class SyncService:
             if info.get("video_count") is not None:
                 creator.video_count = info["video_count"]
         except Exception:
-            pass
+            # 信息更新失败不阻断视频同步，但必须留痕：风控时段若静默跳过，
+            # 表象会误成"无新视频"
+            logger.warning(
+                "获取 UP 主信息失败，跳过信息更新 uid=%s", uid, exc_info=True
+            )
 
         fetched_list: list[FetchedVideo] = await self._fetcher.fetch_new_videos(uid)
 
@@ -123,35 +124,39 @@ class SyncService:
 
         已有 running 任务时：心跳超时则标记失败并新建；否则返回 (existing, False)，
         调用方不得再启动执行协程。
+
+        check-then-create 整体放在 sync_tasks 的跨进程临界区内，
+        防止多实例同时通过 running 检查而各建一个任务。
         """
-        running = store.sync_tasks.filter(status="running")
-        if running:
-            existing = max(running, key=lambda t: t.started_at)
-            if existing.heartbeat_at is not None:
-                age_sec = (_now_utc() - existing.heartbeat_at).total_seconds()
-                if age_sec >= self._HEARTBEAT_DEAD_SEC:
-                    await store.sync_tasks.update(
-                        existing.id,
-                        status="failed",
-                        error_message="任务进程崩溃，心跳超时未更新",
-                        finished_at=_now_utc(),
-                    )
+        async with store.sync_tasks.locked() as repo:
+            running = [t for t in repo.all() if t.status == "running"]
+            if running:
+                existing = max(running, key=lambda t: t.started_at)
+                if existing.heartbeat_at is not None:
+                    age_sec = (_now_utc() - existing.heartbeat_at).total_seconds()
+                    if age_sec >= self._HEARTBEAT_DEAD_SEC:
+                        repo.update_nolock(
+                            existing.id,
+                            status="failed",
+                            error_message="任务进程崩溃，心跳超时未更新",
+                            finished_at=_now_utc(),
+                        )
+                    else:
+                        return existing, False
                 else:
                     return existing, False
-            else:
-                return existing, False
 
-        total = len(store.creators.all())
-        task = SyncTask(
-            status="running",
-            total_creators=total,
-            completed_creators=0,
-            new_videos=0,
-            started_at=_now_utc(),
-            heartbeat_at=_now_utc(),
-        )
-        await store.sync_tasks.add(task)
-        return task, True
+            total = len(store.creators.all())
+            task = SyncTask(
+                status="running",
+                total_creators=total,
+                completed_creators=0,
+                new_videos=0,
+                started_at=_now_utc(),
+                heartbeat_at=_now_utc(),
+            )
+            repo.add_nolock(task)
+            return task, True
 
     async def _heartbeat_loop(
         self, task_id: int, store: DataStore, stop_event: asyncio.Event

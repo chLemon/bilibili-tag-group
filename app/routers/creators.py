@@ -74,7 +74,7 @@ def list_creators(
 ) -> list[CreatorRead]:
     """返回所有 UP 主列表。"""
     creators = _creator_svc.list_creators(store)
-    return [_creator_svc.to_read(store, c) for c in creators]
+    return _creator_svc.to_read_many(store, creators)
 
 
 @router.get("/{creator_id}", response_model=CreatorRead)
@@ -98,28 +98,7 @@ def list_creator_videos(
     creator = _creator_svc.get_creator(store, creator_id)
     if creator is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Creator 不存在")
-
-    videos_list = store.videos.filter(creator_id=creator_id)
-    all_statuses = {s.video_id: s for s in store.video_statuses.all()}
-    videos_list.sort(key=lambda v: v.published_at, reverse=True)
-
-    return [
-        VideoDetail(
-            id=video.id,
-            bvid=video.bvid,
-            title=video.title,
-            creator_id=video.creator_id,
-            creator_name=creator.name,
-            creator_alias=creator.alias,
-            creator_avatar_url=creator.avatar_url,
-            video_url=video.video_url,
-            published_at=video.published_at,
-            duration_seconds=video.duration_seconds,
-            cover_url=video.cover_url,
-            status=all_statuses[video.id].status if video.id in all_statuses else 0,
-        )
-        for video in videos_list
-    ]
+    return _video_svc.list_video_details_by_creator(store, creator)
 
 
 @router.patch("/{creator_id}", response_model=CreatorRead)
@@ -149,7 +128,7 @@ async def batch_update_video_status(
     payload: VideoStatusUpdate,
     store: Annotated[DataStore, Depends(get_store)],
 ) -> dict:
-    """批量将某个 UP 主的所有未看视频标记为指定状态。"""
+    """批量将某个 UP 主的所有视频标记为指定状态。"""
     creator = _creator_svc.get_creator(store, creator_id)
     if creator is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Creator 不存在")

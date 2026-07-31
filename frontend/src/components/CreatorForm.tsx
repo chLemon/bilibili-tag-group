@@ -3,7 +3,7 @@
  * 添加模式：只填 URL，点击按钮自动获取名称和头像。
  * 编辑模式：名称和 URL 只读，可修改启用状态和标签。
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, AlertCircle, Loader2, Search, User } from "lucide-react";
 import { Tag, createTag, resolveCreatorName } from "../api/client";
 
@@ -43,6 +43,7 @@ export default function CreatorForm({
   const [tagCreateError, setTagCreateError] = useState<string | null>(null);
   const [nameResolving, setNameResolving] = useState(false);
   const [nameResolveError, setNameResolveError] = useState<string | null>(null);
+  const fetchSeqRef = useRef(0);
 
   useEffect(() => {
     setLocalTags(tags);
@@ -90,18 +91,23 @@ export default function CreatorForm({
       ? `https://space.bilibili.com/${trimmed}`
       : trimmed;
 
+    // 请求序号：连点"获取信息"时只有最后一次请求的结果生效，
+    // 避免先发出的慢请求覆盖后发出的新结果
+    const seq = ++fetchSeqRef.current;
     setNameResolving(true);
     setNameResolveError(null);
     try {
       const result = await resolveCreatorName(query);
+      if (seq !== fetchSeqRef.current) return;
       setName(result.name);
       if (result.avatar_url) setAvatarUrl(result.avatar_url);
     } catch (error) {
+      if (seq !== fetchSeqRef.current) return;
       setNameResolveError(
         error instanceof Error ? error.message : "获取昵称失败，请检查 URL 是否正确"
       );
     } finally {
-      setNameResolving(false);
+      if (seq === fetchSeqRef.current) setNameResolving(false);
     }
   }
 

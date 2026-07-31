@@ -1,6 +1,10 @@
 /**
  * API 客户端：封装对后端 REST 接口的请求。
- * 所有函数返回 Promise，调用方负责错误处理。
+ *
+ * 约定：
+ * - 所有路径以 /api 开头，开发环境由 vite.config.ts 代理到 http://localhost:8000
+ * - 请求/响应字段沿用后端 snake_case 命名
+ * - 非 2xx 响应抛出 Error("HTTP {status}: {body}")，调用方负责错误处理
  */
 
 // ---- 类型定义 ----
@@ -99,8 +103,8 @@ export interface SyncSettings {
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
-    headers: { "Content-Type": "application/json" },
     ...init,
+    headers: { "Content-Type": "application/json", ...init?.headers },
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -236,7 +240,7 @@ export function updateStatus(
   });
 }
 
-/** 批量更新某 UP 主的所有未看视频状态 */
+/** 批量更新某 UP 主的所有视频状态 */
 export function batchUpdateCreatorVideos(
   creatorId: number,
   status: number

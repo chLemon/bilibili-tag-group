@@ -257,3 +257,32 @@ Node.js v24.4.1
 10:42:40 [vite] hmr update /src/styles/index.css
 10:43:17 [vite] hmr update /src/styles/index.css
 10:43:44 [vite] hmr update /src/styles/index.css
+10:52:33 [vite] hmr update /src/pages/CreatorsPage.tsx
+10:53:38 [vite] hmr update /src/styles/index.css
+10:57:02 [vite] hmr update /src/pages/CreatorsPage.tsx
+10:57:10 [vite] hmr update /src/styles/index.css
+10:57:23 [vite] hmr update /src/styles/index.css
+15:18:45 [vite] hmr update /src/components/VideoCard.tsx
+15:18:58 [vite] hmr update /src/components/VideoCard.tsx
+15:19:10 [vite] hmr update /src/components/VideoCard.tsx
+15:19:53 [vite] hmr update /src/pages/CreatorsPage.tsx, /src/pages/CreatorDetailPage.tsx, /src/pages/SyncPage.tsx, /src/components/CreatorForm.tsx, /src/pages/TagsPage.tsx, /src/components/BatchImportModal.tsx
+15:20:36 [vite] hmr update /src/pages/CreatorsPage.tsx, /src/pages/CreatorDetailPage.tsx, /src/pages/SyncPage.tsx, /src/components/CreatorForm.tsx, /src/pages/TagsPage.tsx, /src/components/BatchImportModal.tsx
+15:24:20 [vite] hmr update /src/pages/CreatorsPage.tsx, /src/pages/CreatorDetailPage.tsx, /src/pages/SyncPage.tsx, /src/components/CreatorForm.tsx, /src/pages/TagsPage.tsx, /src/components/BatchImportModal.tsx
+15:29:46 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+15:32:33 [vite] hmr update /src/pages/CreatorsPage.tsx
+15:33:43 [vite] hmr update /src/components/CreatorForm.tsx
+15:34:40 [vite] hmr update /src/components/CreatorForm.tsx
+15:35:17 [vite] hmr update /src/components/CreatorForm.tsx
+15:35:54 [vite] hmr update /src/components/BatchImportModal.tsx
+15:36:59 [vite] hmr update /src/components/BatchImportModal.tsx
+15:37:12 [vite] hmr update /src/components/BatchImportModal.tsx
+15:38:17 [vite] hmr update /src/pages/TagsPage.tsx
+15:39:17 [vite] hmr update /src/pages/TagsPage.tsx
+15:39:45 [vite] hmr update /src/pages/TagsPage.tsx
+15:40:22 [vite] hmr update /src/pages/TagsPage.tsx
+15:40:41 [vite] hmr update /src/pages/TagsPage.tsx
+15:42:44 [vite] hmr update /src/pages/SyncPage.tsx
+15:44:29 [vite] hmr update /src/pages/SyncPage.tsx
+15:44:42 [vite] hmr update /src/pages/SyncPage.tsx
+15:45:24 [vite] hmr update /src/pages/TagsPage.tsx
+15:45:27 [vite] hmr update /src/pages/TagsPage.tsx

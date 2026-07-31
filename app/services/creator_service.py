@@ -45,26 +45,42 @@ class CreatorService:
 
     def to_read(self, store: DataStore, creator: Creator) -> CreatorRead:
         """将 Creator 模型转换为 CreatorRead schema，附带视频统计数据。"""
-        videos_list = store.videos.filter(creator_id=creator.id)
-        status_map = {s.video_id: s for s in store.video_statuses.all()}
-        unwatched = sum(
-            1 for v in videos_list
-            if v.id not in status_map or status_map[v.id].status == 0
-        )
-        tag_ids = [link.tag_id for link in store.creator_tags.filter(creator_id=creator.id)]
-        return CreatorRead(
-            id=creator.id,
-            name=creator.name,
-            alias=creator.alias,
-            profile_url=creator.profile_url,
-            avatar_url=creator.avatar_url,
-            tag_ids=tag_ids,
-            enabled=creator.enabled,
-            video_count=creator.video_count or 0,
-            synced_video_count=len(videos_list),
-            unwatched_count=unwatched,
-            last_synced_at=creator.last_synced_at,
-        )
+        return self.to_read_many(store, [creator])[0]
+
+    def to_read_many(
+        self, store: DataStore, creators: list[Creator]
+    ) -> list[CreatorRead]:
+        """批量转换为 CreatorRead：三个文件各只全量读一次，预聚合后组装。
+
+        逐个调用 to_read 会对每个 UP 主各读一遍 videos/video_statuses/
+        creator_tags，列表场景下是 3N 次全量读。
+        """
+        video_ids_by_creator: dict[int, list[int]] = {}
+        for v in store.videos.all():
+            video_ids_by_creator.setdefault(v.creator_id, []).append(v.id)
+        status_map = {s.video_id: s.status for s in store.video_statuses.all()}
+        tag_ids_by_creator: dict[int, list[int]] = {}
+        for link in store.creator_tags.all():
+            tag_ids_by_creator.setdefault(link.creator_id, []).append(link.tag_id)
+
+        reads: list[CreatorRead] = []
+        for creator in creators:
+            video_ids = video_ids_by_creator.get(creator.id, [])
+            unwatched = sum(1 for vid in video_ids if status_map.get(vid, 0) == 0)
+            reads.append(CreatorRead(
+                id=creator.id,
+                name=creator.name,
+                alias=creator.alias,
+                profile_url=creator.profile_url,
+                avatar_url=creator.avatar_url,
+                tag_ids=tag_ids_by_creator.get(creator.id, []),
+                enabled=creator.enabled,
+                video_count=creator.video_count or 0,
+                synced_video_count=len(video_ids),
+                unwatched_count=unwatched,
+                last_synced_at=creator.last_synced_at,
+            ))
+        return reads
 
     async def resolve_creator_info(
         self, fetcher: PlaywrightBilibiliFetcher, profile_url: str

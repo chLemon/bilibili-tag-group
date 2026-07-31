@@ -1,4 +1,9 @@
-import { useState } from "react";
+/**
+ * BatchImportModal：批量添加 UP 主的弹窗。
+ * 输入阶段粘贴「uid,标签1,标签2」每行一条；预览阶段并行解析昵称/头像，
+ * 仅提交解析成功的条目，单条失败不影响其他条目。
+ */
+import { useRef, useState } from "react";
 import {
   resolveCreatorName,
   batchCreateCreators,
@@ -6,6 +11,7 @@ import {
 } from "../api/client";
 import { X, Loader2, AlertCircle, CheckCircle2, ChevronLeft } from "lucide-react";
 
+/** 解析后的一行输入：uid + 标签名 + 解析得到的名称/头像 + 解析状态 */
 interface ParsedItem {
   uid: string;
   tag_names: string[];
@@ -26,6 +32,8 @@ export default function BatchImportModal({ onClose, onSuccess }: Props) {
   const [items, setItems] = useState<ParsedItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 预览请求序号：返回修改后重新预览时，丢弃上一批迟到的解析结果
+  const previewSeqRef = useRef(0);
 
   const parsedCount = text.trim()
     ? text.trim().split("\n").filter((l) => l.trim()).length
@@ -47,6 +55,7 @@ export default function BatchImportModal({ onClose, onSuccess }: Props) {
   async function handlePreview() {
     const parsed = parseText();
     if (parsed.length === 0) return;
+    const seq = ++previewSeqRef.current;
     setItems(parsed);
     setStep("preview");
     setError(null);
@@ -57,6 +66,7 @@ export default function BatchImportModal({ onClose, onSuccess }: Props) {
       )
     );
 
+    if (seq !== previewSeqRef.current) return;
     setItems((prev) =>
       prev.map((item, i) => {
         const result = results[i];
@@ -242,6 +252,7 @@ export default function BatchImportModal({ onClose, onSuccess }: Props) {
               <button
                 className="btn btn-outline"
                 onClick={() => {
+                  previewSeqRef.current++; // 作废进行中的预览解析
                   setStep("input");
                   setError(null);
                 }}

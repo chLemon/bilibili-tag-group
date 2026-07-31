@@ -1,19 +1,8 @@
 /**
  * CreatorDetailPage：UP 主视频详情页。
- * 展示该 UP 主的所有视频，支持标记已看/未看切换。
+ * 展示该 UP 主的所有视频，支持单个/一键标记已看、不看、未看。
  */
-import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import {
-  fetchCreator,
-  fetchCreatorVideos,
-  fetchTags,
-  updateStatus,
-  batchUpdateCreatorVideos,
-  Creator,
-  Tag,
-  VideoDetail,
-} from "../api/client";
 import {
   Loader2,
   AlertCircle,
@@ -33,23 +22,8 @@ import {
   CheckCheck,
   Undo2,
 } from "lucide-react";
-
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  const mm = String(m).padStart(2, "0");
-  const ss = String(s).padStart(2, "0");
-  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("zh-CN");
-}
-
-function displayName(c: Creator): string {
-  return c.alias ? `${c.alias}（${c.name}）` : c.name;
-}
+import { useCreatorDetail } from "../hooks/useCreatorDetail";
+import { displayName, formatDate, formatDuration } from "../utils/format";
 
 /** 视频状态元信息：状态值 -> 文案与图标 */
 const STATUS_META: Record<number, { label: string; Icon: typeof Play }> = {
@@ -62,74 +36,21 @@ export default function CreatorDetailPage() {
   const { creatorId } = useParams<{ creatorId: string }>();
   const id = Number(creatorId);
 
-  const [creator, setCreator] = useState<Creator | null>(null);
-  const [videos, setVideos] = useState<VideoDetail[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [toggling, setToggling] = useState<number | null>(null);
-  const [batchLoading, setBatchLoading] = useState(false);
+  const {
+    creator,
+    videos,
+    tags,
+    loading,
+    error,
+    toggling,
+    batchLoading,
+    setStatus,
+    batchSetStatus,
+  } = useCreatorDetail(id);
 
   async function handleBatchUpdate(status: number, label: string) {
     if (!window.confirm(`确定将该 UP 主的所有视频标记为${label}？`)) return;
-    setBatchLoading(true);
-    try {
-      await batchUpdateCreatorVideos(id, status);
-      setVideos((prev) =>
-        prev.map((v) => ({ ...v, status }))
-      );
-      if (creator) {
-        setCreator({
-          ...creator,
-          unwatched_count: status === 0 ? videos.length : 0,
-        });
-      }
-    } catch (err) {
-      setError(String(err));
-    } finally {
-      setBatchLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    if (!id) return;
-    setLoading(true);
-    Promise.all([fetchCreator(id), fetchCreatorVideos(id), fetchTags()])
-      .then(([c, v, t]) => {
-        setCreator(c);
-        setVideos(v);
-        setTags(t);
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [id]);
-
-  async function handleSetStatus(video: VideoDetail, newStatus: number) {
-    setToggling(video.id);
-    try {
-      await updateStatus(video.id, newStatus);
-      const oldStatus = video.status;
-      setVideos((prev) =>
-        prev.map((v) =>
-          v.id === video.id ? { ...v, status: newStatus } : v
-        )
-      );
-      if (creator) {
-        // 只有进出"未看"状态才影响 unwatched_count
-        const wasUnwatched = oldStatus === 0;
-        const isUnwatched = newStatus === 0;
-        if (wasUnwatched !== isUnwatched) {
-          setCreator({
-            ...creator,
-            unwatched_count: creator.unwatched_count + (isUnwatched ? 1 : -1),
-          });
-        }
-      }
-    } catch (err) {
-      setError(String(err));
-    } finally {
-      setToggling(null);
-    }
+    await batchSetStatus(status);
   }
 
   if (loading) {
@@ -333,7 +254,7 @@ export default function CreatorDetailPage() {
                 {v.status !== 1 && (
                   <button
                     className="btn btn-sm btn-primary"
-                    onClick={() => handleSetStatus(v, 1)}
+                    onClick={() => setStatus(v, 1)}
                     disabled={toggling === v.id}
                   >
                     {toggling === v.id ? (
@@ -347,7 +268,7 @@ export default function CreatorDetailPage() {
                 {v.status !== 2 && (
                   <button
                     className="btn btn-sm btn-muted"
-                    onClick={() => handleSetStatus(v, 2)}
+                    onClick={() => setStatus(v, 2)}
                     disabled={toggling === v.id}
                   >
                     {toggling === v.id ? (
@@ -361,7 +282,7 @@ export default function CreatorDetailPage() {
                 {v.status !== 0 && (
                   <button
                     className="btn btn-sm btn-info"
-                    onClick={() => handleSetStatus(v, 0)}
+                    onClick={() => setStatus(v, 0)}
                     disabled={toggling === v.id}
                   >
                     {toggling === v.id ? (

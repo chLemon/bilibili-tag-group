@@ -2,16 +2,9 @@
  * CreatorsPage：UP 主管理页面。
  * 展示统计摘要、已添加的 UP 主列表，支持添加、编辑、按标签筛选。
  */
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  fetchCreators,
-  fetchTags,
-  createCreator,
-  updateCreator,
-  Creator,
-  Tag,
-} from "../api/client";
+import { Creator } from "../api/client";
 import {
   Plus,
   ListPlus,
@@ -32,6 +25,8 @@ import {
 } from "lucide-react";
 import CreatorForm from "../components/CreatorForm";
 import BatchImportModal from "../components/BatchImportModal";
+import { useCreators } from "../hooks/useCreators";
+import { displayName } from "../utils/format";
 import { formatRelativeTime } from "../utils/time";
 
 type FormMode =
@@ -40,99 +35,25 @@ type FormMode =
   | { type: "edit"; creator: Creator };
 
 export default function CreatorsPage() {
-  const [creators, setCreators] = useState<Creator[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const {
+    tags,
+    loading,
+    loadError,
+    submitError,
+    submitting,
+    filterTagId,
+    setFilterTagId,
+    filteredCreators,
+    creators,
+    totalUnwatched,
+    addCreator,
+    editCreator,
+    appendCreators,
+    clearSubmitError,
+  } = useCreators();
+
   const [formMode, setFormMode] = useState<FormMode>({ type: "none" });
-  const [submitting, setSubmitting] = useState(false);
-  const [filterTagId, setFilterTagId] = useState<number | null>(null);
   const [showBatchModal, setShowBatchModal] = useState(false);
-
-  useEffect(() => {
-    Promise.all([fetchCreators(), fetchTags()])
-      .then(([c, t]) => {
-        setCreators(c);
-        setTags(t);
-      })
-      .catch((err: Error) => setLoadError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const filteredCreators = useMemo(() => {
-    if (filterTagId === null) return creators;
-    return creators.filter((c) => c.tag_ids.includes(filterTagId));
-  }, [creators, filterTagId]);
-
-  const totalUnwatched = useMemo(
-    () => creators.reduce((sum, c) => sum + c.unwatched_count, 0),
-    [creators]
-  );
-
-  async function handleAdd(values: {
-    name: string;
-    profile_url: string;
-    avatar_url?: string;
-    alias?: string;
-    tag_ids: number[];
-  }) {
-    setSubmitting(true);
-    setSubmitError(null);
-    try {
-      const created = await createCreator({
-        name: values.name,
-        profile_url: values.profile_url,
-        avatar_url: values.avatar_url,
-        alias: values.alias,
-        tag_ids: values.tag_ids,
-      });
-      setCreators((prev) => [...prev, created]);
-      // 表单里可能新建了标签，刷新标签列表
-      fetchTags().then(setTags).catch(() => {});
-      setFormMode({ type: "none" });
-    } catch (err) {
-      setSubmitError(String(err));
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  function handleBatchSuccess(newCreators: Creator[]) {
-    setCreators((prev) => [...prev, ...newCreators]);
-    fetchTags().then(setTags).catch(() => {});
-    setShowBatchModal(false);
-  }
-
-  async function handleEdit(
-    creatorId: number,
-    values: {
-      name: string;
-      profile_url: string;
-      alias?: string;
-      tag_ids: number[];
-    }
-  ) {
-    setSubmitting(true);
-    setSubmitError(null);
-    try {
-      const updated = await updateCreator(creatorId, {
-        name: values.name,
-        alias: values.alias,
-        tag_ids: values.tag_ids,
-      });
-      setCreators((prev) =>
-        prev.map((c) => (c.id === creatorId ? updated : c))
-      );
-      // 表单里可能新建了标签，刷新标签列表
-      fetchTags().then(setTags).catch(() => {});
-      setFormMode({ type: "none" });
-    } catch (err) {
-      setSubmitError(String(err));
-    } finally {
-      setSubmitting(false);
-    }
-  }
 
   if (loading) {
     return (
@@ -161,7 +82,23 @@ export default function CreatorsPage() {
 
   function closeModal() {
     setFormMode({ type: "none" });
-    setSubmitError(null);
+    clearSubmitError();
+  }
+
+  async function handleSubmit(values: {
+    name: string;
+    profile_url: string;
+    avatar_url?: string;
+    alias?: string;
+    tag_ids: number[];
+  }) {
+    const ok =
+      formMode.type === "add"
+        ? await addCreator(values)
+        : formMode.type === "edit"
+          ? await editCreator(formMode.creator.id, values)
+          : false;
+    if (ok) setFormMode({ type: "none" });
   }
 
   return (
@@ -215,13 +152,6 @@ export default function CreatorsPage() {
           </div>
         </div>
       </div>
-
-      {submitError && !isModalOpen && (
-        <div className="error-message">
-          <AlertCircle size={16} />
-          提交失败：{submitError}
-        </div>
-      )}
 
       {/* 标签筛选栏 */}
       {tags.length > 0 && (
@@ -303,15 +233,13 @@ export default function CreatorsPage() {
                     href={c.profile_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="creator-card-name"
+                    className="creator-card-identity"
                     title={c.profile_url}
                   >
-                    {displayName(c)}
+                    <span className="creator-card-name">{displayName(c)}</span>
+                    <span className="creator-card-url">{c.profile_url}</span>
+                    <ExternalLink size={12} className="creator-card-ext-link" />
                   </a>
-                  <ExternalLink size={12} className="creator-card-ext-link" />
-                  <span className="creator-card-url" title={c.profile_url}>
-                    {c.profile_url}
-                  </span>
                 </div>
 
                 <div className="creator-card-stats">
@@ -418,13 +346,7 @@ export default function CreatorsPage() {
                   : undefined
               }
               tags={tags}
-              onSubmit={(values) => {
-                if (formMode.type === "add") {
-                  handleAdd(values);
-                } else if (formMode.type === "edit") {
-                  handleEdit(formMode.creator.id, values);
-                }
-              }}
+              onSubmit={handleSubmit}
               onCancel={closeModal}
               submitting={submitting}
             />
@@ -436,14 +358,12 @@ export default function CreatorsPage() {
       {showBatchModal && (
         <BatchImportModal
           onClose={() => setShowBatchModal(false)}
-          onSuccess={handleBatchSuccess}
+          onSuccess={(newCreators) => {
+            appendCreators(newCreators);
+            setShowBatchModal(false);
+          }}
         />
       )}
     </div>
   );
-}
-
-/** 格式化 UP 主显示名称：有别名时显示「别名（原名）」，否则只显示原名 */
-function displayName(c: Creator): string {
-  return c.alias ? `${c.alias}（${c.name}）` : c.name;
 }

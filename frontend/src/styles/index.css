@@ -1431,6 +1431,19 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   text-decoration: none;
 }
 
+/* 名字 + URL 组合成的单个可点击区域 */
+.creator-card-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  text-decoration: none;
+}
+
+.creator-card-identity:hover .creator-card-name {
+  color: var(--color-primary);
+}
+
 .creator-card-ext-link {
   display: inline-flex;
   align-items: center;
@@ -1441,7 +1454,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   flex-shrink: 0;
 }
 
-.creator-card-header:hover .creator-card-ext-link {
+.creator-card-identity:hover .creator-card-ext-link {
   opacity: 1;
 }
 
@@ -1453,6 +1466,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   white-space: nowrap;
   max-width: 240px;
   flex-shrink: 1;
+  text-decoration: none;
 }
 
 .creator-card-stats {

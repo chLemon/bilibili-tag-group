@@ -1,6 +1,6 @@
 """视频相关的 Pydantic Schema。"""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas._datetime import BeijingDateTime
 
@@ -8,7 +8,7 @@ from app.schemas._datetime import BeijingDateTime
 class VideoStatusUpdate(BaseModel):
     """更新视频状态的请求体。"""
 
-    status: int  # 0=未看, 1=已看, 2=不看
+    status: int = Field(ge=0, le=2)  # 0=未看, 1=已看, 2=不看
 
 
 class VideoRead(BaseModel):

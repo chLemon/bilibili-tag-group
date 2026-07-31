@@ -509,3 +509,27 @@ class TestVideoService:
         assert result.video_id == video1.id
         assert result.status == 1
         assert store.video_statuses.filter(video_id=video2.id)[0].status == 0
+
+    async def test_batch_set_status_applies_to_all_videos(self, store):
+        """一键操作对所有状态的视频生效（含已看/不看），否则"一键未看"是空操作。"""
+        creator = Creator(name="c", profile_url="https://space.bilibili.com/9")
+        await store.creators.add(creator)
+        videos = []
+        for i, status in enumerate([0, 1, 2]):
+            v = Video(
+                bvid=f"BV_batch_{i}", creator_id=creator.id, title=f"v{i}",
+                video_url=f"https://example.com/{i}",
+                published_at=datetime(2024, 1, 1), duration_seconds=100,
+            )
+            await store.videos.add(v)
+            await store.video_statuses.add(VideoStatus(video_id=v.id, status=status))
+            videos.append(v)
+
+        svc = VideoService()
+        count = await svc.batch_set_status_by_creator(store, creator.id, 0)
+
+        assert count == 3
+        for v in videos:
+            vs = store.video_statuses.filter(video_id=v.id)[0]
+            assert vs.status == 0
+            assert vs.watched_at is None

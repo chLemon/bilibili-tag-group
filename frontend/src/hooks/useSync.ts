@@ -17,10 +17,12 @@ import {
   Tag,
 } from "../api/client";
 import { parseUtc } from "../utils/time";
+import { formatError } from "../utils/format";
 
 /** 轮询间隔（毫秒） */
 const POLL_INTERVAL = 3000;
-/** 心跳超过此秒数判定任务已终止，与后端 _HEARTBEAT_DEAD_SEC 保持一致 */
+/** 心跳超过此秒数判定任务已终止，与后端 app/services/sync_service.py 的
+    SyncService._HEARTBEAT_DEAD_SEC 保持一致 */
 const DEAD_THRESHOLD_SEC = 45;
 
 // ── useSyncTask ────────────────────────────────────────────────────
@@ -37,7 +39,7 @@ export function useSyncTask() {
   useEffect(() => {
     fetchCurrentTask()
       .then(setTask)
-      .catch((err: Error) => setError(err.message));
+      .catch((err) => setError(formatError(err)));
   }, []);
 
   const startSync = useCallback(async () => {
@@ -47,7 +49,7 @@ export function useSyncTask() {
       const t = await runSync();
       setTask(t);
     } catch (err) {
-      setError(String(err));
+      setError(formatError(err));
     } finally {
       setIsStarting(false);
     }
@@ -95,6 +97,13 @@ export function useSyncPolling(
     }
   }, []);
 
+  // onComplete 经 ref 持有：父组件若传入未 memo 的回调，
+  // 不会让 startPolling 变身份而导致轮询反复重启
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
   const startPolling = useCallback(() => {
     if (pollRef.current !== null) return;
     pollRef.current = setInterval(async () => {
@@ -103,13 +112,13 @@ export function useSyncPolling(
         onTaskUpdate(t);
         if (!t || t.status !== "running") {
           stopPolling();
-          onComplete?.();
+          onCompleteRef.current?.();
         }
       } catch {
         // 轮询失败静默忽略，下一轮重试
       }
     }, POLL_INTERVAL);
-  }, [onTaskUpdate, stopPolling, onComplete]);
+  }, [onTaskUpdate, stopPolling]);
 
   // task 变为 running 时启动轮询，结束时或组件卸载时停止
   useEffect(() => {
@@ -139,7 +148,7 @@ export function useSyncSettings() {
         setSettings(cfg);
         setLatestTask(task);
       })
-      .catch((err: Error) => setError(err.message))
+      .catch((err) => setError(formatError(err)))
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -172,7 +181,7 @@ export function useImmediateTags() {
         setImmediateTags(imTags);
         setAllTags(tags);
       })
-      .catch((err: Error) => setError(err.message));
+      .catch((err) => setError(formatError(err)));
   }, []);
 
   const addTag = useCallback(async (tagId: number) => {
@@ -182,7 +191,7 @@ export function useImmediateTags() {
       const result = await addImmediateTag(tagId);
       setImmediateTags((prev) => [...prev, result]);
     } catch (err) {
-      setError(String(err));
+      setError(formatError(err));
     } finally {
       setAddingTagId(null);
     }
@@ -194,7 +203,7 @@ export function useImmediateTags() {
       await removeImmediateTag(tagId);
       setImmediateTags((prev) => prev.filter((t) => t.tag_id !== tagId));
     } catch (err) {
-      setError(String(err));
+      setError(formatError(err));
     }
   }, []);
 

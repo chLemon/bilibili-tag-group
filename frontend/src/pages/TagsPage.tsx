@@ -33,14 +33,12 @@ export default function TagsPage() {
     markAllIgnored,
   } = useTagVideos(selectedTagId);
 
-  // 标记操作成功后顺带刷新侧栏标签的未看数
+  // 标记操作成功后顺带刷新侧栏标签的未看数（失败时不刷新）
   const handleMarkWatched = async (videoId: number) => {
-    await markWatched(videoId);
-    refreshTags();
+    if (await markWatched(videoId)) refreshTags();
   };
   const handleMarkIgnored = async (videoId: number) => {
-    await markIgnored(videoId);
-    refreshTags();
+    if (await markIgnored(videoId)) refreshTags();
   };
 
   const { activeCreatorId, scrollToCreator } = useScrollSpy(
@@ -67,8 +65,7 @@ export default function TagsPage() {
     if (!window.confirm("确定将该 UP 主的所有未看视频标记为已看？")) return;
     setBatchLoadingId(creatorId);
     try {
-      await markAllWatched(creatorId);
-      refreshTags();
+      if (await markAllWatched(creatorId)) refreshTags();
     } finally {
       setBatchLoadingId(null);
     }
@@ -78,8 +75,7 @@ export default function TagsPage() {
     if (!window.confirm("确定将该 UP 主的所有未看视频标记为不看？")) return;
     setBatchLoadingId(creatorId);
     try {
-      await markAllIgnored(creatorId);
-      refreshTags();
+      if (await markAllIgnored(creatorId)) refreshTags();
     } finally {
       setBatchLoadingId(null);
     }

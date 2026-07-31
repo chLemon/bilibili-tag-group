@@ -1198,3 +1198,340 @@ INFO:     127.0.0.1:53887 - "GET /api/sync/task/current HTTP/1.1" 200 OK
 INFO:     127.0.0.1:53888 - "GET /api/sync/latest HTTP/1.1" 200 OK
 INFO:     127.0.0.1:53894 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
 INFO:     127.0.0.1:53896 - "GET /api/tags HTTP/1.1" 200 OK
+2026-07-31 10:48:48 [INFO] app.fetcher.playwright_fetcher: 开始抓取 437979218 的视频
+2026-07-31 10:48:55 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 10:48:58 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 10:49:02 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 10:49:05 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 10:49:10 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 10:49:13 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 10:49:17 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 10:49:21 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-31 10:49:25 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-31 10:49:29 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-31 10:49:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-31 10:49:34 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-31 10:49:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-31 10:49:41 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-31 10:49:44 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+2026-07-31 10:49:48 [INFO] app.fetcher.playwright_fetcher: 抓取第 16 页的数据
+2026-07-31 10:49:52 [INFO] app.fetcher.playwright_fetcher: 抓取第 17 页的数据
+2026-07-31 10:49:57 [INFO] app.fetcher.playwright_fetcher: 抓取第 18 页的数据
+2026-07-31 10:50:00 [INFO] app.fetcher.playwright_fetcher: 抓取第 19 页的数据
+2026-07-31 10:50:04 [INFO] app.fetcher.playwright_fetcher: 抓取第 20 页的数据
+2026-07-31 10:50:08 [INFO] app.fetcher.playwright_fetcher: 抓取第 21 页的数据
+2026-07-31 10:50:11 [INFO] app.fetcher.playwright_fetcher: 抓取第 22 页的数据
+2026-07-31 10:50:14 [INFO] app.fetcher.playwright_fetcher: 抓取第 23 页的数据
+2026-07-31 10:50:17 [INFO] app.fetcher.playwright_fetcher: 抓取第 24 页的数据
+2026-07-31 10:50:20 [INFO] app.fetcher.playwright_fetcher: 抓取第 25 页的数据
+2026-07-31 10:50:21 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1my3k6aEWt
+INFO:     127.0.0.1:54837 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54836 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54838 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54839 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54840 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54856 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54860 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54869 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54870 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54872 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54890 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54904 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-07-31 10:50:44 [INFO] app.fetcher.playwright_fetcher: 开始抓取 652380147 的视频
+INFO:     127.0.0.1:54927 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54942 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54957 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54965 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54974 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54971 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54978 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54982 - "GET /api/creators HTTP/1.1" 200 OK
+2026-07-31 10:51:04 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 10:51:08 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 10:51:11 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 10:51:15 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 10:51:19 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 10:51:22 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 10:51:25 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 10:51:35 [INFO] app.fetcher.playwright_fetcher: 开始抓取 6658776 的视频
+2026-07-31 10:52:08 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 10:52:11 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 10:52:14 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 10:52:18 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 10:52:21 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 10:52:24 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 10:52:27 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 10:52:30 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-31 10:52:34 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+INFO:     127.0.0.1:55291 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55290 - "GET /api/creators HTTP/1.1" 200 OK
+2026-07-31 10:52:37 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-31 10:52:41 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-31 10:52:44 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-31 10:52:48 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-31 10:52:51 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-31 10:52:54 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+INFO:     127.0.0.1:55650 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55649 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55652 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55654 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55884 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55883 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56413 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56412 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56415 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56417 - "GET /api/creators HTTP/1.1" 200 OK
+2026-07-31 11:53:16 [INFO] app.fetcher.playwright_fetcher: 开始抓取 437979218 的视频
+2026-07-31 11:53:25 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 11:53:30 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 11:53:33 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 11:53:36 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 11:53:40 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 11:53:44 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 11:53:48 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 11:53:50 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-31 11:53:53 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-31 11:53:57 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-31 11:54:01 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-31 11:54:05 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-31 11:54:09 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-31 11:54:13 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-31 11:54:16 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+2026-07-31 11:54:18 [INFO] app.fetcher.playwright_fetcher: 抓取第 16 页的数据
+2026-07-31 11:54:21 [INFO] app.fetcher.playwright_fetcher: 抓取第 17 页的数据
+2026-07-31 11:54:24 [INFO] app.fetcher.playwright_fetcher: 抓取第 18 页的数据
+2026-07-31 11:54:27 [INFO] app.fetcher.playwright_fetcher: 抓取第 19 页的数据
+2026-07-31 11:54:30 [INFO] app.fetcher.playwright_fetcher: 抓取第 20 页的数据
+2026-07-31 11:54:33 [INFO] app.fetcher.playwright_fetcher: 抓取第 21 页的数据
+2026-07-31 11:54:36 [INFO] app.fetcher.playwright_fetcher: 抓取第 22 页的数据
+2026-07-31 11:54:40 [INFO] app.fetcher.playwright_fetcher: 抓取第 23 页的数据
+2026-07-31 11:54:43 [INFO] app.fetcher.playwright_fetcher: 抓取第 24 页的数据
+2026-07-31 11:54:47 [INFO] app.fetcher.playwright_fetcher: 抓取第 25 页的数据
+2026-07-31 11:54:47 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1my3k6aEWt
+2026-07-31 11:54:47 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1my3k6aEWt
+2026-07-31 11:55:02 [INFO] app.fetcher.playwright_fetcher: 开始抓取 652380147 的视频
+2026-07-31 11:55:07 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 11:55:10 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 11:55:12 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 11:55:15 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 11:55:19 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 11:55:22 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 11:55:25 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 11:55:32 [INFO] app.fetcher.playwright_fetcher: 开始抓取 6658776 的视频
+2026-07-31 11:56:18 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 11:56:20 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 11:56:23 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 11:56:27 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 11:56:31 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 11:56:35 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 11:56:37 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 11:56:41 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-31 11:56:44 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-31 11:56:46 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-31 11:56:50 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-31 11:56:53 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-31 11:56:57 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-31 11:57:00 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-31 11:57:02 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+2026-07-31 12:57:41 [INFO] app.fetcher.playwright_fetcher: 开始抓取 437979218 的视频
+2026-07-31 12:58:23 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 12:58:26 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 12:58:30 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 12:58:34 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 12:58:36 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 12:58:40 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 12:58:43 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 12:58:46 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-31 12:58:49 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-31 12:58:51 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-31 12:58:54 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-31 12:58:57 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-31 12:58:59 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-31 12:59:02 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-31 12:59:06 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+2026-07-31 12:59:10 [INFO] app.fetcher.playwright_fetcher: 抓取第 16 页的数据
+2026-07-31 12:59:14 [INFO] app.fetcher.playwright_fetcher: 抓取第 17 页的数据
+2026-07-31 12:59:17 [INFO] app.fetcher.playwright_fetcher: 抓取第 18 页的数据
+2026-07-31 12:59:20 [INFO] app.fetcher.playwright_fetcher: 抓取第 19 页的数据
+2026-07-31 12:59:24 [INFO] app.fetcher.playwright_fetcher: 抓取第 20 页的数据
+2026-07-31 12:59:27 [INFO] app.fetcher.playwright_fetcher: 抓取第 21 页的数据
+2026-07-31 12:59:29 [INFO] app.fetcher.playwright_fetcher: 抓取第 22 页的数据
+2026-07-31 12:59:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 23 页的数据
+2026-07-31 12:59:36 [INFO] app.fetcher.playwright_fetcher: 抓取第 24 页的数据
+2026-07-31 12:59:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 25 页的数据
+2026-07-31 12:59:39 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1my3k6aEWt
+2026-07-31 12:59:53 [INFO] app.fetcher.playwright_fetcher: 开始抓取 652380147 的视频
+2026-07-31 13:00:23 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 13:00:25 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 13:00:28 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 13:00:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 13:00:36 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 13:00:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 13:00:43 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 13:00:49 [INFO] app.fetcher.playwright_fetcher: 开始抓取 6658776 的视频
+2026-07-31 13:01:04 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 13:01:07 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 13:01:10 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 13:01:13 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 13:01:17 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 13:01:21 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 13:01:23 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 13:01:28 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-31 13:01:31 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-31 13:01:35 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-31 13:01:37 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-31 13:01:40 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-31 13:01:44 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-31 13:01:48 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-31 13:01:50 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+2026-07-31 14:02:03 [INFO] app.fetcher.playwright_fetcher: 开始抓取 437979218 的视频
+2026-07-31 14:02:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 14:02:36 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 14:02:40 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 14:02:42 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 14:02:46 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 14:02:49 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 14:02:51 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 14:02:54 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-31 14:02:57 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-31 14:03:00 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-31 14:03:03 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-31 14:03:07 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-31 14:03:10 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-31 14:03:13 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-31 14:03:16 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+2026-07-31 14:03:20 [INFO] app.fetcher.playwright_fetcher: 抓取第 16 页的数据
+2026-07-31 14:03:25 [INFO] app.fetcher.playwright_fetcher: 抓取第 17 页的数据
+2026-07-31 14:03:28 [INFO] app.fetcher.playwright_fetcher: 抓取第 18 页的数据
+2026-07-31 14:03:31 [INFO] app.fetcher.playwright_fetcher: 抓取第 19 页的数据
+2026-07-31 14:03:35 [INFO] app.fetcher.playwright_fetcher: 抓取第 20 页的数据
+2026-07-31 14:03:38 [INFO] app.fetcher.playwright_fetcher: 抓取第 21 页的数据
+2026-07-31 14:03:41 [INFO] app.fetcher.playwright_fetcher: 抓取第 22 页的数据
+2026-07-31 14:03:44 [INFO] app.fetcher.playwright_fetcher: 抓取第 23 页的数据
+2026-07-31 14:03:47 [INFO] app.fetcher.playwright_fetcher: 抓取第 24 页的数据
+2026-07-31 14:03:50 [INFO] app.fetcher.playwright_fetcher: 抓取第 25 页的数据
+2026-07-31 14:03:51 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1NS3k6FEUw
+2026-07-31 14:03:51 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1my3k6aEWt
+2026-07-31 14:03:51 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1NS3k6FEUw
+2026-07-31 14:03:51 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1my3k6aEWt
+2026-07-31 14:03:52 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1NS3k6FEUw
+2026-07-31 14:03:52 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1my3k6aEWt
+2026-07-31 14:03:52 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1NS3k6FEUw
+2026-07-31 14:03:52 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1my3k6aEWt
+2026-07-31 14:04:07 [INFO] app.fetcher.playwright_fetcher: 开始抓取 652380147 的视频
+2026-07-31 14:04:09 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 14:04:14 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 14:04:17 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 14:04:20 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 14:04:23 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 14:04:26 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 14:04:29 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 14:04:36 [INFO] app.fetcher.playwright_fetcher: 开始抓取 6658776 的视频
+2026-07-31 14:05:17 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 14:05:20 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 14:05:23 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 14:05:27 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 14:05:31 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 14:05:34 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 14:05:38 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 14:05:41 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-31 14:05:44 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-31 14:05:47 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-31 14:05:51 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-31 14:05:54 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-31 14:05:57 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-31 14:06:01 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-31 14:06:03 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+2026-07-31 15:06:44 [INFO] app.fetcher.playwright_fetcher: 开始抓取 437979218 的视频
+2026-07-31 15:07:40 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 15:07:43 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 15:07:47 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 15:07:50 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 15:07:53 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 15:07:57 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 15:08:01 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 15:08:04 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-31 15:08:07 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-31 15:08:11 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-31 15:08:15 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-31 15:08:18 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-31 15:08:22 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-31 15:08:24 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-31 15:08:27 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+2026-07-31 15:08:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 16 页的数据
+2026-07-31 15:08:35 [INFO] app.fetcher.playwright_fetcher: 抓取第 17 页的数据
+2026-07-31 15:08:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 18 页的数据
+2026-07-31 15:08:43 [INFO] app.fetcher.playwright_fetcher: 抓取第 19 页的数据
+2026-07-31 15:08:46 [INFO] app.fetcher.playwright_fetcher: 抓取第 20 页的数据
+2026-07-31 15:08:48 [INFO] app.fetcher.playwright_fetcher: 抓取第 21 页的数据
+2026-07-31 15:08:51 [INFO] app.fetcher.playwright_fetcher: 抓取第 22 页的数据
+2026-07-31 15:08:54 [INFO] app.fetcher.playwright_fetcher: 抓取第 23 页的数据
+2026-07-31 15:08:58 [INFO] app.fetcher.playwright_fetcher: 抓取第 24 页的数据
+2026-07-31 15:09:01 [INFO] app.fetcher.playwright_fetcher: 抓取第 25 页的数据
+2026-07-31 15:09:02 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1NS3k6FEUw
+2026-07-31 15:09:02 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1my3k6aEWt
+2026-07-31 15:09:02 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1NS3k6FEUw
+2026-07-31 15:09:02 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1my3k6aEWt
+2026-07-31 15:09:20 [INFO] app.fetcher.playwright_fetcher: 开始抓取 652380147 的视频
+2026-07-31 15:09:23 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 15:09:25 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 15:09:29 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 15:09:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 15:09:35 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 15:09:40 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 15:09:43 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 15:09:51 [INFO] app.fetcher.playwright_fetcher: 开始抓取 6658776 的视频
+2026-07-31 15:09:54 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 15:09:58 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 15:10:01 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 15:10:04 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 15:10:08 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 15:10:11 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 15:10:15 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 15:10:18 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-31 15:10:20 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-31 15:10:23 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-31 15:10:27 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-31 15:10:30 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-31 15:10:33 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-31 15:10:36 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-31 15:10:40 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+INFO:     127.0.0.1:53100 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53099 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53174 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53173 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53609 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53608 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54524 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54526 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54530 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54534 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56879 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56878 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56881 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56888 - "GET /api/creators HTTP/1.1" 200 OK
+2026-07-31 16:12:16 [INFO] app.fetcher.playwright_fetcher: 开始抓取 437979218 的视频
+2026-07-31 16:13:23 [INFO] app.fetcher.playwright_fetcher: 开始抓取 652380147 的视频
+2026-07-31 16:13:26 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 16:13:30 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 16:13:33 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 16:13:37 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 16:13:41 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 16:13:43 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 16:13:46 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 16:13:53 [INFO] app.fetcher.playwright_fetcher: 开始抓取 6658776 的视频
+2026-07-31 16:13:56 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-31 16:13:59 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-31 16:14:03 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-31 16:14:08 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-31 16:14:11 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-31 16:14:13 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-31 16:14:17 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-31 16:14:20 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-31 16:14:23 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-31 16:14:26 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-31 16:14:29 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-31 16:14:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-31 16:14:36 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-31 16:14:38 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-31 16:14:43 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据

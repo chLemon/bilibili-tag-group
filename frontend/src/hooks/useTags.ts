@@ -11,6 +11,7 @@ import {
   Tag,
   Video,
 } from "../api/client";
+import { formatError } from "../utils/format";
 
 /** 无标签 UP 主的虚拟标识 */
 export const UNTAGGED_ID = -1;
@@ -35,7 +36,7 @@ export function useTags() {
   useEffect(() => {
     fetchTags()
       .then(setTags)
-      .catch((err: Error) => setError(err.message))
+      .catch((err) => setError(formatError(err)))
       .finally(() => setLoading(false));
   }, []);
 
@@ -56,6 +57,7 @@ export function useTags() {
  * 根据选中的标签 ID 获取视频列表，并按 UP 主分组。
  * error 仅用于列表加载失败；actionError 用于标记已看等操作失败（不影响列表展示）。
  * reload 可重新拉取当前标签的视频。
+ * mark* 系列操作返回是否成功，调用方可据此决定是否联动刷新（如侧栏未看数）。
  */
 export function useTagVideos(selectedTagId: number | null) {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -77,8 +79,8 @@ export function useTagVideos(selectedTagId: number | null) {
       .then((v) => {
         if (!cancelled) setVideos(v);
       })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
+      .catch((err) => {
+        if (!cancelled) setError(formatError(err));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -108,39 +110,47 @@ export function useTagVideos(selectedTagId: number | null) {
     return Array.from(map.values()).sort((a, b) => a.creatorId - b.creatorId);
   }, [videos]);
 
-  const markWatched = useCallback(async (videoId: number) => {
+  const markWatched = useCallback(async (videoId: number): Promise<boolean> => {
     try {
       await updateStatus(videoId, 1);
       setVideos((prev) => prev.filter((v) => v.id !== videoId));
+      return true;
     } catch (err) {
-      setActionError(String(err));
+      setActionError(formatError(err));
+      return false;
     }
   }, []);
 
-  const markIgnored = useCallback(async (videoId: number) => {
+  const markIgnored = useCallback(async (videoId: number): Promise<boolean> => {
     try {
       await updateStatus(videoId, 2);
       setVideos((prev) => prev.filter((v) => v.id !== videoId));
+      return true;
     } catch (err) {
-      setActionError(String(err));
+      setActionError(formatError(err));
+      return false;
     }
   }, []);
 
-  const markAllWatched = useCallback(async (creatorId: number) => {
+  const markAllWatched = useCallback(async (creatorId: number): Promise<boolean> => {
     try {
       await batchUpdateCreatorVideos(creatorId, 1);
       setVideos((prev) => prev.filter((v) => v.creator_id !== creatorId));
+      return true;
     } catch (err) {
-      setActionError(String(err));
+      setActionError(formatError(err));
+      return false;
     }
   }, []);
 
-  const markAllIgnored = useCallback(async (creatorId: number) => {
+  const markAllIgnored = useCallback(async (creatorId: number): Promise<boolean> => {
     try {
       await batchUpdateCreatorVideos(creatorId, 2);
       setVideos((prev) => prev.filter((v) => v.creator_id !== creatorId));
+      return true;
     } catch (err) {
-      setActionError(String(err));
+      setActionError(formatError(err));
+      return false;
     }
   }, []);
 
