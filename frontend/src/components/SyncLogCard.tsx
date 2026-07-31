@@ -3,11 +3,7 @@
  */
 import { Clock, FileVideo, CalendarClock, CheckCircle2, XCircle } from "lucide-react";
 import { SyncTask } from "../api/client";
-
-/** 格式化为本地时间字符串 */
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleString("zh-CN");
-}
+import { formatLocalDateTime } from "../utils/time";
 
 interface Props {
   latestTask: SyncTask | null;
@@ -48,13 +44,13 @@ export default function SyncLogCard({ latestTask }: Props) {
         <div className="sync-log-stat">
           <CalendarClock size={14} />
           <span>开始时间</span>
-          <span>{formatTime(latestTask.started_at)}</span>
+          <span>{formatLocalDateTime(latestTask.started_at)}</span>
         </div>
         {latestTask.finished_at && (
           <div className="sync-log-stat">
             <CalendarClock size={14} />
             <span>结束时间</span>
-            <span>{formatTime(latestTask.finished_at)}</span>
+            <span>{formatLocalDateTime(latestTask.finished_at)}</span>
           </div>
         )}
       </div>

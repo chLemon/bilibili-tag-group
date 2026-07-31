@@ -90,6 +90,7 @@ export default function BatchImportModal({ onClose, onSuccess }: Props) {
           uid: item.uid,
           tag_names: item.tag_names,
           name: item.name!,
+          avatar_url: item.avatar_url,
         })),
       });
       const newCreators = resp.results

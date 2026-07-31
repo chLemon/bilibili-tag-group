@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import CreatorForm from "../components/CreatorForm";
 import BatchImportModal from "../components/BatchImportModal";
+import { formatRelativeTime } from "../utils/time";
 
 type FormMode =
   | { type: "none" }
@@ -87,6 +88,8 @@ export default function CreatorsPage() {
         tag_ids: values.tag_ids,
       });
       setCreators((prev) => [...prev, created]);
+      // 表单里可能新建了标签，刷新标签列表
+      fetchTags().then(setTags).catch(() => {});
       setFormMode({ type: "none" });
     } catch (err) {
       setSubmitError(String(err));
@@ -121,6 +124,8 @@ export default function CreatorsPage() {
       setCreators((prev) =>
         prev.map((c) => (c.id === creatorId ? updated : c))
       );
+      // 表单里可能新建了标签，刷新标签列表
+      fetchTags().then(setTags).catch(() => {});
       setFormMode({ type: "none" });
     } catch (err) {
       setSubmitError(String(err));
@@ -153,6 +158,11 @@ export default function CreatorsPage() {
   }
 
   const isModalOpen = formMode.type !== "none";
+
+  function closeModal() {
+    setFormMode({ type: "none" });
+    setSubmitError(null);
+  }
 
   return (
     <div>
@@ -206,7 +216,7 @@ export default function CreatorsPage() {
         </div>
       </div>
 
-      {submitError && (
+      {submitError && !isModalOpen && (
         <div className="error-message">
           <AlertCircle size={16} />
           提交失败：{submitError}
@@ -318,6 +328,7 @@ export default function CreatorsPage() {
                     <>
                       <span className="creator-card-stat-dot" />
                       <span className="creator-card-stat creator-card-unwatched">
+                        <Play size={12} />
                         {c.unwatched_count} 未看
                       </span>
                     </>
@@ -370,7 +381,7 @@ export default function CreatorsPage() {
         <div
           className="modal-overlay"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setFormMode({ type: "none" });
+            if (e.target === e.currentTarget) closeModal();
           }}
         >
           <div className="modal-content">
@@ -382,12 +393,18 @@ export default function CreatorsPage() {
               </h3>
               <button
                 className="modal-close"
-                onClick={() => setFormMode({ type: "none" })}
+                onClick={closeModal}
                 title="关闭 (Esc)"
               >
                 <X size={18} />
               </button>
             </div>
+            {submitError && (
+              <div className="error-message" style={{ margin: "0 var(--space-4)" }}>
+                <AlertCircle size={16} />
+                提交失败：{submitError}
+              </div>
+            )}
             <CreatorForm
               initialValues={
                 formMode.type === "edit"
@@ -408,7 +425,7 @@ export default function CreatorsPage() {
                   handleEdit(formMode.creator.id, values);
                 }
               }}
-              onCancel={() => setFormMode({ type: "none" })}
+              onCancel={closeModal}
               submitting={submitting}
             />
           </div>
@@ -429,25 +446,4 @@ export default function CreatorsPage() {
 /** 格式化 UP 主显示名称：有别名时显示「别名（原名）」，否则只显示原名 */
 function displayName(c: Creator): string {
   return c.alias ? `${c.alias}（${c.name}）` : c.name;
-}
-
-/** 将 ISO 时间字符串转换为相对时间描述 */
-function formatRelativeTime(iso: string): string {
-  const now = Date.now();
-  const then = new Date(iso + "Z").getTime();
-  const diffMs = now - then;
-  if (diffMs < 0) return "刚刚";
-
-  const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return "刚刚";
-  if (minutes < 60) return `${minutes} 分钟前`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} 小时前`;
-
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days} 天前`;
-
-  const months = Math.floor(days / 30);
-  return `${months} 个月前`;
 }

@@ -31,8 +31,8 @@ const mockSettings: client.SyncSettings = {
 };
 
 const mockTags: client.Tag[] = [
-  { id: 1, name: "沙雕动画" },
-  { id: 2, name: "科技" },
+  { id: 1, name: "沙雕动画", unwatched_count: 0 },
+  { id: 2, name: "科技", unwatched_count: 0 },
 ];
 
 const mockImmediateTags: client.ImmediateTag[] = [

@@ -11,7 +11,7 @@ import * as client from "../src/api/client";
 vi.mock("../src/api/client");
 
 const mockTags: client.Tag[] = [
-  { id: 1, name: "科技" },
+  { id: 1, name: "科技", unwatched_count: 0 },
 ];
 
 const mockCreators: client.Creator[] = [
@@ -51,6 +51,7 @@ beforeEach(() => {
   vi.mocked(client.createTag).mockResolvedValue({
     id: 2,
     name: "游戏",
+    unwatched_count: 0,
   });
   vi.mocked(client.resolveCreatorName).mockResolvedValue({
     name: "新UP主",

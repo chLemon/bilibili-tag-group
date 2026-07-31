@@ -9,6 +9,7 @@
 export interface Tag {
   id: number;
   name: string;
+  unwatched_count: number;
 }
 
 /** UP 主 */
@@ -180,6 +181,7 @@ export interface BatchCreatorItem {
   uid: string;
   tag_names: string[];
   name?: string;
+  avatar_url?: string | null;
 }
 
 /** 批量添加请求 */

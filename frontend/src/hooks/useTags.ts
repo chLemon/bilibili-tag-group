@@ -26,7 +26,7 @@ export interface CreatorGroup {
 
 // ── useTags ──────────────────────────────────────────────────────────
 
-/** 获取所有标签列表，管理加载与错误状态 */
+/** 获取所有标签列表，管理加载与错误状态；refresh 可静默刷新（不重置加载态） */
 export function useTags() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,22 +39,34 @@ export function useTags() {
       .finally(() => setLoading(false));
   }, []);
 
-  return { tags, loading, error };
+  const refresh = useCallback(async () => {
+    try {
+      setTags(await fetchTags());
+    } catch {
+      // 静默失败，保留旧数据
+    }
+  }, []);
+
+  return { tags, loading, error, refresh };
 }
 
 // ── useTagVideos ─────────────────────────────────────────────────────
 
 /**
  * 根据选中的标签 ID 获取视频列表，并按 UP 主分组。
- * 返回分组后的列表、原始视频列表、加载状态、错误及标记已看方法。
+ * error 仅用于列表加载失败；actionError 用于标记已看等操作失败（不影响列表展示）。
+ * reload 可重新拉取当前标签的视频。
  */
 export function useTagVideos(selectedTagId: number | null) {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (selectedTagId === null) return;
+    let cancelled = false;
     setLoading(true);
     setError(null);
     const promise =
@@ -62,10 +74,22 @@ export function useTagVideos(selectedTagId: number | null) {
         ? fetchUntaggedVideos()
         : fetchTagVideos(selectedTagId);
     promise
-      .then(setVideos)
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [selectedTagId]);
+      .then((v) => {
+        if (!cancelled) setVideos(v);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedTagId, reloadKey]);
+
+  const reload = useCallback(() => setReloadKey((k) => k + 1), []);
+  const dismissActionError = useCallback(() => setActionError(null), []);
 
   const groupedVideos: CreatorGroup[] = useMemo(() => {
     const map = new Map<number, CreatorGroup>();
@@ -89,7 +113,7 @@ export function useTagVideos(selectedTagId: number | null) {
       await updateStatus(videoId, 1);
       setVideos((prev) => prev.filter((v) => v.id !== videoId));
     } catch (err) {
-      setError(String(err));
+      setActionError(String(err));
     }
   }, []);
 
@@ -98,7 +122,7 @@ export function useTagVideos(selectedTagId: number | null) {
       await updateStatus(videoId, 2);
       setVideos((prev) => prev.filter((v) => v.id !== videoId));
     } catch (err) {
-      setError(String(err));
+      setActionError(String(err));
     }
   }, []);
 
@@ -107,7 +131,7 @@ export function useTagVideos(selectedTagId: number | null) {
       await batchUpdateCreatorVideos(creatorId, 1);
       setVideos((prev) => prev.filter((v) => v.creator_id !== creatorId));
     } catch (err) {
-      setError(String(err));
+      setActionError(String(err));
     }
   }, []);
 
@@ -116,11 +140,23 @@ export function useTagVideos(selectedTagId: number | null) {
       await batchUpdateCreatorVideos(creatorId, 2);
       setVideos((prev) => prev.filter((v) => v.creator_id !== creatorId));
     } catch (err) {
-      setError(String(err));
+      setActionError(String(err));
     }
   }, []);
 
-  return { videos, groupedVideos, loading, error, markWatched, markIgnored, markAllWatched, markAllIgnored };
+  return {
+    videos,
+    groupedVideos,
+    loading,
+    error,
+    actionError,
+    dismissActionError,
+    reload,
+    markWatched,
+    markIgnored,
+    markAllWatched,
+    markAllIgnored,
+  };
 }
 
 // ── useScrollSpy ─────────────────────────────────────────────────────

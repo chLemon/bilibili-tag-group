@@ -161,6 +161,19 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   border-color: #CBD5E1;
 }
 
+/* 浅灰色按钮：用于"不看"等弱负面操作 */
+.btn-muted {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-color: #CBD5E1;
+}
+
+.btn-muted:hover:not(:disabled) {
+  background: var(--color-border);
+  color: var(--color-text);
+  border-color: #94A3B8;
+}
+
 .btn-outline-danger {
   background: var(--color-surface);
   color: var(--color-text-secondary);
@@ -792,6 +805,12 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .creator-anchor-nav {
   width: 115px;
   flex-shrink: 0;
+  /* 滚动时固定在右侧：top = 导航栏 52px + 边框 1px + 内容间距 */
+  position: sticky;
+  top: 77px;
+  align-self: flex-start;
+  max-height: calc(100vh - 101px);
+  overflow-y: auto;
 }
 
 .creator-anchor-title {
@@ -1767,7 +1786,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 }
 
 .video-detail-row-watched {
-  opacity: 0.65;
+  opacity: 0.85;
 }
 
 .video-detail-row-watched:hover {
@@ -1778,6 +1797,21 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   flex: 1;
   min-width: 0;
 }
+
+/* ===== 视频卡片状态底色（未看=蓝、已看=粉、不看=浅灰） ===== */
+.video-row-bg-0 { background: rgba(59, 130, 246, 0.07); }
+.video-row-bg-1 { background: rgba(251, 114, 153, 0.07); }
+.video-row-bg-2 { background: #FAFBFC; }
+
+/* meta 区状态文字：与底色同色系，加粗保持醒目 */
+.cover-block-text-0,
+.cover-block-text-1,
+.cover-block-text-2 {
+  font-weight: 600;
+}
+.cover-block-text-0 { color: #2563EB; }
+.cover-block-text-1 { color: #E85D7E; }
+.cover-block-text-2 { color: #475569; font-weight: 700; }
 
 /* ===== 批量导入弹窗内样式 ===== */
 .batch-import-hint {

@@ -757,3 +757,180 @@ TypeError: object SyncTask can't be used in 'await' expression
 2026-07-22 12:46:54 [INFO] httpx: HTTP Request: GET http://testserver/api/sync/settings "HTTP/1.1 200 OK"
 2026-07-22 12:46:54 [INFO] httpx: HTTP Request: GET http://testserver/api/sync/settings "HTTP/1.1 200 OK"
 2026-07-22 12:46:54 [INFO] httpx: HTTP Request: GET http://testserver/api/sync/settings "HTTP/1.1 200 OK"
+2026-07-30 22:24:25 [INFO] app.fetcher.playwright_fetcher: 开始抓取 437979218 的视频
+2026-07-30 22:24:29 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-30 22:24:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-30 22:24:36 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-30 22:24:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-30 22:24:43 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-30 22:24:47 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-30 22:24:50 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-30 22:24:53 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-30 22:24:57 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-30 22:25:01 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-30 22:25:04 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-30 22:25:08 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-30 22:25:11 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-30 22:25:15 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-30 22:25:18 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+2026-07-30 22:25:22 [INFO] app.fetcher.playwright_fetcher: 抓取第 16 页的数据
+2026-07-30 22:25:25 [INFO] app.fetcher.playwright_fetcher: 抓取第 17 页的数据
+2026-07-30 22:25:28 [INFO] app.fetcher.playwright_fetcher: 抓取第 18 页的数据
+2026-07-30 22:25:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 19 页的数据
+2026-07-30 22:25:35 [INFO] app.fetcher.playwright_fetcher: 抓取第 20 页的数据
+2026-07-30 22:25:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 21 页的数据
+2026-07-30 22:25:42 [INFO] app.fetcher.playwright_fetcher: 抓取第 22 页的数据
+2026-07-30 22:25:45 [INFO] app.fetcher.playwright_fetcher: 抓取第 23 页的数据
+2026-07-30 22:25:47 [INFO] app.fetcher.playwright_fetcher: 抓取第 24 页的数据
+2026-07-30 22:25:50 [INFO] app.fetcher.playwright_fetcher: 抓取第 25 页的数据
+2026-07-30 22:25:51 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1KD3Y6qE8a
+2026-07-30 22:25:51 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1wF3e6hEt4
+2026-07-30 22:25:51 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1KD3Y6qEDA
+2026-07-30 22:27:40 [ERROR] app.routers.creators: 解析 UP 主名称失败 url=https://space.bilibili.com/652380147
+Traceback (most recent call last):
+  File "/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/app/fetcher/playwright_fetcher.py", line 249, in fetch_creator_info
+    name = await name_el.text_content()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/.venv/lib/python3.13/site-packages/playwright/async_api/_generated.py", line 20027, in text_content
+    await self._impl_obj.text_content(timeout=to_milliseconds(timeout))
+  File "/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/.venv/lib/python3.13/site-packages/playwright/_impl/_locator.py", line 678, in text_content
+    return await self._frame.text_content(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/.venv/lib/python3.13/site-packages/playwright/_impl/_frame.py", line 732, in text_content
+    return await self._channel.send(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+        "textContent", self._timeout, locals_to_params(locals())
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/.venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/.venv/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 563, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Locator.text_content: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator(".nickname").first
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/app/routers/creators.py", line 62, in resolve_creator_name
+    info = await _creator_svc.resolve_creator_info(fetcher, profile_url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/app/services/creator_service.py", line 66, in resolve_creator_info
+    return await fetcher.fetch_creator_info(uid)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/app/fetcher/playwright_fetcher.py", line 293, in fetch_creator_info
+    raise FetchError(f"获取 UP 主信息失败，uid={uid}: {exc}") from exc
+app.fetcher.playwright_fetcher.FetchError: 获取 UP 主信息失败，uid=652380147: Locator.text_content: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator(".nickname").first
+
+2026-07-30 22:55:21 [INFO] app.fetcher.playwright_fetcher: 开始抓取 437979218 的视频
+2026-07-30 22:55:49 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-30 22:55:52 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-30 22:55:55 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-30 22:55:58 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-30 22:56:00 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-30 22:56:03 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-30 22:56:07 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-30 22:56:10 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-30 22:56:13 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-30 22:56:17 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-30 22:56:20 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-30 22:56:22 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-30 22:56:26 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-30 22:56:30 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-30 22:56:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+2026-07-30 22:56:36 [INFO] app.fetcher.playwright_fetcher: 抓取第 16 页的数据
+2026-07-30 22:56:40 [INFO] app.fetcher.playwright_fetcher: 抓取第 17 页的数据
+2026-07-30 22:56:43 [INFO] app.fetcher.playwright_fetcher: 抓取第 18 页的数据
+2026-07-30 22:56:45 [INFO] app.fetcher.playwright_fetcher: 抓取第 19 页的数据
+2026-07-30 22:56:48 [INFO] app.fetcher.playwright_fetcher: 抓取第 20 页的数据
+2026-07-30 22:56:51 [INFO] app.fetcher.playwright_fetcher: 抓取第 21 页的数据
+2026-07-30 22:56:55 [INFO] app.fetcher.playwright_fetcher: 抓取第 22 页的数据
+2026-07-30 22:56:59 [INFO] app.fetcher.playwright_fetcher: 抓取第 23 页的数据
+2026-07-30 22:57:03 [INFO] app.fetcher.playwright_fetcher: 抓取第 24 页的数据
+2026-07-30 22:57:07 [INFO] app.fetcher.playwright_fetcher: 抓取第 25 页的数据
+2026-07-30 22:57:07 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1KD3Y6qE8a
+2026-07-30 22:57:07 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1wF3e6hEt4
+2026-07-30 22:57:07 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1KD3Y6qEDA
+2026-07-30 22:57:07 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1KD3Y6qE8a
+2026-07-30 22:57:07 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1wF3e6hEt4
+2026-07-30 22:57:07 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1KD3Y6qEDA
+2026-07-30 22:57:07 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1KD3Y6qE8a
+2026-07-30 22:57:07 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1wF3e6hEt4
+2026-07-30 22:57:07 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1KD3Y6qEDA
+2026-07-30 22:57:18 [INFO] app.fetcher.playwright_fetcher: 开始抓取 652380147 的视频
+2026-07-30 22:57:34 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-30 22:57:37 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-30 22:57:41 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-30 22:57:44 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-30 22:57:47 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-30 22:57:50 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-30 22:57:53 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-30 22:58:01 [INFO] app.fetcher.playwright_fetcher: 开始抓取 6658776 的视频
+2026-07-30 22:58:42 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-30 22:58:46 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-30 22:58:50 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-30 22:58:53 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-30 22:58:56 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-30 22:59:00 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-30 22:59:04 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-30 22:59:07 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-30 22:59:11 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-30 22:59:13 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-30 22:59:18 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-30 22:59:22 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-30 22:59:26 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-30 22:59:29 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-30 22:59:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+2026-07-30 22:59:32 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1wn3y6oENB
+2026-07-30 23:23:34 [INFO] app.fetcher.playwright_fetcher: 开始抓取 437979218 的视频
+2026-07-30 23:23:51 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-30 23:23:54 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-30 23:23:58 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-30 23:24:01 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-30 23:24:04 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-30 23:24:08 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-30 23:24:11 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-07-30 23:24:14 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-07-30 23:24:17 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-07-30 23:24:21 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-07-30 23:24:25 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-07-30 23:24:29 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-07-30 23:24:33 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-07-30 23:24:36 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-07-30 23:24:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+2026-07-30 23:24:42 [INFO] app.fetcher.playwright_fetcher: 抓取第 16 页的数据
+2026-07-30 23:24:46 [INFO] app.fetcher.playwright_fetcher: 抓取第 17 页的数据
+2026-07-30 23:24:49 [INFO] app.fetcher.playwright_fetcher: 抓取第 18 页的数据
+2026-07-30 23:24:53 [INFO] app.fetcher.playwright_fetcher: 抓取第 19 页的数据
+2026-07-30 23:24:56 [INFO] app.fetcher.playwright_fetcher: 抓取第 20 页的数据
+2026-07-30 23:24:59 [INFO] app.fetcher.playwright_fetcher: 抓取第 21 页的数据
+2026-07-30 23:25:03 [INFO] app.fetcher.playwright_fetcher: 抓取第 22 页的数据
+2026-07-30 23:25:05 [INFO] app.fetcher.playwright_fetcher: 抓取第 23 页的数据
+2026-07-30 23:25:09 [INFO] app.fetcher.playwright_fetcher: 抓取第 24 页的数据
+2026-07-30 23:25:11 [INFO] app.fetcher.playwright_fetcher: 抓取第 25 页的数据
+2026-07-30 23:25:12 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1KD3Y6qE8a
+2026-07-30 23:25:12 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1wF3e6hEt4
+2026-07-30 23:25:12 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1KD3Y6qEDA
+2026-07-30 23:25:12 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1KD3Y6qE8a
+2026-07-30 23:25:12 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1wF3e6hEt4
+2026-07-30 23:25:12 [WARNING] app.services.sync_service: 跳过无发布时间的视频 bvid=BV1KD3Y6qEDA
+2026-07-30 23:25:29 [INFO] app.fetcher.playwright_fetcher: 开始抓取 652380147 的视频
+2026-07-30 23:25:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-07-30 23:25:36 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-07-30 23:25:40 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-07-30 23:25:43 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-07-30 23:25:47 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-07-30 23:25:51 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-07-30 23:25:53 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据

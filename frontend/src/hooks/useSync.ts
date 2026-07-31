@@ -16,6 +16,7 @@ import {
   ImmediateTag,
   Tag,
 } from "../api/client";
+import { parseUtc } from "../utils/time";
 
 /** 轮询间隔（毫秒） */
 const POLL_INTERVAL = 3000;
@@ -74,13 +75,13 @@ export function useSyncPolling(
   const isRunning =
     task?.status === "running" &&
     (task.heartbeat_at
-      ? Date.now() - new Date(task.heartbeat_at).getTime() < DEAD_THRESHOLD_SEC * 1000
+      ? Date.now() - parseUtc(task.heartbeat_at) < DEAD_THRESHOLD_SEC * 1000
       : true);
 
   const isDead =
     task?.status === "running" &&
     task.heartbeat_at != null &&
-    Date.now() - new Date(task.heartbeat_at).getTime() >= DEAD_THRESHOLD_SEC * 1000;
+    Date.now() - parseUtc(task.heartbeat_at) >= DEAD_THRESHOLD_SEC * 1000;
 
   const progress =
     task && task.total_creators > 0

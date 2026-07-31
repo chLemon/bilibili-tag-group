@@ -9,7 +9,7 @@ import VideoCard from "../components/VideoCard";
 import CreatorAnchorNav from "../components/CreatorAnchorNav";
 
 export default function TagsPage() {
-  const { tags, loading: loadingTags, error: tagsError } = useTags();
+  const { tags, loading: loadingTags, error: tagsError, refresh: refreshTags } = useTags();
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
 
   // 标签加载完成后自动选中第一个；无标签时选中"无标签"
@@ -24,11 +24,24 @@ export default function TagsPage() {
     groupedVideos,
     loading: loadingVideos,
     error: videosError,
+    actionError,
+    dismissActionError,
+    reload,
     markWatched,
     markIgnored,
     markAllWatched,
     markAllIgnored,
   } = useTagVideos(selectedTagId);
+
+  // 标记操作成功后顺带刷新侧栏标签的未看数
+  const handleMarkWatched = async (videoId: number) => {
+    await markWatched(videoId);
+    refreshTags();
+  };
+  const handleMarkIgnored = async (videoId: number) => {
+    await markIgnored(videoId);
+    refreshTags();
+  };
 
   const { activeCreatorId, scrollToCreator } = useScrollSpy(
     groupedVideos,
@@ -55,6 +68,7 @@ export default function TagsPage() {
     setBatchLoadingId(creatorId);
     try {
       await markAllWatched(creatorId);
+      refreshTags();
     } finally {
       setBatchLoadingId(null);
     }
@@ -65,6 +79,7 @@ export default function TagsPage() {
     setBatchLoadingId(creatorId);
     try {
       await markAllIgnored(creatorId);
+      refreshTags();
     } finally {
       setBatchLoadingId(null);
     }
@@ -112,6 +127,9 @@ export default function TagsPage() {
               className={`tag-item${selectedTagId === tag.id ? " tag-item-active" : ""}`}
             >
               <span className="tag-item-name truncate">{tag.name}</span>
+              {tag.unwatched_count > 0 && (
+                <span className="anchor-badge">{tag.unwatched_count}</span>
+              )}
             </li>
           ))}
           <li
@@ -130,7 +148,26 @@ export default function TagsPage() {
         <h3 className="video-panel-title">
           {selectedTagId === UNTAGGED_ID ? "无标签 UP 主" : selectedTag?.name ?? ""}
           <span className="badge badge-muted">{videos.length} 个未看</span>
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={reload}
+            disabled={loadingVideos}
+            title="重新加载视频列表"
+            style={{ marginLeft: "auto" }}
+          >
+            <RefreshCw size={14} className={loadingVideos ? "spinner" : ""} />
+          </button>
         </h3>
+
+        {actionError && (
+          <div className="error-message">
+            <AlertCircle size={16} />
+            操作失败：{actionError}
+            <button className="btn btn-outline btn-sm" onClick={dismissActionError}>
+              知道了
+            </button>
+          </div>
+        )}
 
         {loadingVideos ? (
           <div className="loading-state">
@@ -140,7 +177,7 @@ export default function TagsPage() {
           <div className="error-message">
             <AlertCircle size={16} />
             视频加载失败：{videosError}
-            <button className="btn btn-outline btn-sm" onClick={() => setSelectedTagId(selectedTagId)}>
+            <button className="btn btn-outline btn-sm" onClick={reload}>
               <RefreshCw size={12} /> 重试
             </button>
           </div>
@@ -186,6 +223,7 @@ export default function TagsPage() {
                     {expandedCreators.has(group.creatorId) ? (
                       <>
                         <button
+                          key="watched"
                           className="btn btn-sm btn-primary"
                           disabled={batchLoadingId !== null}
                           onClick={() => handleMarkAllWatched(group.creatorId)}
@@ -198,7 +236,8 @@ export default function TagsPage() {
                           一键已看
                         </button>
                         <button
-                          className="btn btn-sm btn-danger"
+                          key="ignored"
+                          className="btn btn-sm btn-muted"
                           disabled={batchLoadingId !== null}
                           onClick={() => handleMarkAllIgnored(group.creatorId)}
                         >
@@ -210,6 +249,7 @@ export default function TagsPage() {
                           一键不看
                         </button>
                         <button
+                          key="toggle"
                           className="btn btn-sm btn-ghost"
                           onClick={() => toggleExpand(group.creatorId)}
                           title="收起批量操作"
@@ -219,6 +259,7 @@ export default function TagsPage() {
                       </>
                     ) : (
                       <button
+                        key="toggle"
                         className="btn btn-sm btn-outline"
                         onClick={() => toggleExpand(group.creatorId)}
                         title="展开批量操作"
@@ -229,7 +270,7 @@ export default function TagsPage() {
                   </div>
                 </div>
                 {group.videos.map((v) => (
-                  <VideoCard key={v.id} video={v} onMarkWatched={markWatched} onMarkIgnored={markIgnored} />
+                  <VideoCard key={v.id} video={v} onMarkWatched={handleMarkWatched} onMarkIgnored={handleMarkIgnored} />
                 ))}
               </section>
             ))}

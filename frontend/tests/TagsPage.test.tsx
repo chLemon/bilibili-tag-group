@@ -12,8 +12,8 @@ import * as client from "../src/api/client";
 vi.mock("../src/api/client");
 
 const mockTags: client.Tag[] = [
-  { id: 1, name: "科技" },
-  { id: 2, name: "音乐" },
+  { id: 1, name: "科技", unwatched_count: 0 },
+  { id: 2, name: "音乐", unwatched_count: 0 },
 ];
 
 const mockVideos: client.Video[] = [

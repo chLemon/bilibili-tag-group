@@ -66,3 +66,194 @@ Node.js v24.4.1
   VITE v5.4.21  ready in 142 ms
 
   ➜  Local:   http://127.0.0.1:5173/
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 261 ms
+
+  ➜  Local:   http://127.0.0.1:5173/
+22:47:36 [vite] hmr update /src/pages/CreatorDetailPage.tsx, /src/pages/CreatorsPage.tsx, /src/pages/SyncPage.tsx, /src/pages/TagsPage.tsx, /src/components/CreatorForm.tsx, /src/components/BatchImportModal.tsx
+22:47:36 [vite] hmr update /src/pages/CreatorDetailPage.tsx, /src/pages/CreatorsPage.tsx, /src/pages/SyncPage.tsx, /src/pages/TagsPage.tsx, /src/components/CreatorForm.tsx, /src/components/BatchImportModal.tsx
+22:47:40 [vite] hmr update /src/components/BatchImportModal.tsx
+23:05:08 [vite] hmr update /src/pages/SyncPage.tsx
+23:05:16 [vite] hmr update /src/pages/SyncPage.tsx
+23:05:20 [vite] hmr update /src/components/SyncLogCard.tsx
+23:05:40 [vite] hmr update /src/components/SyncLogCard.tsx
+23:05:43 [vite] hmr update /src/pages/CreatorsPage.tsx
+23:05:43 [vite] Internal server error: Duplicate declaration "formatRelativeTime"
+  434 |
+  435 | /** 将 ISO 时间字符串转换为相对时间描述 */
+> 436 | function formatRelativeTime(iso: string): string {
+      |          ^^^^^^^^^^^^^^^^^^
+  437 |   const now = Date.now();
+  438 |   const then = new Date(iso + "Z").getTime();
+  439 |   const diffMs = now - then;
+  Plugin: vite:react-babel
+  File: /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/src/pages/CreatorsPage.tsx
+      at File.buildCodeFrameError (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/core/lib/transformation/file/file.js:189:12)
+      at Scope.checkBlockScopedCollisions (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/scope/index.js:433:27)
+      at Scope.registerBinding (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/scope/index.js:530:16)
+      at Scope.registerDeclaration (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/scope/index.js:475:12)
+      at Object.BlockScoped (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/scope/index.js:276:12)
+      at Object.newFn (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/visitors.js:203:17)
+      at NodePath._call (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/path/context.js:50:20)
+      at NodePath.call (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/path/context.js:40:18)
+      at NodePath.visit (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/path/context.js:87:31)
+      at TraversalContext.visitQueue (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/context.js:96:16)
+      at TraversalContext.visitMultiple (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/context.js:68:17)
+      at TraversalContext.visit (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/context.js:117:19)
+      at traverseNode (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/traverse-node.js:130:17)
+      at traverse (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/index.js:53:34)
+      at NodePath.traverse (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/path/index.js:120:24)
+      at Scope.crawl (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/scope/index.js:695:10)
+      at Scope.init (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/scope/index.js:661:12)
+      at NodePath.setScope (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/path/context.js:139:55)
+      at NodePath.setContext (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/traverse/lib/path/context.js:151:12)
+      at new File (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/core/lib/transformation/file/file.js:80:8)
+      at normalizeFile (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/core/lib/transformation/normalize-file.js:96:10)
+      at normalizeFile.next (<anonymous>)
+      at run (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/core/lib/transformation/index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/core/lib/transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/gensync/index.js:261:32)
+      at /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/gensync/index.js:223:11)
+      at /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/gensync/index.js:189:28
+      at /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/core/lib/gensync-utils/async.js:67:7
+      at /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/gensync/index.js:113:33
+      at step (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/gensync/index.js:287:14)
+      at /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/gensync/index.js:223:11)
+23:06:09 [vite] hmr update /src/pages/CreatorsPage.tsx
+23:08:07 [vite] hmr update /src/pages/CreatorDetailPage.tsx, /src/pages/CreatorsPage.tsx, /src/pages/SyncPage.tsx, /src/pages/TagsPage.tsx, /src/components/CreatorForm.tsx, /src/components/BatchImportModal.tsx
+23:08:17 [vite] hmr update /src/pages/TagsPage.tsx
+23:08:45 [vite] hmr update /src/pages/TagsPage.tsx
+23:09:11 [vite] hmr update /src/pages/TagsPage.tsx
+23:09:37 [vite] hmr update /src/pages/TagsPage.tsx
+23:09:58 [vite] hmr update /src/pages/TagsPage.tsx
+23:10:32 [vite] hmr update /src/pages/TagsPage.tsx
+23:11:01 [vite] hmr update /src/pages/TagsPage.tsx
+23:11:07 [vite] hmr update /src/pages/TagsPage.tsx
+23:11:35 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+23:11:54 [vite] hmr update /src/pages/CreatorsPage.tsx
+23:11:59 [vite] hmr update /src/pages/CreatorsPage.tsx
+23:12:12 [vite] hmr update /src/pages/CreatorsPage.tsx
+23:12:16 [vite] hmr update /src/pages/CreatorsPage.tsx
+23:12:38 [vite] hmr update /src/pages/CreatorsPage.tsx
+23:12:56 [vite] hmr update /src/pages/CreatorsPage.tsx
+23:13:10 [vite] hmr update /src/pages/CreatorsPage.tsx
+23:13:24 [vite] hmr update /src/components/VideoCard.tsx
+23:13:33 [vite] hmr update /src/components/VideoCard.tsx
+23:13:43 [vite] hmr update /src/components/VideoCard.tsx
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 121 ms
+
+  ➜  Local:   http://127.0.0.1:5173/
+23:40:47 [vite] hmr update /src/pages/TagsPage.tsx
+23:40:52 [vite] hmr update /src/styles/index.css
+23:43:31 [vite] hmr update /src/styles/index.css
+23:43:47 [vite] hmr update /src/pages/TagsPage.tsx
+23:43:51 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+23:44:07 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+23:44:11 [vite] hmr update /src/components/VideoCard.tsx
+23:45:02 [vite] hmr update /src/styles/index.css
+23:45:14 [vite] hmr update /src/styles/index.css
+23:46:17 [vite] hmr update /src/pages/CreatorsPage.tsx
+23:48:49 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+23:49:42 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+23:53:24 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+23:53:27 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+23:54:11 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+23:54:11 [vite] Internal server error: /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/src/pages/CreatorDetailPage.tsx: Missing semicolon. (422:11)
+
+  420 |               </div>
+  421 |             </div>
+> 422 |           ))}
+      |            ^
+  423 |         </div>
+  424 |       )}
+  425 |     </div>
+  Plugin: vite:react-babel
+  File: /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/src/pages/CreatorDetailPage.tsx:422:11
+  420|                </div>
+  421|              </div>
+  422|            ))}
+     |             ^
+  423|          </div>
+  424|        )}
+      at constructor (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:365:19)
+      at TypeScriptParserMixin.raise (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:6599:19)
+      at TypeScriptParserMixin.semicolon (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:6895:10)
+      at TypeScriptParserMixin.parseReturnStatement (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:13143:12)
+      at TypeScriptParserMixin.parseStatementContent (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:12798:21)
+      at TypeScriptParserMixin.parseStatementContent (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:9508:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:12100:24)
+      at TypeScriptParserMixin.parseArrowExpression (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:12075:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11687:12)
+      at TypeScriptParserMixin.parseExprAtom (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:9786:20)
+      at /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:12426:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10800:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:12493:17)
+      at TypeScriptParserMixin.parseExprListItem (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:12175:18)
+      at TypeScriptParserMixin.parseCallExpressionArguments (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11252:22)
+      at TypeScriptParserMixin.parseCoverCallAndAsyncArrowHead (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11186:29)
+      at TypeScriptParserMixin.parseSubscript (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11120:19)
+      at TypeScriptParserMixin.parseSubscript (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:9272:18)
+      at TypeScriptParserMixin.parseSubscripts (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11094:19)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11085:17)
+      at TypeScriptParserMixin.parseUpdate (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:9786:20)
+      at TypeScriptParserMixin.parseExpressionBase (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10784:23)
+      at /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:12426:12)
+      at TypeScriptParserMixin.parseExpression (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10780:17)
+      at TypeScriptParserMixin.jsxParseExpressionContainer (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:4632:31)
+      at TypeScriptParserMixin.jsxParseElementAt (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:4711:36)
+23:54:36 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+23:54:49 [vite] hmr update /src/styles/index.css
+23:55:17 [vite] hmr update /src/styles/index.css
+23:58:38 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+23:58:42 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+23:59:22 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+23:59:45 [vite] hmr update /src/styles/index.css
+00:00:04 [vite] hmr update /src/styles/index.css
+00:04:16 [vite] hmr update /src/styles/index.css
+00:05:30 [vite] hmr update /src/styles/index.css
+00:07:07 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+00:07:19 [vite] hmr update /src/styles/index.css
+10:32:00 [vite] hmr update /src/styles/index.css
+10:32:06 [vite] hmr update /src/styles/index.css
+10:40:34 [vite] hmr update /src/styles/index.css
+10:42:39 [vite] hmr update /src/styles/index.css
+10:42:40 [vite] hmr update /src/styles/index.css
+10:43:17 [vite] hmr update /src/styles/index.css
+10:43:44 [vite] hmr update /src/styles/index.css

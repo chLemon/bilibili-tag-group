@@ -1,7 +1,7 @@
 /**
  * VideoCard：展示单个视频的卡片组件。
  */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Video } from "../api/client";
 import { Clock, Calendar, ExternalLink, Eye, EyeOff, Image } from "lucide-react";
 
@@ -26,10 +26,18 @@ interface VideoCardProps {
 
 export default function VideoCard({ video, onMarkWatched, onMarkIgnored }: VideoCardProps) {
   const [removing, setRemoving] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 卸载时清理未触发的定时器，避免组件移除后仍回调
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   function handleAction(callback: (id: number) => void) {
     setRemoving(true);
-    setTimeout(() => callback(video.id), 200);
+    timerRef.current = setTimeout(() => callback(video.id), 200);
   }
 
   return (
@@ -92,16 +100,14 @@ export default function VideoCard({ video, onMarkWatched, onMarkIgnored }: Video
         <div className="video-card-actions" style={{ display: "flex", gap: 6, flexShrink: 0 }}>
           <button
             onClick={() => handleAction(onMarkWatched)}
-            className="btn btn-sm"
-            style={{ background: "#FB7299", color: "#fff", borderColor: "#FB7299" }}
+            className="btn btn-sm btn-primary"
           >
             <Eye size={13} />
             已看
           </button>
           <button
             onClick={() => handleAction(onMarkIgnored)}
-            className="btn btn-sm"
-            style={{ background: "var(--color-bg-muted)", color: "var(--color-text-secondary)", borderColor: "var(--color-border)" }}
+            className="btn btn-sm btn-muted"
           >
             <EyeOff size={13} />
             不看

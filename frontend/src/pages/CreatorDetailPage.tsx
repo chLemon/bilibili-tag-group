@@ -51,6 +51,13 @@ function displayName(c: Creator): string {
   return c.alias ? `${c.alias}（${c.name}）` : c.name;
 }
 
+/** 视频状态元信息：状态值 -> 文案与图标 */
+const STATUS_META: Record<number, { label: string; Icon: typeof Play }> = {
+  0: { label: "未看", Icon: Play },
+  1: { label: "已看", Icon: Eye },
+  2: { label: "不看", Icon: EyeOff },
+};
+
 export default function CreatorDetailPage() {
   const { creatorId } = useParams<{ creatorId: string }>();
   const id = Number(creatorId);
@@ -74,7 +81,7 @@ export default function CreatorDetailPage() {
       if (creator) {
         setCreator({
           ...creator,
-          unwatched_count: status === 0 ? creator.video_count : 0,
+          unwatched_count: status === 0 ? videos.length : 0,
         });
       }
     } catch (err) {
@@ -245,7 +252,7 @@ export default function CreatorDetailPage() {
               一键已看
             </button>
             <button
-              className="btn btn-sm btn-danger"
+              className="btn btn-sm btn-muted"
               disabled={batchLoading}
               onClick={() => handleBatchUpdate(2, "不看")}
             >
@@ -273,10 +280,12 @@ export default function CreatorDetailPage() {
         </div>
       ) : (
         <div className="creator-list">
-          {videos.map((v) => (
+          {videos.map((v) => {
+            const st = STATUS_META[v.status] ?? STATUS_META[0];
+            return (
             <div
               key={v.id}
-              className={`video-detail-row${v.status !== 0 ? " video-detail-row-watched" : ""}`}
+              className={`video-detail-row video-row-bg-${v.status}${v.status !== 0 ? " video-detail-row-watched" : ""}`}
             >
               <a
                 href={v.video_url}
@@ -313,24 +322,11 @@ export default function CreatorDetailPage() {
                     <Calendar size={11} />
                     {formatDate(v.published_at)}
                   </span>
-                  {v.status === 1 && (
-                    <>
-                      <span className="creator-card-stat-dot" />
-                      <span className="creator-card-stat" style={{ color: "var(--color-success)" }}>
-                        <Eye size={11} />
-                        已看
-                      </span>
-                    </>
-                  )}
-                  {v.status === 2 && (
-                    <>
-                      <span className="creator-card-stat-dot" />
-                      <span className="creator-card-stat" style={{ color: "var(--color-text-muted)" }}>
-                        <EyeOff size={11} />
-                        不看
-                      </span>
-                    </>
-                  )}
+                  <span className="creator-card-stat-dot" />
+                  <span className={`creator-card-stat cover-block-text-${v.status}`}>
+                    <st.Icon size={11} />
+                    {st.label}
+                  </span>
                 </div>
               </div>
               <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
@@ -350,7 +346,7 @@ export default function CreatorDetailPage() {
                 )}
                 {v.status !== 2 && (
                   <button
-                    className="btn btn-sm btn-outline"
+                    className="btn btn-sm btn-muted"
                     onClick={() => handleSetStatus(v, 2)}
                     disabled={toggling === v.id}
                   >
@@ -368,12 +364,18 @@ export default function CreatorDetailPage() {
                     onClick={() => handleSetStatus(v, 0)}
                     disabled={toggling === v.id}
                   >
+                    {toggling === v.id ? (
+                      <Loader2 size={12} className="spinner" />
+                    ) : (
+                      <Undo2 size={12} />
+                    )}
                     未看
                   </button>
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
