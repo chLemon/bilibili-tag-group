@@ -18,8 +18,17 @@ env/
 
 # 测试与覆盖率
 .pytest_cache/
+.ruff_cache/
 .coverage
 htmlcov/
+
+# JsonRepo 锁/临时文件与手工备份（数据目录在仓库外，这里是兜底）
+*.json.lock
+*.tmp
+*.bak
+
+# 工具产物
+.superpowers/
 
 # 数据库
 *.db

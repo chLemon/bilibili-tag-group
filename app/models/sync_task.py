@@ -1,4 +1,5 @@
 """同步任务模型：追踪异步全量同步的进度。"""
+
 from datetime import datetime
 
 from pydantic import BaseModel, Field

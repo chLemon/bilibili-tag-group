@@ -2,6 +2,7 @@
 
 后端存储 naive UTC 时间，序列化为 JSON 时转换为北京时间（UTC+8）的 ISO8601 字符串。
 """
+
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Annotated
 

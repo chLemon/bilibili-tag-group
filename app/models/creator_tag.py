@@ -1,4 +1,5 @@
 """UP 主-标签关联模型。"""
+
 from pydantic import BaseModel, Field
 
 

@@ -1,4 +1,5 @@
 """manage.py 一键启停脚本测试。"""
+
 import os
 import socket
 import subprocess
@@ -6,9 +7,8 @@ import sys
 import time
 from pathlib import Path
 
-import pytest
-
 import manage
+import pytest
 
 
 def spawn_dead_pid() -> int:
@@ -87,14 +87,10 @@ def test_wait_for_port_timeout():
 
 def test_stop_services_kills_process_and_removes_pid_file(paths):
     kwargs = {} if manage.IS_WINDOWS else {"start_new_session": True}
-    proc = subprocess.Popen(
-        [sys.executable, "-c", "import time; time.sleep(60)"], **kwargs
-    )
+    proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"], **kwargs)
     paths.backend_pid_file.write_text(str(proc.pid))
     try:
-        assert manage.stop_services(
-            [paths.backend_pid_file, paths.frontend_pid_file]
-        ) is True
+        assert manage.stop_services([paths.backend_pid_file, paths.frontend_pid_file]) is True
         for _ in range(50):
             if not manage.pid_is_running(proc.pid):
                 break
@@ -106,9 +102,7 @@ def test_stop_services_kills_process_and_removes_pid_file(paths):
 
 
 def test_stop_services_no_running_services(paths):
-    assert manage.stop_services(
-        [paths.backend_pid_file, paths.frontend_pid_file]
-    ) is False
+    assert manage.stop_services([paths.backend_pid_file, paths.frontend_pid_file]) is False
 
 
 GIT_ENV = {
@@ -225,12 +219,8 @@ def test_cmd_stop_backup_failure_still_returns_zero(paths, capsys):
 
 def test_cmd_start_writes_pid_files_even_when_port_timeout(paths, monkeypatch):
     """端口超时也要写 PID 文件，否则 stop 无法清理孤儿进程。"""
-    backend_proc = subprocess.Popen(
-        [sys.executable, "-c", "import time; time.sleep(30)"]
-    )
-    frontend_proc = subprocess.Popen(
-        [sys.executable, "-c", "import time; time.sleep(30)"]
-    )
+    backend_proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+    frontend_proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
     try:
         import types as types_mod
 
@@ -278,8 +268,7 @@ def test_kill_process_tree_sigkill_when_sigterm_ignored():
         [
             sys.executable,
             "-c",
-            "import signal, time; signal.signal(signal.SIGTERM, signal.SIG_IGN); "
-            "time.sleep(60)",
+            "import signal, time; signal.signal(signal.SIGTERM, signal.SIG_IGN); time.sleep(60)",
         ],
         start_new_session=True,
     )

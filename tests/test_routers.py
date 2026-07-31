@@ -1,4 +1,5 @@
 """路由集成测试：通过 TestClient 验证 API 端点行为。"""
+
 from datetime import datetime
 from unittest.mock import AsyncMock
 
@@ -17,6 +18,7 @@ def test_healthcheck_endpoint():
 # ──────────────────────────────────────────────
 # Creators 路由
 # ──────────────────────────────────────────────
+
 
 class TestCreateCreator:
     """POST /api/creators 测试。"""
@@ -79,9 +81,7 @@ class TestResolveName:
         assert response.json()["avatar_url"] == "https://x/a.jpg"
 
     def test_resolve_name_invalid_url_returns_400(self, client):
-        response = client.get(
-            "/api/creators/resolve-name", params={"profile_url": "not-a-url"}
-        )
+        response = client.get("/api/creators/resolve-name", params={"profile_url": "not-a-url"})
         assert response.status_code == 400
 
 
@@ -107,11 +107,15 @@ class TestBatchCreateCreators:
         mock_fetcher.fetch_creator_info = AsyncMock()
         response = client.post(
             "/api/creators/batch",
-            json={"items": [{
-                "uid": "123",
-                "name": "UP1",
-                "avatar_url": "https://i0.hdslb.com/bfs/face/abc.jpg",
-            }]},
+            json={
+                "items": [
+                    {
+                        "uid": "123",
+                        "name": "UP1",
+                        "avatar_url": "https://i0.hdslb.com/bfs/face/abc.jpg",
+                    }
+                ]
+            },
         )
         assert response.status_code == 200
         result = response.json()["results"][0]
@@ -121,10 +125,9 @@ class TestBatchCreateCreators:
 
     def test_batch_create_fetch_failure(self, client, mock_fetcher):
         from app.fetcher.playwright_fetcher import FetchError
+
         mock_fetcher.fetch_creator_info = AsyncMock(side_effect=FetchError("被风控"))
-        response = client.post(
-            "/api/creators/batch", json={"items": [{"uid": "123"}]}
-        )
+        response = client.post("/api/creators/batch", json={"items": [{"uid": "123"}]})
         assert response.status_code == 200
         result = response.json()["results"][0]
         assert result["success"] is False
@@ -182,6 +185,7 @@ class TestUpdateCreator:
 # ──────────────────────────────────────────────
 # Tags 路由
 # ──────────────────────────────────────────────
+
 
 class TestListTags:
     """GET /api/tags 测试。"""
@@ -264,6 +268,7 @@ class TestTagVideos:
 # Videos 路由
 # ──────────────────────────────────────────────
 
+
 class TestUpdateStatus:
     """PATCH /api/videos/{video_id}/status 测试。"""
 
@@ -306,6 +311,7 @@ class TestUpdateStatus:
 # Sync 路由
 # ──────────────────────────────────────────────
 
+
 class TestSyncLatest:
     """GET /api/sync/latest 测试。"""
 
@@ -317,6 +323,7 @@ class TestSyncLatest:
     async def test_returns_latest_sync_log(self, client, store, seeded_data):
         """有同步记录时返回最近一条。"""
         from app.models.sync_task import SyncTask
+
         task = SyncTask(
             scope="all",
             status="completed",

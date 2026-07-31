@@ -1,4 +1,5 @@
 """FastAPI 应用入口：注册路由，通过 lifespan 管理定时同步调度器生命周期。"""
+
 import asyncio
 import logging
 from collections.abc import AsyncGenerator

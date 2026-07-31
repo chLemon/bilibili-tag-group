@@ -1,4 +1,5 @@
 """标签路由：标签列表与标签下未看视频。"""
+
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
@@ -30,10 +31,7 @@ def list_tags(
     """返回所有标签列表（含各标签未看视频数）。"""
     tags = _tag_svc.list_tags(store)
     counts = _tag_svc.unwatched_count_by_tag(store)
-    return [
-        TagRead(id=t.id, name=t.name, unwatched_count=counts.get(t.id, 0))
-        for t in tags
-    ]
+    return [TagRead(id=t.id, name=t.name, unwatched_count=counts.get(t.id, 0)) for t in tags]
 
 
 @router.get("/untagged/videos", response_model=list[VideoRead])

@@ -1,4 +1,5 @@
 """标签模型。"""
+
 from pydantic import BaseModel, Field
 
 

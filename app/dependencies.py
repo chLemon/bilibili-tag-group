@@ -1,4 +1,5 @@
 """FastAPI 依赖注入函数。"""
+
 from __future__ import annotations
 
 from app.fetcher.playwright_fetcher import PlaywrightBilibiliFetcher

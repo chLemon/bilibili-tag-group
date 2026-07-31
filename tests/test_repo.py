@@ -1,4 +1,5 @@
 """JsonRepo 存储层测试。"""
+
 import asyncio
 import multiprocessing
 from pathlib import Path

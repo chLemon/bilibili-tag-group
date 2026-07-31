@@ -1,4 +1,5 @@
 """视频路由：标记视频状态。"""
+
 import logging
 from typing import Annotated
 

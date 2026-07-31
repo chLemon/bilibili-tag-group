@@ -1,4 +1,5 @@
 """测试同步服务：SyncService.sync_creator 和 SyncService.start_sync/run_sync_task。"""
+
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
@@ -103,8 +104,11 @@ class TestSyncCreatorGuards:
     async def test_video_without_published_at_is_skipped(self, store):
         creator = await _make_creator_async(store)
         bad = FetchedVideo(
-            bvid="BV_bad_date", title="无日期", video_url="https://example.com",
-            published_at=None, duration_seconds=60,
+            bvid="BV_bad_date",
+            title="无日期",
+            video_url="https://example.com",
+            published_at=None,
+            duration_seconds=60,
         )
         good = _make_fetched_video("BV_good_date")
         mock_fetcher = _make_mock_fetcher(fetch_new_videos=[bad, good])
@@ -348,8 +352,11 @@ class TestCreatorService:
         creator = await _make_creator_async(store)
         svc = CreatorService()
         updated = await svc.update_creator(
-            store=store, creator=creator,
-            name="新名称", alias=None, tag_ids=None,
+            store=store,
+            creator=creator,
+            name="新名称",
+            alias=None,
+            tag_ids=None,
         )
         assert updated.name == "新名称"
         persisted = store.creators.get(creator.id)
@@ -360,8 +367,12 @@ class TestCreatorService:
         creator = await _make_creator_async(store)
         svc = CreatorService()
         updated = await svc.update_creator(
-            store=store, creator=creator,
-            name=None, alias=None, tag_ids=None, enabled=False,
+            store=store,
+            creator=creator,
+            name=None,
+            alias=None,
+            tag_ids=None,
+            enabled=False,
         )
         assert updated.enabled is False
 
@@ -374,8 +385,11 @@ class TestCreatorService:
         creator = await _make_creator_async(store)
         svc = CreatorService()
         await svc.update_creator(
-            store=store, creator=creator,
-            name=None, alias=None, tag_ids=[tag1.id, tag2.id],
+            store=store,
+            creator=creator,
+            name=None,
+            alias=None,
+            tag_ids=[tag1.id, tag2.id],
         )
         links = store.creator_tags.filter(creator_id=creator.id)
         assert len(links) == 2
@@ -386,12 +400,18 @@ class TestCreatorService:
         creator = await _make_creator_async(store)
         svc = CreatorService()
         await svc.update_creator(
-            store=store, creator=creator,
-            name=None, alias=None, tag_ids=[tag.id],
+            store=store,
+            creator=creator,
+            name=None,
+            alias=None,
+            tag_ids=[tag.id],
         )
         await svc.update_creator(
-            store=store, creator=creator,
-            name=None, alias=None, tag_ids=[],
+            store=store,
+            creator=creator,
+            name=None,
+            alias=None,
+            tag_ids=[],
         )
         links = store.creator_tags.filter(creator_id=creator.id)
         assert len(links) == 0
@@ -487,14 +507,20 @@ class TestVideoService:
     async def test_set_status_uses_video_id_not_status_id(self, store):
         """Video.id 与 VideoStatus.id 错位时，仍按 video_id 正确定位。"""
         video1 = Video(
-            bvid="BV_misalign_1", creator_id=1, title="v1",
+            bvid="BV_misalign_1",
+            creator_id=1,
+            title="v1",
             video_url="https://example.com/1",
-            published_at=datetime(2024, 1, 1), duration_seconds=100,
+            published_at=datetime(2024, 1, 1),
+            duration_seconds=100,
         )
         video2 = Video(
-            bvid="BV_misalign_2", creator_id=1, title="v2",
+            bvid="BV_misalign_2",
+            creator_id=1,
+            title="v2",
             video_url="https://example.com/2",
-            published_at=datetime(2024, 1, 2), duration_seconds=100,
+            published_at=datetime(2024, 1, 2),
+            duration_seconds=100,
         )
         await store.videos.add(video1)
         await store.videos.add(video2)
@@ -517,9 +543,12 @@ class TestVideoService:
         videos = []
         for i, status in enumerate([0, 1, 2]):
             v = Video(
-                bvid=f"BV_batch_{i}", creator_id=creator.id, title=f"v{i}",
+                bvid=f"BV_batch_{i}",
+                creator_id=creator.id,
+                title=f"v{i}",
                 video_url=f"https://example.com/{i}",
-                published_at=datetime(2024, 1, 1), duration_seconds=100,
+                published_at=datetime(2024, 1, 1),
+                duration_seconds=100,
             )
             await store.videos.add(v)
             await store.video_statuses.add(VideoStatus(video_id=v.id, status=status))

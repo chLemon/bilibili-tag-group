@@ -41,6 +41,13 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+# app/fetcher 是用户校准过的冻结基准，不参与自动格式化
+extend-exclude = ["app/fetcher"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
+
+[tool.ruff.format]
+# 保持项目现有风格：双引号、4 空格缩进（均为 ruff 默认值，显式声明）
+quote-style = "double"
+indent-style = "space"

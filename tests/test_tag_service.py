@@ -1,4 +1,5 @@
 """TagService 单元测试：未看视频聚合与按标签查询。"""
+
 from datetime import datetime
 
 from app.models.creator import Creator
@@ -24,14 +25,16 @@ async def _seed(store):
     await store.creator_tags.add(CreatorTag(creator_id=c2.id, tag_id=t2.id))
 
     async def add_video(creator_id: int, bvid: str, status: int) -> Video:
-        v = await store.videos.add(Video(
-            bvid=bvid,
-            creator_id=creator_id,
-            title=f"title-{bvid}",
-            video_url=f"https://www.bilibili.com/video/{bvid}",
-            published_at=datetime(2024, 1, 1),
-            duration_seconds=60,
-        ))
+        v = await store.videos.add(
+            Video(
+                bvid=bvid,
+                creator_id=creator_id,
+                title=f"title-{bvid}",
+                video_url=f"https://www.bilibili.com/video/{bvid}",
+                published_at=datetime(2024, 1, 1),
+                duration_seconds=60,
+            )
+        )
         await store.video_statuses.add(VideoStatus(video_id=v.id, status=status))
         return v
 

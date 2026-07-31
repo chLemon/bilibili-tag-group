@@ -1,4 +1,5 @@
 """标签服务：查询标签列表及标签下的未看视频。"""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -59,19 +60,21 @@ class TagService:
             if video.id not in unwatched_ids:
                 continue
             creator = all_creators.get(video.creator_id)
-            results.append(VideoRead(
-                id=video.id,
-                bvid=video.bvid,
-                title=video.title,
-                creator_id=video.creator_id,
-                creator_name=creator.name if creator else "",
-                creator_alias=creator.alias if creator else None,
-                creator_avatar_url=creator.avatar_url if creator else None,
-                video_url=video.video_url,
-                cover_url=video.cover_url,
-                published_at=video.published_at,
-                duration_seconds=video.duration_seconds,
-            ))
+            results.append(
+                VideoRead(
+                    id=video.id,
+                    bvid=video.bvid,
+                    title=video.title,
+                    creator_id=video.creator_id,
+                    creator_name=creator.name if creator else "",
+                    creator_alias=creator.alias if creator else None,
+                    creator_avatar_url=creator.avatar_url if creator else None,
+                    video_url=video.video_url,
+                    cover_url=video.cover_url,
+                    published_at=video.published_at,
+                    duration_seconds=video.duration_seconds,
+                )
+            )
 
         results.sort(key=lambda v: v.published_at, reverse=True)
         return results

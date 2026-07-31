@@ -1,4 +1,5 @@
 """视频服务：管理本地视频观看状态。"""
+
 from __future__ import annotations
 
 from app.models.creator import Creator
@@ -64,9 +65,7 @@ class VideoService:
         watched_at = _now_utc() if status_value == 1 else None
         creator_video_ids = {v.id for v in store.videos.filter(creator_id=creator_id)}
         target_ids = {
-            vs.id
-            for vs in store.video_statuses.all()
-            if vs.video_id in creator_video_ids
+            vs.id for vs in store.video_statuses.all() if vs.video_id in creator_video_ids
         }
         return await store.video_statuses.bulk_update(
             target_ids, status=status_value, watched_at=watched_at

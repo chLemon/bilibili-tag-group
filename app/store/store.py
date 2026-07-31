@@ -1,4 +1,5 @@
 """数据中心：聚合所有 JsonRepo 实例。"""
+
 from __future__ import annotations
 
 from pathlib import Path

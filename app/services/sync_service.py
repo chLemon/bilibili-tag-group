@@ -1,4 +1,5 @@
 """同步核心服务：将 B 站抓取结果写入本地数据库。"""
+
 from __future__ import annotations
 
 import asyncio
@@ -39,10 +40,7 @@ class SyncService:
     ) -> bool:
         if not immediate_tag_ids:
             return False
-        creator_tag_ids = {
-            row.tag_id
-            for row in store.creator_tags.filter(creator_id=creator_id)
-        }
+        creator_tag_ids = {row.tag_id for row in store.creator_tags.filter(creator_id=creator_id)}
         return bool(creator_tag_ids & immediate_tag_ids)
 
     async def sync_creator(self, store: DataStore, creator: Creator) -> int:
@@ -52,14 +50,14 @@ class SyncService:
 
         immediate_tag_ids = self._get_immediate_tag_ids(store)
         if self._creator_has_immediate_tag(store, creator.id, immediate_tag_ids):
-            if creator.last_synced_at and (
-                _now_utc() - creator.last_synced_at
-            ) < timedelta(minutes=5):
+            if creator.last_synced_at and (_now_utc() - creator.last_synced_at) < timedelta(
+                minutes=5
+            ):
                 return 0
         else:
-            if creator.last_synced_at and (
-                _now_utc() - creator.last_synced_at
-            ) < timedelta(minutes=50):
+            if creator.last_synced_at and (_now_utc() - creator.last_synced_at) < timedelta(
+                minutes=50
+            ):
                 return 0
 
         uid = CreatorService.uid_from_profile_url(creator.profile_url)
@@ -75,9 +73,7 @@ class SyncService:
         except Exception:
             # 信息更新失败不阻断视频同步，但必须留痕：风控时段若静默跳过，
             # 表象会误成"无新视频"
-            logger.warning(
-                "获取 UP 主信息失败，跳过信息更新 uid=%s", uid, exc_info=True
-            )
+            logger.warning("获取 UP 主信息失败，跳过信息更新 uid=%s", uid, exc_info=True)
 
         fetched_list: list[FetchedVideo] = await self._fetcher.fetch_new_videos(uid)
 
@@ -177,9 +173,7 @@ class SyncService:
             if task is None:
                 return
 
-            hb_task = asyncio.create_task(
-                self._heartbeat_loop(task_id, store, heartbeat_stop)
-            )
+            hb_task = asyncio.create_task(self._heartbeat_loop(task_id, store, heartbeat_stop))
 
             creators = store.creators.all()
             await store.sync_tasks.update(task_id, total_creators=len(creators))

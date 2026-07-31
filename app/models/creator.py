@@ -1,4 +1,5 @@
 """UP 主模型。时间字段统一为 naive UTC（见 app/utils/time.py）。"""
+
 from datetime import datetime
 
 from pydantic import BaseModel, Field

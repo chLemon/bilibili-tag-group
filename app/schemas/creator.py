@@ -1,4 +1,5 @@
 """UP 主相关的 Pydantic Schema。"""
+
 from datetime import datetime
 
 from pydantic import BaseModel, field_validator

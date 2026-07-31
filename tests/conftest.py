@@ -1,4 +1,5 @@
 """测试夹具：临时 DataStore、FastAPI client 及种子数据。"""
+
 import shutil
 import tempfile
 from dataclasses import dataclass

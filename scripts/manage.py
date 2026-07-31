@@ -5,6 +5,7 @@
     uv run python scripts/manage.py stop      # 停止服务 + 备份 ../private-data
     uv run python scripts/manage.py restart   # = stop + start
 """
+
 import argparse
 import os
 import shutil
@@ -102,9 +103,7 @@ def wait_for_port(port: int, timeout_seconds: float) -> bool:
 def kill_process_tree(pid: int) -> None:
     """终止整棵进程树。POSIX 杀进程组（失败回退单进程），Windows 用 taskkill。"""
     if IS_WINDOWS:
-        subprocess.run(
-            ["taskkill", "/T", "/F", "/PID", str(pid)], capture_output=True
-        )
+        subprocess.run(["taskkill", "/T", "/F", "/PID", str(pid)], capture_output=True)
         return
     try:
         os.killpg(pid, signal.SIGTERM)
@@ -229,9 +228,7 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
             if shutil.which("uv") is None:
                 print("[ERROR] 未找到 uv，请先安装 uv")
                 return 1
-            rc = subprocess.run(
-                ["uv", "sync", "--extra", "dev"], cwd=paths.project_root
-            ).returncode
+            rc = subprocess.run(["uv", "sync", "--extra", "dev"], cwd=paths.project_root).returncode
             if rc != 0:
                 print("[ERROR] uv sync 失败")
                 return 1
@@ -246,8 +243,14 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
 
         backend = spawn_service(
             [
-                "uv", "run", "uvicorn", "app.main:app",
-                "--host", "127.0.0.1", "--port", str(BACKEND_PORT),
+                "uv",
+                "run",
+                "uvicorn",
+                "app.main:app",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                str(BACKEND_PORT),
             ],
             backend_log,
             cwd=paths.project_root,
@@ -268,9 +271,7 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
         if not (paths.frontend_dir / "node_modules").exists():
             print("未找到 node_modules，执行 npm install ...")
             if IS_WINDOWS:
-                rc = subprocess.run(
-                    "npm install", cwd=paths.frontend_dir, shell=True
-                ).returncode
+                rc = subprocess.run("npm install", cwd=paths.frontend_dir, shell=True).returncode
             else:
                 rc = subprocess.run(["npm", "install"], cwd=paths.frontend_dir).returncode
             if rc != 0:

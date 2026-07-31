@@ -1,4 +1,5 @@
 """全局配置：数据目录、同步间隔、B 站 Cookie。可用 .env 覆盖（见 model_config）。"""
+
 from pathlib import Path
 
 from pydantic_settings import BaseSettings

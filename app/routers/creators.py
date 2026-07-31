@@ -1,4 +1,5 @@
 """UP 主管理路由。"""
+
 import logging
 from typing import Annotated
 

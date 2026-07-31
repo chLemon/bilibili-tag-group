@@ -1,4 +1,5 @@
 """同步路由：查询最近同步状态、手动触发全量同步、查询调度配置、管理立即同步标签。"""
+
 import asyncio
 import logging
 from collections.abc import Coroutine

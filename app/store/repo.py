@@ -1,4 +1,5 @@
 """泛型 JSON 文件仓库：按需 IO、写入加锁。"""
+
 from __future__ import annotations
 
 import asyncio
@@ -102,7 +103,7 @@ class JsonRepo[T]:
     # ── 写（加锁） ──────────────────────────────────────────
 
     @asynccontextmanager
-    async def locked(self) -> AsyncIterator["JsonRepo[T]"]:
+    async def locked(self) -> AsyncIterator[JsonRepo[T]]:
         """把多步读-改-写包进同一临界区（进程内锁 + 跨进程文件锁）。
 
         用于 check-then-act 场景（如 start_sync 先查 running 再新建），

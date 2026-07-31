@@ -1,4 +1,5 @@
 """测试抓取层：PlaywrightBilibiliFetcher 与 FetchedVideo 标准化逻辑。"""
+
 import logging
 
 import pytest
@@ -24,11 +25,11 @@ class TestPlaywrightBilibiliFetcher:
 
     @pytest.mark.integration
     async def test_fetch_creator_info(self):
-        uid = "1024129080" # 东哥，视频多
+        uid = "1024129080"  # 东哥，视频多
 
         fetcher = PlaywrightBilibiliFetcher()
-        creator_info : dict = await fetcher.fetch_creator_info(uid)
-        assert creator_info["name"] == '烧毁一切就是美'
+        creator_info: dict = await fetcher.fetch_creator_info(uid)
+        assert creator_info["name"] == "烧毁一切就是美"
         assert len(creator_info["avatar_url"]) > 0
-        assert creator_info['video_count'] > 999
+        assert creator_info["video_count"] > 999
         logging.info(creator_info)

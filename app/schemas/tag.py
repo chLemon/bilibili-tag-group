@@ -1,4 +1,5 @@
 """标签相关的 Pydantic Schema。"""
+
 from pydantic import BaseModel, field_validator
 
 

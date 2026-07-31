@@ -1,4 +1,5 @@
 """UP 主管理服务：负责创建、查询、编辑 UP 主及其标签关联。"""
+
 from __future__ import annotations
 
 import logging
@@ -47,9 +48,7 @@ class CreatorService:
         """将 Creator 模型转换为 CreatorRead schema，附带视频统计数据。"""
         return self.to_read_many(store, [creator])[0]
 
-    def to_read_many(
-        self, store: DataStore, creators: list[Creator]
-    ) -> list[CreatorRead]:
+    def to_read_many(self, store: DataStore, creators: list[Creator]) -> list[CreatorRead]:
         """批量转换为 CreatorRead：三个文件各只全量读一次，预聚合后组装。
 
         逐个调用 to_read 会对每个 UP 主各读一遍 videos/video_statuses/
@@ -67,19 +66,21 @@ class CreatorService:
         for creator in creators:
             video_ids = video_ids_by_creator.get(creator.id, [])
             unwatched = sum(1 for vid in video_ids if status_map.get(vid, 0) == 0)
-            reads.append(CreatorRead(
-                id=creator.id,
-                name=creator.name,
-                alias=creator.alias,
-                profile_url=creator.profile_url,
-                avatar_url=creator.avatar_url,
-                tag_ids=tag_ids_by_creator.get(creator.id, []),
-                enabled=creator.enabled,
-                video_count=creator.video_count or 0,
-                synced_video_count=len(video_ids),
-                unwatched_count=unwatched,
-                last_synced_at=creator.last_synced_at,
-            ))
+            reads.append(
+                CreatorRead(
+                    id=creator.id,
+                    name=creator.name,
+                    alias=creator.alias,
+                    profile_url=creator.profile_url,
+                    avatar_url=creator.avatar_url,
+                    tag_ids=tag_ids_by_creator.get(creator.id, []),
+                    enabled=creator.enabled,
+                    video_count=creator.video_count or 0,
+                    synced_video_count=len(video_ids),
+                    unwatched_count=unwatched,
+                    last_synced_at=creator.last_synced_at,
+                )
+            )
         return reads
 
     async def resolve_creator_info(
@@ -110,9 +111,11 @@ class CreatorService:
                         avatar_url = info.get("avatar_url")
                     except FetchError as exc:
                         logger.exception("批量添加-获取 UP 主信息失败 uid=%s", item.uid)
-                        results.append(BatchCreatorResult(
-                            uid=item.uid, success=False, error=f"获取 UP 主信息失败：{exc}"
-                        ))
+                        results.append(
+                            BatchCreatorResult(
+                                uid=item.uid, success=False, error=f"获取 UP 主信息失败：{exc}"
+                            )
+                        )
                         continue
 
                 tags = await self.find_or_create_tags(store, item.tag_names)
@@ -123,9 +126,11 @@ class CreatorService:
                     tag_ids=[t.id for t in tags],
                     avatar_url=avatar_url,
                 )
-                results.append(BatchCreatorResult(
-                    uid=item.uid, success=True, creator=self.to_read(store, creator)
-                ))
+                results.append(
+                    BatchCreatorResult(
+                        uid=item.uid, success=True, creator=self.to_read(store, creator)
+                    )
+                )
             except Exception as exc:
                 logger.exception("批量添加 UP 主失败 uid=%s", item.uid)
                 results.append(BatchCreatorResult(uid=item.uid, success=False, error=str(exc)))
