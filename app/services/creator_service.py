@@ -35,6 +35,14 @@ class CreatorService:
             return m.group(1)
         raise ValueError(f"无法从 URL 中提取 UID：{profile_url}")
 
+    @staticmethod
+    def normalize_profile_url(profile_url: str) -> str:
+        """规范化主页输入：纯数字 uid 补全为空间 URL，其余原样返回（去除首尾空白）。"""
+        trimmed = profile_url.strip()
+        if trimmed.isdigit():
+            return f"https://space.bilibili.com/{trimmed}"
+        return trimmed
+
     def to_read(self, store: DataStore, creator: Creator) -> CreatorRead:
         """将 Creator 模型转换为 CreatorRead schema，附带视频统计数据。"""
         videos_list = store.videos.filter(creator_id=creator.id)
@@ -78,7 +86,7 @@ class CreatorService:
                 profile_url = f"https://space.bilibili.com/{item.uid}"
                 if item.name:
                     creator_name = item.name
-                    avatar_url = None
+                    avatar_url = item.avatar_url
                 else:
                     try:
                         info = await fetcher.fetch_creator_info(item.uid)
@@ -119,7 +127,7 @@ class CreatorService:
         """创建新 UP 主，并可选择同时关联标签。"""
         creator = Creator(
             name=name,
-            profile_url=profile_url,
+            profile_url=self.normalize_profile_url(profile_url),
             avatar_url=avatar_url,
             alias=alias,
         )

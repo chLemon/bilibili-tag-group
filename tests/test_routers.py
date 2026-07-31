@@ -53,6 +53,15 @@ class TestCreateCreator:
         body = response.json()
         assert seeded_data.tag_id in body["tag_ids"]
 
+    def test_create_creator_with_plain_uid_normalizes_to_url(self, client):
+        """只输入 uid 时，存储的 profile_url 应规范化为空间 URL。"""
+        response = client.post(
+            "/api/creators",
+            json={"name": "影视飓风", "profile_url": "946974"},
+        )
+        assert response.status_code == 201
+        assert response.json()["profile_url"] == "https://space.bilibili.com/946974"
+
 
 class TestResolveName:
     """GET /api/creators/resolve-name 测试。"""
@@ -92,6 +101,23 @@ class TestBatchCreateCreators:
         assert result["success"] is True
         assert result["creator"]["name"] == "UP1"
         assert result["creator"]["tag_ids"] != []
+
+    def test_batch_create_with_name_and_avatar_skips_fetch(self, client, mock_fetcher):
+        """已提供昵称和头像时直接使用，不再请求 B 站。"""
+        mock_fetcher.fetch_creator_info = AsyncMock()
+        response = client.post(
+            "/api/creators/batch",
+            json={"items": [{
+                "uid": "123",
+                "name": "UP1",
+                "avatar_url": "https://i0.hdslb.com/bfs/face/abc.jpg",
+            }]},
+        )
+        assert response.status_code == 200
+        result = response.json()["results"][0]
+        assert result["success"] is True
+        assert result["creator"]["avatar_url"] == "https://i0.hdslb.com/bfs/face/abc.jpg"
+        mock_fetcher.fetch_creator_info.assert_not_called()
 
     def test_batch_create_fetch_failure(self, client, mock_fetcher):
         from app.fetcher.playwright_fetcher import FetchError
@@ -170,6 +196,11 @@ class TestListTags:
         assert response.status_code == 200
         assert len(response.json()) == 1
         assert response.json()[0]["id"] == seeded_data.tag_id
+
+    def test_list_tags_includes_unwatched_count(self, client, seeded_data):
+        """标签列表应包含各标签的未看视频数。"""
+        response = client.get("/api/tags")
+        assert response.json()[0]["unwatched_count"] == 1
 
 
 class TestCreateTag:

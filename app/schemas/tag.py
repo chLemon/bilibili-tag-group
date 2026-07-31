@@ -21,5 +21,6 @@ class TagRead(BaseModel):
 
     id: int
     name: str
+    unwatched_count: int = 0
 
     model_config = {"from_attributes": True}

@@ -47,6 +47,7 @@ class BatchCreatorItem(BaseModel):
     uid: str
     tag_names: list[str] = []
     name: str | None = None
+    avatar_url: str | None = None
 
     @field_validator("uid")
     @classmethod

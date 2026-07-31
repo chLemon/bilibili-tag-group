@@ -19,6 +19,20 @@ class TagService:
         """返回所有标签（按 id 升序）。"""
         return sorted(store.tags.all(), key=lambda t: t.id)
 
+    def unwatched_count_by_tag(self, store: DataStore) -> dict[int, int]:
+        """统计每个标签下的未看视频数（tag_id -> count）。"""
+        unwatched_video_ids = {s.video_id for s in store.video_statuses.filter(status=0)}
+        count_by_creator: dict[int, int] = {}
+        for v in store.videos.all():
+            if v.id in unwatched_video_ids:
+                count_by_creator[v.creator_id] = count_by_creator.get(v.creator_id, 0) + 1
+        counts: dict[int, int] = {}
+        for link in store.creator_tags.all():
+            n = count_by_creator.get(link.creator_id, 0)
+            if n:
+                counts[link.tag_id] = counts.get(link.tag_id, 0) + n
+        return counts
+
     def list_unwatched_videos_by_tag(self, store: DataStore, tag_id: int) -> list[VideoRead]:
         """查询某个标签下所有 UP 主的未看视频，按发布时间倒序。"""
         creator_links = store.creator_tags.filter(tag_id=tag_id)
