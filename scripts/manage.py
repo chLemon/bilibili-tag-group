@@ -32,6 +32,10 @@ PRIVATE_DATA_REPO_SUBDIR = "bilibili-tag-group"
 
 IS_WINDOWS = os.name == "nt"
 
+# backend.log / frontend.log 是子进程输出重定向，进程内无法滚动；
+# 每次 start 前检查一次，超限则轮替为 .1（只留一份备份）
+LOG_ROTATE_THRESHOLD = 10 * 1024 * 1024
+
 
 @dataclass(frozen=True)
 class LauncherPaths:
@@ -182,6 +186,21 @@ def backup_data_repo(private_data: Path) -> bool:
     return True
 
 
+def rotate_log_if_oversized(log_file: Path, threshold: int = LOG_ROTATE_THRESHOLD) -> bool:
+    """日志超过阈值则轮替为 <name>.1（只留一份）。返回是否发生了轮替。"""
+    try:
+        if not log_file.exists() or log_file.stat().st_size <= threshold:
+            return False
+        backup = log_file.with_name(log_file.name + ".1")
+        backup.unlink(missing_ok=True)
+        log_file.rename(backup)
+    except OSError as exc:
+        print(f"[WARN] 日志轮替失败 {log_file}: {exc}")
+        return False
+    print(f"日志已轮替：{log_file} -> {log_file.name}.1")
+    return True
+
+
 def spawn_service(command: list[str], log_file: Path, cwd: Path) -> subprocess.Popen:
     """后台启动服务，输出重定向到日志文件。
 
@@ -241,6 +260,7 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
         if result.returncode != 0:
             print("[WARN] Playwright chromium 安装失败，resolve-name 可能不可用")
 
+        rotate_log_if_oversized(backend_log)
         backend = spawn_service(
             [
                 "uv",
@@ -278,6 +298,7 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
                 print("[ERROR] npm install 失败")
                 return 1
 
+        rotate_log_if_oversized(frontend_log)
         frontend = spawn_service(["npm", "run", "dev"], frontend_log, cwd=paths.frontend_dir)
         print(f"等待前端端口 {FRONTEND_PORT} ...")
         paths.frontend_pid_file.write_text(str(frontend.pid))

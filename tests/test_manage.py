@@ -308,3 +308,32 @@ def test_cmd_restart_passes_paths_to_stop_and_start(paths, monkeypatch):
     rc = manage.cmd_restart(paths)
     assert rc == 0
     assert received == [("stop", paths), ("start", paths)]
+
+
+def test_rotate_log_if_oversized(tmp_path):
+    log = tmp_path / "backend.log"
+    log.write_text("x" * 100)
+    assert manage.rotate_log_if_oversized(log, threshold=50) is True
+    assert not log.exists()
+    assert (tmp_path / "backend.log.1").stat().st_size == 100
+
+
+def test_rotate_log_under_threshold_keeps_file(tmp_path):
+    log = tmp_path / "backend.log"
+    log.write_text("x" * 100)
+    assert manage.rotate_log_if_oversized(log, threshold=200) is False
+    assert log.exists()
+    assert not (tmp_path / "backend.log.1").exists()
+
+
+def test_rotate_log_replaces_old_backup(tmp_path):
+    log = tmp_path / "backend.log"
+    old_backup = tmp_path / "backend.log.1"
+    old_backup.write_text("old")
+    log.write_text("y" * 100)
+    assert manage.rotate_log_if_oversized(log, threshold=50) is True
+    assert old_backup.read_text() == "y" * 100
+
+
+def test_rotate_log_missing_file_is_noop(tmp_path):
+    assert manage.rotate_log_if_oversized(tmp_path / "nope.log") is False
