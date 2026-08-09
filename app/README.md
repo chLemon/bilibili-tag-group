@@ -9,7 +9,7 @@ app/
 ├── main.py                  # FastAPI 应用入口，lifespan 管理调度器
 ├── config.py                # 配置（数据目录、同步间隔、Cookie）
 ├── dependencies.py          # FastAPI 依赖注入（get_store / get_fetcher / get_sync_service）
-├── logging_config.py        # 日志配置：文件（logs/app.log，滚动）+ 控制台双输出
+├── logging_config.py        # 日志配置：输出到 stderr，由 manage.py 重定向到 logs/backend.log
 ├── scheduler.py             # asyncio 定时同步调度器
 ├── utils/
 │   └── time.py              # now_utc()：统一 naive UTC 时间工具
