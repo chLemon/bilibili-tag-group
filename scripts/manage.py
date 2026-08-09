@@ -68,7 +68,12 @@ def pid_is_running(pid: int) -> bool:
             ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
             capture_output=True,
         )
-        return f'"{pid},"'.encode() in result.stdout.replace(b" ", b"")
+        # CSV 每行形如 "name.exe","1234",...，比对第二列
+        for line in result.stdout.splitlines():
+            parts = line.split(b",")
+            if len(parts) > 1 and parts[1] == f'"{pid}"'.encode():
+                return True
+        return False
     try:
         os.kill(pid, 0)
     except ProcessLookupError:
