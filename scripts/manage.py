@@ -256,10 +256,13 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
                 print("[ERROR] uv sync 失败")
                 return 1
 
-        print("安装 Playwright chromium（首次约 150MB，可能需几分钟，请耐心等待）...")
+        print("安装 Playwright chromium（首次约 150MB，走 npmmirror 镜像，请耐心等待）...")
+        # 默认 CDN 在国内经常下不完，导致每次启动都重下；换 npmmirror 镜像
+        env = {**os.environ, "PLAYWRIGHT_DOWNLOAD_HOST": "https://cdn.npmmirror.com/binaries/playwright"}
         result = subprocess.run(
             ["uv", "run", "playwright", "install", "chromium"],
             cwd=paths.project_root,
+            env=env,
         )
         if result.returncode != 0:
             print("[WARN] Playwright chromium 安装失败，resolve-name 可能不可用")
