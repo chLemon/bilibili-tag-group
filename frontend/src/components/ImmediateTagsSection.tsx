@@ -29,7 +29,8 @@ export default function ImmediateTagsSection({
           立即同步标签
         </h3>
         <span className="text-secondary text-sm">
-          拥有这些标签的 UP 主在同步时将绕过 TTL 缓存，直接从 B 站获取最新视频数据。
+          拥有这些标签的 UP 主，距上次同步超过 5 分钟就会重新抓取（普通 UP 主需超过 50
+          分钟），点击"立即同步"能更快刷出最新视频。
         </span>
       </div>
 
