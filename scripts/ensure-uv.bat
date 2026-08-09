@@ -1,4 +1,6 @@
 @echo off
+rem 本文件含中文，必须以 UTF-8 代码页解析，否则 cmd（默认 GBK）会把中文行读成乱码
+chcp 65001 >nul
 rem 确保 uv 可用：已安装则直接返回；未安装则用 pip 安装，并把 pip 的
 rem Scripts 目录加进当前会话 PATH（仅本次 cmd 窗口生效，不修改注册表，
 rem 避免 setx 截断 PATH 的风险）。被 start/stop/restart.bat 以 call 方式调用，
