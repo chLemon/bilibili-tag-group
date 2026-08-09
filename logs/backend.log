@@ -1928,3 +1928,7 @@ INFO:     127.0.0.1:63150 - "GET /api/creators HTTP/1.1" 200 OK
 2026-08-03 15:14:37 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
 2026-08-03 15:14:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
 2026-08-03 15:14:42 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+INFO:     Started server process [5208]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
