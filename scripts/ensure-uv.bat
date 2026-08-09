@@ -33,8 +33,14 @@ if errorlevel 1 (
 )
 
 rem pip --user installs into the user Scripts dir (usually not on PATH);
-rem a non-user install lands in Python's own Scripts dir. Add both.
-for /f "delims=" %%i in ('%PY% -c "import sysconfig; print(sysconfig.get_path('scripts', 'nt_user'))"') do set "PATH=%PATH%;%%i"
+rem a non-user install lands in Python's own Scripts dir. Add both to the
+rem current session, and persist the user Scripts dir to the user PATH (via
+rem PowerShell registry write, not setx which truncates at 1024 chars) so
+rem future windows find uv directly.
+for /f "delims=" %%i in ('%PY% -c "import sysconfig; print(sysconfig.get_path('scripts', 'nt_user'))"') do (
+    set "PATH=%PATH%;%%i"
+    powershell -NoProfile -Command "$p=[Environment]::GetEnvironmentVariable('Path','User'); if ($p -notlike '*%%i*') { [Environment]::SetEnvironmentVariable('Path', $p + ';%%i', 'User') }" >nul 2>&1
+)
 for /f "delims=" %%i in ('%PY% -c "import sysconfig; print(sysconfig.get_path('scripts'))"') do set "PATH=%PATH%;%%i"
 
 where uv >nul 2>&1
