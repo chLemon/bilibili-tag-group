@@ -85,6 +85,7 @@ export interface SyncTask {
   total_creators: number;
   completed_creators: number;
   current_creator_name: string | null;
+  current_creator_pages: number;
   new_videos: number;
   error_message: string | null;
   started_at: string;

@@ -84,6 +84,8 @@ class PlaywrightBilibiliFetcher:
         self._playwright = None
         self._browser = None
         self._cache: dict[str, dict] = {}
+        self.current_page = 0
+        """fetch_new_videos 最近一次完成的页码，同步任务据此展示页级进度"""
 
     # ── 浏览器生命周期 ──────────────────────────────────────────
 
@@ -183,6 +185,9 @@ class PlaywrightBilibiliFetcher:
         3. 从前往后翻页继续抓取，直到完成
 
         如果某页抓取失败，则整个失败。
+
+        抓取过程中每完成一页会更新 self.current_page（仅观测用，供
+        同步任务展示页级进度，不影响抓取行为）。
         """
 
         context = await self._create_context()
@@ -197,6 +202,7 @@ class PlaywrightBilibiliFetcher:
             )
 
             videos: list[FetchedVideo] = []
+            self.current_page = 0
 
             # 翻页抓取
             while True:
@@ -212,6 +218,7 @@ class PlaywrightBilibiliFetcher:
                 for video in await self._extract_videos_from_page(page):
                     videos.append(video)
                     page_bvids.add(video.bvid)
+                self.current_page = current_page_num
 
                 if page_bvids and self._any_known(page_bvids):
                     # 已经获取到了db里有的视频，那么提前返回即可

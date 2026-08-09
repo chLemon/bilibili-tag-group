@@ -14,6 +14,7 @@ class SyncTaskRead(BaseModel):
     total_creators: int
     completed_creators: int
     current_creator_name: str | None = None
+    current_creator_pages: int = 0
     new_videos: int
     error_message: str | None = None
     started_at: BeijingDateTime

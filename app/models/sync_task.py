@@ -15,6 +15,8 @@ class SyncTask(BaseModel):
     total_creators: int = 0
     completed_creators: int = 0
     current_creator_name: str | None = None
+    current_creator_pages: int = 0
+    """当前 UP 主已抓取的页数，用于前端展示页级进度"""
     new_videos: int = 0
     error_message: str | None = None
     started_at: datetime = Field(default_factory=now_utc)

@@ -26,6 +26,8 @@ B 站的 WBI 签名接口有风控，直接调 API 容易被拦。抓取层改�
 
 翻页循环中有 `_any_known(page_bvids)` 早停分支（翻到含已知视频的页就提前结束），但当前实现恒返回 `False`，早停从未生效——见 `docs/fetcher-review.md` 第 1 条。
 
+观测性扩展（不改变抓取行为）：`fetch_new_videos` 每抓完一页会更新 `fetcher.current_page` 属性；`run_sync_task` 在抓取期间每 2 秒把它写入 `SyncTask.current_creator_pages`，供前端展示页级进度。
+
 ## 卡片字段提取
 
 | 字段 | 来源 | 解析 |
