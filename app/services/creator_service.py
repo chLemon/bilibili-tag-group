@@ -211,6 +211,19 @@ class CreatorService:
 
         return store.creators.get(creator.id) or creator
 
+    async def delete_creator(self, store: DataStore, creator_id: int) -> bool:
+        """删除 UP 主并级联清理标签关联、视频及其观看状态。不存在时返回 False。"""
+        if store.creators.get(creator_id) is None:
+            return False
+        for link in store.creator_tags.filter(creator_id=creator_id):
+            await store.creator_tags.delete(link.id)
+        for video in store.videos.filter(creator_id=creator_id):
+            for s in store.video_statuses.filter(video_id=video.id):
+                await store.video_statuses.delete(s.id)
+            await store.videos.delete(video.id)
+        await store.creators.delete(creator_id)
+        return True
+
     def get_tag_ids(self, store: DataStore, creator_id: int) -> list[int]:
         """获取 UP 主关联的所有标签 ID。"""
         links = store.creator_tags.filter(creator_id=creator_id)

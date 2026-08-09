@@ -57,6 +57,8 @@ beforeEach(() => {
     name: "新UP主",
     avatar_url: null,
   });
+  // mockReset 同时清空调用历史，避免用例间断言互相污染
+  vi.mocked(client.deleteCreator).mockReset().mockResolvedValue(undefined);
 });
 
 describe("CreatorsPage", () => {
@@ -142,5 +144,35 @@ describe("CreatorsPage", () => {
       expect(chip).toBeInTheDocument();
       expect(chip.className).toContain("form-tag-chip-active");
     });
+  });
+
+  it("确认后删除 UP 主并从列表移除", async () => {
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
+    render(
+      <MemoryRouter>
+        <CreatorsPage />
+      </MemoryRouter>
+    );
+    await waitFor(() => screen.getByText("测试UP主"));
+    await userEvent.click(screen.getByRole("button", { name: /删除/ }));
+    await waitFor(() => {
+      expect(client.deleteCreator).toHaveBeenCalledWith(1);
+      expect(screen.queryByText("测试UP主")).not.toBeInTheDocument();
+    });
+    vi.unstubAllGlobals();
+  });
+
+  it("取消确认则不删除", async () => {
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(false));
+    render(
+      <MemoryRouter>
+        <CreatorsPage />
+      </MemoryRouter>
+    );
+    await waitFor(() => screen.getByText("测试UP主"));
+    await userEvent.click(screen.getByRole("button", { name: /删除/ }));
+    expect(client.deleteCreator).not.toHaveBeenCalled();
+    expect(screen.getByText("测试UP主")).toBeInTheDocument();
+    vi.unstubAllGlobals();
   });
 });

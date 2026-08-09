@@ -88,6 +88,7 @@ SyncTask（scope="all" 的全量同步记录，含进度追踪与探活心跳）
 | `GET` | `/api/creators/resolve-name` | 根据 URL 获取昵称 |
 | `GET` | `/api/creators/{id}` | 获取单个 UP 主详情 |
 | `PATCH` | `/api/creators/{id}` | 编辑 UP 主 |
+| `DELETE` | `/api/creators/{id}` | 删除 UP 主（级联删除标签关联、视频与观看状态） |
 | `GET` | `/api/creators/{id}/videos` | 指定 UP 主的所有视频（含已看状态） |
 | `PATCH` | `/api/creators/{id}/videos/status` | 批量标记该 UP 主所有未看视频的状态 |
 | `POST` | `/api/tags` | 创建标签 |

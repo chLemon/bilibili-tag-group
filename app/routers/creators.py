@@ -123,6 +123,16 @@ async def update_creator(
     return _creator_svc.to_read(store, creator)
 
 
+@router.delete("/{creator_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_creator(
+    creator_id: int,
+    store: Annotated[DataStore, Depends(get_store)],
+) -> None:
+    """删除 UP 主，级联删除其标签关联、视频与观看状态。"""
+    if not await _creator_svc.delete_creator(store, creator_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Creator 不存在")
+
+
 @router.patch("/{creator_id}/videos/status")
 async def batch_update_video_status(
     creator_id: int,

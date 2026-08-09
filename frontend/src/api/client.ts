@@ -228,6 +228,11 @@ export function updateCreator(
   });
 }
 
+/** 删除 UP 主（级联删除其视频与观看记录） */
+export function deleteCreator(creatorId: number): Promise<void> {
+  return request<void>(`/api/creators/${creatorId}`, { method: "DELETE" });
+}
+
 // ---- 视频 API ----
 
 /** 更新视频状态：0=未看, 1=已看, 2=不看 */
