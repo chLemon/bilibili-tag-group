@@ -204,6 +204,36 @@ def rotate_log_if_oversized(log_file: Path, threshold: int = LOG_ROTATE_THRESHOL
     return True
 
 
+class _Tee:
+    """把写入原 stream 的内容同时写一份到文件。"""
+
+    def __init__(self, stream, file):
+        self._stream = stream
+        self._file = file
+
+    def write(self, s):
+        self._stream.write(s)
+        self._file.write(s)
+        return len(s)
+
+    def flush(self):
+        self._stream.flush()
+        self._file.flush()
+
+
+def tee_console_to(log_file: Path, command: str) -> None:
+    """控制台输出同时落一份到 launcher.log，窗口关闭后仍可回查启动/停止过程。
+
+    每次运行覆盖重写（只留最近一次），防止无限膨胀。只覆盖 manage.py
+    自身的 print；子进程（uv sync、npm install 等）直接继承控制台 fd，
+    不经 sys.stdout，不会入档。
+    """
+    f = open(log_file, "w", encoding="utf-8")
+    sys.stdout = _Tee(sys.stdout, f)
+    sys.stderr = _Tee(sys.stderr, f)
+    print(f"===== {datetime.now():%Y-%m-%d %H:%M:%S} manage.py {command} =====")
+
+
 def spawn_service(command: list[str], log_file: Path, cwd: Path) -> subprocess.Popen:
     """后台启动服务，输出重定向到日志文件。
 
@@ -353,6 +383,8 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("stop", help="停止前后端并备份数据仓库")
     sub.add_parser("restart", help="先 stop 再 start")
     args = parser.parse_args(argv)
+    DEFAULT_PATHS.log_dir.mkdir(exist_ok=True)
+    tee_console_to(DEFAULT_PATHS.log_dir / "launcher.log", args.command)
     handlers = {"start": cmd_start, "stop": cmd_stop, "restart": cmd_restart}
     return handlers[args.command]()
 

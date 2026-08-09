@@ -2,6 +2,13 @@
 
 `logs/` 下各日志文件的内容、产生方式与滚动策略。按项目约定，`logs/*.log` 纳入 git（跨机器排查问题），`*.pid` 与轮替备份 `*.log.1` 不入库。
 
+## 启动器日志
+
+### `launcher.log`
+
+- **内容**：`manage.py` 自身的控制台输出（依赖安装进度、端口等待、备份结果等）。bat/sh 入口都只是转发到 manage.py，所以两端输出统一落在这里。
+- **滚动策略**：每次运行 manage.py 时**覆盖重写**，只保留最近一次，不会膨胀。子进程（uv sync、npm install 等）直接写控制台，不入档。
+
 ## 进程输出重定向
 
 由 `scripts/manage.py` 的 `spawn_service` 把子进程 stdout/stderr 以 append 模式重定向到文件（manage.py start 启动时才有；手动 `uvicorn` / `npm run dev` 不产生）。
