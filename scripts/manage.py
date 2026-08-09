@@ -60,6 +60,7 @@ DEFAULT_PATHS = LauncherPaths(
 
 
 def pid_is_running(pid: int) -> bool:
+    """判断进程是否存活。POSIX 用 kill(pid, 0) 探测（EPERM 也算存活），Windows 查 tasklist。"""
     if pid <= 0:
         return False
     if IS_WINDOWS:
@@ -94,6 +95,7 @@ def read_live_pid(pid_file: Path) -> int | None:
 
 
 def wait_for_port(port: int, timeout_seconds: float) -> bool:
+    """轮询 TCP 端口直到可连接或超时，用于等服务真正就绪。"""
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
         try:
@@ -149,6 +151,7 @@ def stop_services(pid_files: list[Path]) -> bool:
 
 
 def git_ok(args: list[str], cwd: Path) -> bool:
+    """执行 git 子命令，返回是否成功（静默，不打印输出）。"""
     return subprocess.run(["git", *args], cwd=cwd, capture_output=True).returncode == 0
 
 
@@ -230,6 +233,7 @@ def spawn_service(command: list[str], log_file: Path, cwd: Path) -> subprocess.P
 
 
 def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
+    """幂等启动：前后端都在跑就只开浏览器；缺哪个补哪个（含依赖安装与日志轮替）。"""
     paths.log_dir.mkdir(exist_ok=True)
     backend_pid = read_live_pid(paths.backend_pid_file)
     frontend_pid = read_live_pid(paths.frontend_pid_file)
@@ -323,6 +327,7 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
 
 
 def cmd_stop(paths: LauncherPaths = DEFAULT_PATHS) -> int:
+    """停止前后端，然后尝试备份数据仓库；备份失败只警告、不影响停止结果。"""
     if stop_services([paths.backend_pid_file, paths.frontend_pid_file]):
         print("服务已停止")
     else:
@@ -332,11 +337,13 @@ def cmd_stop(paths: LauncherPaths = DEFAULT_PATHS) -> int:
 
 
 def cmd_restart(paths: LauncherPaths = DEFAULT_PATHS) -> int:
+    """先 stop（含备份）再 start。"""
     cmd_stop(paths)
     return cmd_start(paths)
 
 
 def main(argv: list[str] | None = None) -> int:
+    """解析 start/stop/restart 子命令并分发。argv 可注入以便测试。"""
     parser = argparse.ArgumentParser(prog="manage.py", description="一键启停前后端服务")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("start", help="幂等启动前后端（已运行则只打开浏览器）")
