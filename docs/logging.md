@@ -2,13 +2,12 @@
 
 `logs/` 下各日志文件的内容、产生方式与滚动策略。按项目约定，`logs/*.log` 纳入 git（跨机器排查问题），`*.pid` 与轮替备份 `*.log.1` 不入库。
 
-## 应用日志
+## 启动器日志
 
-### `app.log`
+### `launcher.log`
 
-- **内容**：后端应用日志（`app.*` logger 的全部输出），格式 `时间 [级别] logger名: 消息`。
-- **产生方式**：`app/logging_config.py` 的 `RotatingFileHandler`，由 FastAPI lifespan 调用 `setup_logging()` 挂上。
-- **滚动策略**：单文件 10MB，保留 5 份（`app.log.1` ~ `app.log.5`），上限约 60MB。**不会膨胀。**
+- **内容**：`manage.py` 自身的控制台输出（依赖安装进度、端口等待、备份结果等）。bat/sh 入口都只是转发到 manage.py，所以两端输出统一落在这里。
+- **滚动策略**：每次运行 manage.py 时**覆盖重写**，只保留最近一次，不会膨胀。子进程（uv sync、npm install 等）直接写控制台，不入档。
 
 ## 进程输出重定向
 
@@ -16,7 +15,7 @@
 
 ### `backend.log`
 
-- **内容**：uvicorn 进程的全部输出——uvicorn 自身的启动/访问日志，外加应用日志（`setup_logging` 同时往 stderr 和 `app.log` 写，stderr 被重定向到这里）。**内容基本是 app.log 的超集**，排障时优先看它。
+- **内容**：uvicorn 进程的全部输出——uvicorn 自身的启动/访问日志，外加应用日志（`app/logging_config.py` 的 `setup_logging` 把应用日志写到 stderr，随之被重定向到这里）。**唯一的后端日志文件**，排障看它即可。
 - **滚动策略**：进程内无法滚动，改为 **start 时一次性轮替**：`cmd_start` spawn 前检查，超过 10MB 则 rename 为 `backend.log.1`（只留一份）。注意只在重启服务时生效，单次长跑期间仍会持续增长。
 
 ### `frontend.log`
@@ -26,9 +25,8 @@
 
 ## 其他文件
 
-- `backend-stdout.log` / `backend-stderr.log` / `frontend-stdout.log` / `frontend-stderr.log` / `launcher.log` / `migration.log`：历史遗留的空文件，当前代码不再写入。
 - `backend.pid` / `frontend.pid`：运行中服务的 PID，`stop` 据此清理进程。不入库。
 
-## 为什么 backend.log 与 app.log 内容重复
+## 为什么只有 backend.log 一个后端日志
 
-`setup_logging` 挂了 stderr + 文件两个 handler，是为了兼顾两种启动方式：手动 `uvicorn --reload` 时看控制台，manage.py 启动时落 `app.log`。stderr 经重定向进入 `backend.log` 属副作用，代价是有界重复（已被滚动/轮替限制），收益是手动调试时控制台不会静默，故保留。
+历史上曾有 `app.log`（`RotatingFileHandler` 滚动落盘）与 `backend.log` 并存，内容重复。由于服务固定由 manage.py 启动（不手动跑 uvicorn），stderr 一定会被重定向到 backend.log，`setup_logging` 便只保留 stderr 输出，文件落盘统一交给 backend.log，避免双份日志。

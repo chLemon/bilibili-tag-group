@@ -8,6 +8,7 @@ import {
   fetchTags,
   createCreator,
   updateCreator,
+  deleteCreator,
   Creator,
   CreatorCreate,
   CreatorUpdate,
@@ -102,6 +103,25 @@ export function useCreators() {
     [refreshTags]
   );
 
+  /** 删除 UP 主，成功返回 true */
+  const removeCreator = useCallback(
+    async (creatorId: number): Promise<boolean> => {
+      setSubmitting(true);
+      setSubmitError(null);
+      try {
+        await deleteCreator(creatorId);
+        setCreators((prev) => prev.filter((c) => c.id !== creatorId));
+        return true;
+      } catch (err) {
+        setSubmitError(formatError(err));
+        return false;
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    []
+  );
+
   /** 批量导入成功后追加新 UP 主 */
   const appendCreators = useCallback(
     (newCreators: Creator[]) => {
@@ -126,6 +146,7 @@ export function useCreators() {
     totalUnwatched,
     addCreator,
     editCreator,
+    removeCreator,
     appendCreators,
     clearSubmitError,
   };

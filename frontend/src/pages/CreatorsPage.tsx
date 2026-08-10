@@ -14,6 +14,7 @@ import {
   Inbox,
   ExternalLink,
   Pencil,
+  Trash2,
   X,
   User,
   Filter,
@@ -48,6 +49,7 @@ export default function CreatorsPage() {
     totalUnwatched,
     addCreator,
     editCreator,
+    removeCreator,
     appendCreators,
     clearSubmitError,
   } = useCreators();
@@ -297,6 +299,22 @@ export default function CreatorsPage() {
                 >
                   <Pencil size={12} />
                   编辑
+                </button>
+                <button
+                  className="btn-edit"
+                  onClick={async () => {
+                    if (
+                      !window.confirm(
+                        `删除 UP 主「${displayName(c)}」？其视频与观看记录将一并删除。`
+                      )
+                    )
+                      return;
+                    const ok = await removeCreator(c.id);
+                    if (!ok) window.alert("删除失败，请查看后端日志");
+                  }}
+                >
+                  <Trash2 size={12} />
+                  删除
                 </button>
               </div>
             </div>

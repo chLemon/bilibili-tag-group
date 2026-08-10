@@ -182,6 +182,25 @@ class TestUpdateCreator:
         assert response.status_code == 404
 
 
+class TestDeleteCreator:
+    """DELETE /api/creators/{creator_id} 测试。"""
+
+    def test_delete_creator_cascades(self, client, store, seeded_data):
+        """删除 UP 主应级联清理标签关联、视频与观看状态，但保留标签本身。"""
+        response = client.delete(f"/api/creators/{seeded_data.creator_id}")
+        assert response.status_code == 204
+
+        assert store.creators.all() == []
+        assert store.creator_tags.all() == []
+        assert store.videos.all() == []
+        assert store.video_statuses.all() == []
+        assert len(store.tags.all()) == 1
+
+    def test_delete_creator_not_found(self, client):
+        response = client.delete("/api/creators/99999")
+        assert response.status_code == 404
+
+
 # ──────────────────────────────────────────────
 # Tags 路由
 # ──────────────────────────────────────────────

@@ -188,11 +188,21 @@ class SyncService:
                 task = store.sync_tasks.get(task_id)
                 if task is None:
                     return
-                await store.sync_tasks.update(task_id, current_creator_name=creator.name)
+                await store.sync_tasks.update(
+                    task_id,
+                    current_creator_name=creator.name,
+                    current_creator_pages=0,
+                )
 
                 try:
-                    new_count = await self.sync_creator(store, creator)
-                    total_new += new_count
+                    # 抓取期间每 2 秒把 fetcher 的页进度写进任务，供前端展示
+                    fetch = asyncio.create_task(self.sync_creator(store, creator))
+                    while not fetch.done():
+                        await asyncio.sleep(2)
+                        await store.sync_tasks.update(
+                            task_id, current_creator_pages=self._fetcher.current_page
+                        )
+                    total_new += fetch.result()
                 except Exception as exc:
                     errors.append(f"{creator.name}: {exc}")
 
@@ -204,6 +214,7 @@ class SyncService:
                     completed_creators=(task.completed_creators + 1),
                     new_videos=total_new,
                     current_creator_name=None,
+                    current_creator_pages=0,
                 )
 
             task = store.sync_tasks.get(task_id)

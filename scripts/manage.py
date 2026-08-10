@@ -60,15 +60,20 @@ DEFAULT_PATHS = LauncherPaths(
 
 
 def pid_is_running(pid: int) -> bool:
+    """判断进程是否存活。POSIX 用 kill(pid, 0) 探测（EPERM 也算存活），Windows 查 tasklist。"""
     if pid <= 0:
         return False
     if IS_WINDOWS:
         result = subprocess.run(
             ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
             capture_output=True,
-            text=True,
         )
-        return f'"{pid},"' in result.stdout.replace(" ", "")
+        # CSV 每行形如 "name.exe","1234",...，比对第二列
+        for line in result.stdout.splitlines():
+            parts = line.split(b",")
+            if len(parts) > 1 and parts[1] == f'"{pid}"'.encode():
+                return True
+        return False
     try:
         os.kill(pid, 0)
     except ProcessLookupError:
@@ -94,6 +99,7 @@ def read_live_pid(pid_file: Path) -> int | None:
 
 
 def wait_for_port(port: int, timeout_seconds: float) -> bool:
+    """轮询 TCP 端口直到可连接或超时，用于等服务真正就绪。"""
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
         try:
@@ -149,6 +155,7 @@ def stop_services(pid_files: list[Path]) -> bool:
 
 
 def git_ok(args: list[str], cwd: Path) -> bool:
+    """执行 git 子命令，返回是否成功（静默，不打印输出）。"""
     return subprocess.run(["git", *args], cwd=cwd, capture_output=True).returncode == 0
 
 
@@ -201,6 +208,36 @@ def rotate_log_if_oversized(log_file: Path, threshold: int = LOG_ROTATE_THRESHOL
     return True
 
 
+class _Tee:
+    """把写入原 stream 的内容同时写一份到文件。"""
+
+    def __init__(self, stream, file):
+        self._stream = stream
+        self._file = file
+
+    def write(self, s):
+        self._stream.write(s)
+        self._file.write(s)
+        return len(s)
+
+    def flush(self):
+        self._stream.flush()
+        self._file.flush()
+
+
+def tee_console_to(log_file: Path, command: str) -> None:
+    """控制台输出同时落一份到 launcher.log，窗口关闭后仍可回查启动/停止过程。
+
+    每次运行覆盖重写（只留最近一次），防止无限膨胀。只覆盖 manage.py
+    自身的 print；子进程（uv sync、npm install 等）直接继承控制台 fd，
+    不经 sys.stdout，不会入档。
+    """
+    f = open(log_file, "w", encoding="utf-8")
+    sys.stdout = _Tee(sys.stdout, f)
+    sys.stderr = _Tee(sys.stderr, f)
+    print(f"===== {datetime.now():%Y-%m-%d %H:%M:%S} manage.py {command} =====")
+
+
 def spawn_service(command: list[str], log_file: Path, cwd: Path) -> subprocess.Popen:
     """后台启动服务，输出重定向到日志文件。
 
@@ -230,6 +267,7 @@ def spawn_service(command: list[str], log_file: Path, cwd: Path) -> subprocess.P
 
 
 def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
+    """幂等启动：前后端都在跑就只开浏览器；缺哪个补哪个（含依赖安装与日志轮替）。"""
     paths.log_dir.mkdir(exist_ok=True)
     backend_pid = read_live_pid(paths.backend_pid_file)
     frontend_pid = read_live_pid(paths.frontend_pid_file)
@@ -252,10 +290,13 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
                 print("[ERROR] uv sync 失败")
                 return 1
 
+        print("安装 Playwright chromium（首次约 150MB，走 npmmirror 镜像，请耐心等待）...")
+        # 默认 CDN 在国内经常下不完，导致每次启动都重下；换 npmmirror 镜像
+        env = {**os.environ, "PLAYWRIGHT_DOWNLOAD_HOST": "https://cdn.npmmirror.com/binaries/playwright"}
         result = subprocess.run(
             ["uv", "run", "playwright", "install", "chromium"],
             cwd=paths.project_root,
-            capture_output=True,
+            env=env,
         )
         if result.returncode != 0:
             print("[WARN] Playwright chromium 安装失败，resolve-name 可能不可用")
@@ -323,6 +364,7 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
 
 
 def cmd_stop(paths: LauncherPaths = DEFAULT_PATHS) -> int:
+    """停止前后端，然后尝试备份数据仓库；备份失败只警告、不影响停止结果。"""
     if stop_services([paths.backend_pid_file, paths.frontend_pid_file]):
         print("服务已停止")
     else:
@@ -332,17 +374,21 @@ def cmd_stop(paths: LauncherPaths = DEFAULT_PATHS) -> int:
 
 
 def cmd_restart(paths: LauncherPaths = DEFAULT_PATHS) -> int:
+    """先 stop（含备份）再 start。"""
     cmd_stop(paths)
     return cmd_start(paths)
 
 
 def main(argv: list[str] | None = None) -> int:
+    """解析 start/stop/restart 子命令并分发。argv 可注入以便测试。"""
     parser = argparse.ArgumentParser(prog="manage.py", description="一键启停前后端服务")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("start", help="幂等启动前后端（已运行则只打开浏览器）")
     sub.add_parser("stop", help="停止前后端并备份数据仓库")
     sub.add_parser("restart", help="先 stop 再 start")
     args = parser.parse_args(argv)
+    DEFAULT_PATHS.log_dir.mkdir(exist_ok=True)
+    tee_console_to(DEFAULT_PATHS.log_dir / "launcher.log", args.command)
     handlers = {"start": cmd_start, "stop": cmd_stop, "restart": cmd_restart}
     return handlers[args.command]()
 

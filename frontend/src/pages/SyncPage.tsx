@@ -109,6 +109,8 @@ export default function SyncPage() {
           {task.current_creator_name && !isDead && (
             <div className="text-sm text-secondary">
               当前：{task.current_creator_name}
+              {task.current_creator_pages > 0 &&
+                `（已抓 ${task.current_creator_pages} 页）`}
             </div>
           )}
           {isDead && (

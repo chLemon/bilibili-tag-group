@@ -1928,3 +1928,144 @@ INFO:     127.0.0.1:63150 - "GET /api/creators HTTP/1.1" 200 OK
 2026-08-03 15:14:37 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
 2026-08-03 15:14:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
 2026-08-03 15:14:42 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+INFO:     Started server process [5208]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:9158 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9160 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9162 - "GET /api/tags/untagged/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4223 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6558 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9166 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12644 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8702 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2191 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2192 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2193 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2194 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9019 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4805 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4803 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4806 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4807 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2159 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2160 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7741 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3116 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3118 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8363 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8364 - "GET /api/tags/untagged/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3456 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3458 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5764 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4889 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13586 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11248 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11250 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11253 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11251 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11252 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8498 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8501 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8500 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14092 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12877 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12878 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1594 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2237 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2239 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9351 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9352 - "GET /api/tags/untagged/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7800 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7803 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7802 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7804 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7805 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12520 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4198 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4196 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4200 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4199 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14602 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14601 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4050 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11423 - "GET /api/tags HTTP/1.1" 200 OK
+2026-08-09 21:50:35 [ERROR] app.routers.creators: 解析 UP 主名称失败 url=https://space.bilibili.com/1525355
+Traceback (most recent call last):
+  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 249, in fetch_creator_info
+    name = await name_el.text_content()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\async_api\_generated.py", line 20027, in text_content
+    await self._impl_obj.text_content(timeout=to_milliseconds(timeout))
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_locator.py", line 678, in text_content
+    return await self._frame.text_content(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_frame.py", line 732, in text_content
+    return await self._channel.send(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 563, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Locator.text_content: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator(".nickname").first
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 63, in resolve_creator_name
+    info = await _creator_svc.resolve_creator_info(fetcher, profile_url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\app\services\creator_service.py", line 91, in resolve_creator_info
+    return await fetcher.fetch_creator_info(uid)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 293, in fetch_creator_info
+    raise FetchError(f"获取 UP 主信息失败，uid={uid}: {exc}") from exc
+app.fetcher.playwright_fetcher.FetchError: 获取 UP 主信息失败，uid=1525355: Locator.text_content: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator(".nickname").first
+
+INFO:     127.0.0.1:12206 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F1525355 HTTP/1.1" 502 Bad Gateway
+2026-08-09 21:51:48 [ERROR] app.routers.creators: 解析 UP 主名称失败 url=https://space.bilibili.com/1525355
+Traceback (most recent call last):
+  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 249, in fetch_creator_info
+    name = await name_el.text_content()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\async_api\_generated.py", line 20027, in text_content
+    await self._impl_obj.text_content(timeout=to_milliseconds(timeout))
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_locator.py", line 678, in text_content
+    return await self._frame.text_content(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_frame.py", line 732, in text_content
+    return await self._channel.send(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 563, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Locator.text_content: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator(".nickname").first
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\chen\bilibili-tag-group\app\routers\creators.py", line 63, in resolve_creator_name
+    info = await _creator_svc.resolve_creator_info(fetcher, profile_url)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\app\services\creator_service.py", line 91, in resolve_creator_info
+    return await fetcher.fetch_creator_info(uid)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 293, in fetch_creator_info
+    raise FetchError(f"获取 UP 主信息失败，uid={uid}: {exc}") from exc
+app.fetcher.playwright_fetcher.FetchError: 获取 UP 主信息失败，uid=1525355: Locator.text_content: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator(".nickname").first
+
+INFO:     127.0.0.1:4348 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F1525355 HTTP/1.1" 502 Bad Gateway

@@ -85,6 +85,7 @@ export interface SyncTask {
   total_creators: number;
   completed_creators: number;
   current_creator_name: string | null;
+  current_creator_pages: number;
   new_videos: number;
   error_message: string | null;
   started_at: string;
@@ -225,6 +226,11 @@ export function updateCreator(
     method: "PATCH",
     body: JSON.stringify(payload),
   });
+}
+
+/** 删除 UP 主（级联删除其视频与观看记录） */
+export function deleteCreator(creatorId: number): Promise<void> {
+  return request<void>(`/api/creators/${creatorId}`, { method: "DELETE" });
 }
 
 // ---- 视频 API ----

@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import tempfile
+import time
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
@@ -129,7 +130,16 @@ class JsonRepo[T]:
                 f.write(text)
                 f.flush()
                 os.fsync(f.fileno())
-            os.replace(tmp, self._file_path)
+            # Windows 上杀毒软件/索引器会短暂占用目标文件，os.replace 此时抛
+            # WinError 5（PermissionError）；短暂重试等占用释放即可
+            for attempt in range(5):
+                try:
+                    os.replace(tmp, self._file_path)
+                    break
+                except PermissionError:
+                    if attempt == 4:
+                        raise
+                    time.sleep(0.1 * (attempt + 1))
         except BaseException:
             Path(tmp).unlink(missing_ok=True)
             raise

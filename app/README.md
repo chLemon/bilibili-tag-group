@@ -9,7 +9,7 @@ app/
 ├── main.py                  # FastAPI 应用入口，lifespan 管理调度器
 ├── config.py                # 配置（数据目录、同步间隔、Cookie）
 ├── dependencies.py          # FastAPI 依赖注入（get_store / get_fetcher / get_sync_service）
-├── logging_config.py        # 日志配置：文件（logs/app.log，滚动）+ 控制台双输出
+├── logging_config.py        # 日志配置：输出到 stderr，由 manage.py 重定向到 logs/backend.log
 ├── scheduler.py             # asyncio 定时同步调度器
 ├── utils/
 │   └── time.py              # now_utc()：统一 naive UTC 时间工具
@@ -88,6 +88,7 @@ SyncTask（scope="all" 的全量同步记录，含进度追踪与探活心跳）
 | `GET` | `/api/creators/resolve-name` | 根据 URL 获取昵称 |
 | `GET` | `/api/creators/{id}` | 获取单个 UP 主详情 |
 | `PATCH` | `/api/creators/{id}` | 编辑 UP 主 |
+| `DELETE` | `/api/creators/{id}` | 删除 UP 主（级联删除标签关联、视频与观看状态） |
 | `GET` | `/api/creators/{id}/videos` | 指定 UP 主的所有视频（含已看状态） |
 | `PATCH` | `/api/creators/{id}/videos/status` | 批量标记该 UP 主所有未看视频的状态 |
 | `POST` | `/api/tags` | 创建标签 |

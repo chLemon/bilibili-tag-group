@@ -81,6 +81,7 @@ def mock_fetcher():
         return_value={"name": "测试UP主", "avatar_url": None, "video_count": 0}
     )
     m.fetch_new_videos = AsyncMock(return_value=[])
+    m.current_page = 0
     return m
 
 

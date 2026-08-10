@@ -44,6 +44,7 @@ def _make_mock_fetcher(fetch_creator_info=None, fetch_new_videos=None):
     m.fetch_new_videos = AsyncMock(
         return_value=fetch_new_videos if fetch_new_videos is not None else []
     )
+    m.current_page = 0
     return m
 
 
