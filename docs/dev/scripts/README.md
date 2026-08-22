@@ -25,7 +25,7 @@ uv run python scripts/manage.py restart   # stop + start
 ### 关键常量与路径
 
 - `PROJECT_ROOT`：脚本所在目录的上一级，即项目根。
-- `LOG_DIR = PROJECT_ROOT / "logs"`：存放 `backend.pid` / `frontend.pid` / `backend.log` / `frontend.log` / `launcher.log`。
+- `LOG_DIR = PROJECT_ROOT / "logs"`：存放 `backend.log` / `frontend.log` / `launcher.log`（不再写 PID 文件）。
 - `BACKEND_HOST` / `BACKEND_PORT` / `FRONTEND_PORT`：从 `app/config.settings` 读取（默认 `127.0.0.1` / `3333` / `2222`），值来自项目根 `config.json`。前端 vite 开发服务器与后端 uvicorn 各占一个端口，`frontend/vite.config.ts` 也读同一份 `config.json`，改端口只动一处。
 - `PRIVATE_DATA_DIR = PROJECT_ROOT.parent / "private-data"`：数据仓库根，备份目标。
 - `PRIVATE_DATA_REPO_SUBDIR = "bilibili-tag-group"`：本项目在数据仓库下的子目录，备份时只 `git add` 这个子目录下的 `*.json`。
@@ -44,14 +44,15 @@ uv run python scripts/manage.py restart   # stop + start
 
 ### 进程探测与终止
 
-- `pid_is_running(pid)`：
-  - POSIX 用 `os.kill(pid, 0)` 探测，`ProcessLookupError` 视为已死，`PermissionError` 视为存活（进程不属于当前用户但仍在跑）。
-  - Windows 调 `tasklist /FI "PID eq <pid>" /FO CSV /NH`，按字节比对 CSV 第二列（PID 字段），避开 `PYTHONUTF8=1` 下的编码问题。
-- `read_live_pid(pid_file)`：读 PID 文件，内容非法或进程已死则清理文件并返回 `None`，避免残留 PID 文件误判。
+纯端口方案，不写 PID 文件：
+
+- `port_in_use(port)`：单次 `socket.create_connection(("127.0.0.1", port), timeout=0.5)`，连得上 = 有服务在跑。用于 `cmd_start` 判断"已在运行"。
+- `find_pid_on_port(port)`：查占指定端口的 PID。POSIX 调 `lsof -ti :<port> -sTCP:LISTEN`（`-t` 只输出 PID，`-sTCP:LISTEN` 只匹配监听状态，多行取第一个）；Windows 解析 `netstat -ano` 输出，按字节匹配 `:<port>` 与 `LISTENING`，取行末 PID（按字节匹配避开 `PYTHONUTF8=1` 编码问题）。工具缺失或端口未被占用返回 `None`。
+- `_pid_alive(pid)`：仅 `kill_process_tree` 内部用，轮询等进程退出。POSIX `os.kill(pid, 0)`（`ProcessLookupError` = 已死，`PermissionError` = 存活）；Windows 沿用 `tasklist` CSV 按字节比对。
 - `kill_process_tree(pid)`：
   - POSIX 用 `os.killpg(pid, SIGTERM)`（子进程用 `start_new_session=True` 启动，PID 即 PGID），失败回退到单进程 `SIGTERM`；最多等 5 秒，超时 `SIGKILL` 强杀，最后 `waitpid` 收尸。
   - Windows 用 `taskkill /T /F /PID <pid>`，`/T` 连同子进程一起终止。
-- `stop_services(pid_files)`：循环 `read_live_pid` + `kill_process_tree` + 清理 PID 文件，只要有进程被终止就返回 `True`。
+- `stop_services_by_port(ports)`：循环 `find_pid_on_port` + `kill_process_tree`，kill 前打印"停止端口 X 上的进程 (PID Y)"供用户确认。只要有进程被终止就返回 `True`。
 
 ### 端口就绪探测
 
@@ -59,23 +60,23 @@ uv run python scripts/manage.py restart   # stop + start
 
 ### 启动流程 `cmd_start`
 
-1. 确保 `logs/` 存在；读取前后端 PID 文件。
-2. 如果两个 PID 都存活：直接 `webbrowser.open(FRONTEND_URL)`，不重启。
-3. 后端缺失时：
+1. 确保 `logs/` 存在；用 `port_in_use` 探测前后端端口。
+2. 如果两个端口都被占：直接 `webbrowser.open(FRONTEND_URL)`，不重启。
+3. 后端端口未被占时：
    - `.venv` 不存在则先 `uv sync --extra dev`；`uv` 不在 PATH 直接报错退出。
    - 跑 `uv run playwright install chromium`，走 `PLAYWRIGHT_DOWNLOAD_HOST=https://cdn.npmmirror.com/binaries/playwright` 镜像（国内默认 CDN 经常下不完，会导致每次启动都重下）。
    - 超阈值则轮替 `backend.log`。
-   - `spawn_service` 用 `start_new_session=True`（POSIX）或 `CREATE_NO_WINDOW` + `cmd` 包装（Windows）后台拉起 `uv run uvicorn app.main:app --host <BACKEND_HOST> --port <BACKEND_PORT>`，stdout/stderr 重定向到 `backend.log`，stdin 接 `DEVNULL`（setsid 后失去控制终端，继承的 tty 被读会 EIO，vite 的 readline 会因此崩溃）。
-   - 写 PID 文件，`wait_for_port(BACKEND_PORT, 15)` 等就绪。
-4. 前端缺失时：
+   - `spawn_service` 用 `start_new_session=True`（POSIX）或 `CREATE_NO_WINDOW` + `cmd` 包装（Windows）后台拉起 `uv run uvicorn app.main:app --host <BACKEND_HOST> --port <BACKEND_PORT>`，stdout/stderr 重定向到 `backend.log`，stdin 接 `DEVNULL`（setsid 后失去控制终端，继承的 tty 被读会 EIO，vite 的 readline 会因此崩溃）。不再写 PID 文件。
+   - `wait_for_port(BACKEND_PORT, 15)` 等就绪。
+4. 前端端口未被占时：
    - `node` 不在 PATH 报错退出。
    - `node_modules` 缺失则 `npm install`（Windows 用 `shell=True` 走 cmd）。
-   - 轮替 `frontend.log`，`spawn_service` 拉起 `npm run dev`，写 PID，`wait_for_port(FRONTEND_PORT, 30)` 等就绪（vite 自身也读 `config.json` 的 `frontend_port` 决定监听端口，两边一致）。
+   - 轮替 `frontend.log`，`spawn_service` 拉起 `npm run dev`，`wait_for_port(FRONTEND_PORT, 30)` 等就绪（vite 自身也读 `config.json` 的 `frontend_port` 决定监听端口，两边一致）。
 5. 前端就绪后打开浏览器，打印 Backend / Frontend / Logs 三个地址。
 
 ### 停止流程 `cmd_stop`
 
-1. `stop_services([backend_pid_file, frontend_pid_file])` 终止前后端。
+1. `stop_services_by_port([BACKEND_PORT, FRONTEND_PORT])`：对每个端口调 `find_pid_on_port` 查 PID，找到就打印"停止端口 X 上的进程 (PID Y)"并 `kill_process_tree` 终止。
 2. `backup_data_repo(private_data_dir)`：
    - `../private-data/.git` 不存在则警告并跳过（用户没把数据目录初始化成 git 仓库）。
    - `git pull --ff-only` 尝试拉远端（失败不阻断，比如没配 remote）。
@@ -125,7 +126,7 @@ Windows 专用，启停前确保 `uv` 可用：
 
 ## 关键设计点
 
-- **PID 文件是唯一真相**：启停判断服务是否在跑完全依赖 `logs/backend.pid` / `logs/frontend.pid`，不扫端口、不查进程名，避免误杀同名进程。
+- **端口是唯一真相**：启动判断用 `port_in_use`（连得上 = 在跑），停止取 PID 用 `find_pid_on_port`（`lsof` / `netstat` 查占端口的进程）。不写 PID 文件，避免 PID 复用误杀与残留文件问题。代价是 stop 时若端口被别的程序占会杀掉它——但端口是我们配的 3333/2222，被占的概率极低，且 kill 前会打印 PID + 端口供用户确认。
 - **进程组终止**：POSIX 用 `start_new_session` 启动 + `killpg` 终止，保证 uvicorn / vite 派生的子进程（Playwright、esbuild 等）一并清理。
 - **幂等启动**：服务已运行时只开浏览器，不重启、不重装依赖。
 - **备份解耦**：停止已经完成就算备份失败也不回滚，数据本地提交即使 push 失败也保留。

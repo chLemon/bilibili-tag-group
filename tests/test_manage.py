@@ -18,6 +18,12 @@ def spawn_dead_pid() -> int:
     return proc.pid
 
 
+def free_port() -> int:
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
 @pytest.fixture
 def paths(tmp_path):
     log_dir = tmp_path / "logs"
@@ -25,50 +31,74 @@ def paths(tmp_path):
     return manage.LauncherPaths(
         project_root=tmp_path,
         log_dir=log_dir,
-        backend_pid_file=log_dir / "backend.pid",
-        frontend_pid_file=log_dir / "frontend.pid",
         frontend_dir=tmp_path / "frontend",
         private_data_dir=tmp_path / "private-data",
     )
 
 
-def test_pid_is_running_with_current_process():
-    assert manage.pid_is_running(os.getpid()) is True
+# ── port_in_use ────────────────────────────────────────────────────────────
 
 
-def test_pid_is_running_with_dead_process():
-    assert manage.pid_is_running(spawn_dead_pid()) is False
-
-
-def test_read_live_pid_returns_pid_when_alive(tmp_path):
-    pid_file = tmp_path / "a.pid"
-    pid_file.write_text(str(os.getpid()))
-    assert manage.read_live_pid(pid_file) == os.getpid()
-    assert pid_file.exists()
-
-
-def test_read_live_pid_cleans_stale_file(tmp_path):
-    pid_file = tmp_path / "a.pid"
-    pid_file.write_text(str(spawn_dead_pid()))
-    assert manage.read_live_pid(pid_file) is None
-    assert not pid_file.exists()
-
-
-def test_read_live_pid_cleans_invalid_content(tmp_path):
-    pid_file = tmp_path / "a.pid"
-    pid_file.write_text("not-a-number")
-    assert manage.read_live_pid(pid_file) is None
-    assert not pid_file.exists()
-
-
-def test_read_live_pid_missing_file(tmp_path):
-    assert manage.read_live_pid(tmp_path / "a.pid") is None
-
-
-def free_port() -> int:
+def test_port_in_use_true_when_listening():
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
+        s.listen(1)
+        port = s.getsockname()[1]
+        assert manage.port_in_use(port) is True
+
+
+def test_port_in_use_false_when_free():
+    assert manage.port_in_use(free_port()) is False
+
+
+# ── find_pid_on_port ───────────────────────────────────────────────────────
+
+
+def _listen_port() -> tuple[int, subprocess.Popen]:
+    """起一个监听端口的子进程，返回 (port, proc)。"""
+    port = free_port()
+    proc = subprocess.Popen(
+        [sys.executable, "-c", f"import socket, time; s=socket.socket(); s.bind(('127.0.0.1', {port})); s.listen(1); time.sleep(60)"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    # 等子进程真的开始监听
+    deadline = time.monotonic() + 3
+    while time.monotonic() < deadline:
+        if manage.port_in_use(port):
+            return port, proc
+        time.sleep(0.05)
+    proc.kill()
+    proc.wait()
+    raise RuntimeError("子进程未在 3 秒内开始监听")
+
+
+def test_find_pid_on_port_returns_pid_when_listening():
+    port, proc = _listen_port()
+    try:
+        pid = manage.find_pid_on_port(port)
+        assert pid == proc.pid
+    finally:
+        proc.kill()
+        proc.wait()
+
+
+def test_find_pid_on_port_returns_none_when_free():
+    assert manage.find_pid_on_port(free_port()) is None
+
+
+# ── _pid_alive（kill_process_tree 内部用）──────────────────────────────────
+
+
+def test_pid_alive_with_current_process():
+    assert manage._pid_alive(os.getpid()) is True
+
+
+def test_pid_alive_with_dead_process():
+    assert manage._pid_alive(spawn_dead_pid()) is False
+
+
+# ── wait_for_port ──────────────────────────────────────────────────────────
 
 
 def test_wait_for_port_open():
@@ -85,24 +115,32 @@ def test_wait_for_port_timeout():
     assert time.monotonic() - start < 2
 
 
-def test_stop_services_kills_process_and_removes_pid_file(paths):
-    kwargs = {} if manage.IS_WINDOWS else {"start_new_session": True}
-    proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"], **kwargs)
-    paths.backend_pid_file.write_text(str(proc.pid))
+# ── stop_services_by_port ──────────────────────────────────────────────────
+
+
+def test_stop_services_by_port_kills_listening_process():
+    port, proc = _listen_port()
     try:
-        assert manage.stop_services([paths.backend_pid_file, paths.frontend_pid_file]) is True
+        assert manage.stop_services_by_port([port]) is True
         for _ in range(50):
-            if not manage.pid_is_running(proc.pid):
+            if not manage._pid_alive(proc.pid):
                 break
             time.sleep(0.1)
-        assert not manage.pid_is_running(proc.pid)
-        assert not paths.backend_pid_file.exists()
+        assert not manage._pid_alive(proc.pid)
+        assert not manage.port_in_use(port)
     finally:
-        proc.kill()  # 兜底，防止测试失败遗留进程
+        try:
+            proc.kill()
+            proc.wait()
+        except Exception:
+            pass
 
 
-def test_stop_services_no_running_services(paths):
-    assert manage.stop_services([paths.backend_pid_file, paths.frontend_pid_file]) is False
+def test_stop_services_by_port_no_running_services():
+    assert manage.stop_services_by_port([free_port()]) is False
+
+
+# ── backup_data_repo ───────────────────────────────────────────────────────
 
 
 GIT_ENV = {
@@ -155,6 +193,9 @@ def test_backup_not_a_repo_returns_false(tmp_path, capsys):
     assert "跳过备份" in capsys.readouterr().out
 
 
+# ── spawn_service ──────────────────────────────────────────────────────────
+
+
 def test_spawn_service_detaches_stdin(paths, monkeypatch):
     """后台服务不得继承终端 stdin，否则 setsid 后读 tty 会 EIO 崩溃（vite 实测）。"""
     captured = {}
@@ -169,12 +210,14 @@ def test_spawn_service_detaches_stdin(paths, monkeypatch):
     assert captured.get("stdin") == subprocess.DEVNULL
 
 
-def test_cmd_start_idempotent_opens_browser_only(paths, monkeypatch):
-    """前后端都在运行时，start 只打开浏览器，不起新进程。"""
-    paths.backend_pid_file.write_text(str(os.getpid()))
-    paths.frontend_pid_file.write_text(str(os.getpid()))
+# ── cmd_start ──────────────────────────────────────────────────────────────
+
+
+def test_cmd_start_idempotent_when_both_ports_in_use(paths, monkeypatch):
+    """前后端端口都被占时，start 只打开浏览器，不起新进程。"""
     opened = []
     monkeypatch.setattr(manage.webbrowser, "open", opened.append)
+    monkeypatch.setattr(manage, "port_in_use", lambda port: True)
 
     def forbidden(*args, **kwargs):
         raise AssertionError("不应启动新进程")
@@ -185,16 +228,18 @@ def test_cmd_start_idempotent_opens_browser_only(paths, monkeypatch):
 
 
 def test_cmd_start_starts_only_dead_service(paths, monkeypatch):
-    """后端存活、前端已死时，只重启前端并打开浏览器，不重起后端。"""
+    """后端端口被占、前端端口空闲时，只启动前端并打开浏览器，不重起后端。"""
     import types as types_mod
 
-    paths.backend_pid_file.write_text(str(os.getpid()))
-    paths.frontend_pid_file.write_text(str(spawn_dead_pid()))
     (paths.frontend_dir / "node_modules").mkdir(parents=True)
-    monkeypatch.setattr(
-        manage, "shutil", types_mod.SimpleNamespace(which=lambda name: "/usr/bin/node")
-    )
+    monkeypatch.setattr(manage, "shutil", types_mod.SimpleNamespace(which=lambda name: "/usr/bin/node"))
     monkeypatch.setattr(manage, "wait_for_port", lambda port, timeout: True)
+
+    def port_in_use(port: int) -> bool:
+        return port == manage.BACKEND_PORT
+
+    monkeypatch.setattr(manage, "port_in_use", port_in_use)
+
     opened = []
     monkeypatch.setattr(manage.webbrowser, "open", opened.append)
     spawned = []
@@ -209,85 +254,51 @@ def test_cmd_start_starts_only_dead_service(paths, monkeypatch):
     assert opened == [manage.FRONTEND_URL]
 
 
-def test_cmd_stop_backup_failure_still_returns_zero(paths, capsys):
-    """备份失败（private-data 不是 git 仓库）不影响 stop 的退出码。"""
+# ── cmd_stop ───────────────────────────────────────────────────────────────
+
+
+def test_cmd_stop_no_running_services_returns_zero(paths, monkeypatch, capsys):
+    """无服务运行时，stop 打印未发现并返回 0；备份失败不影响退出码。"""
+    monkeypatch.setattr(manage, "find_pid_on_port", lambda port: None)
     assert manage.cmd_stop(paths) == 0
     out = capsys.readouterr().out
     assert "未发现运行中的服务" in out
     assert "跳过备份" in out
 
 
-def test_cmd_start_writes_pid_files_even_when_port_timeout(paths, monkeypatch):
-    """端口超时也要写 PID 文件，否则 stop 无法清理孤儿进程。"""
-    backend_proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
-    frontend_proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+def test_cmd_stop_kills_services_by_port(paths, monkeypatch, capsys):
+    """stop 按端口查 PID 并终止。"""
+    port, proc = _listen_port()
     try:
-        import types as types_mod
+        # 让 find_pid_on_port 只对该端口返回 PID
+        original = manage.find_pid_on_port
 
-        def fake_spawn(command, log_file, cwd):
-            if "uvicorn" in command:
-                return types_mod.SimpleNamespace(pid=backend_proc.pid)
-            return types_mod.SimpleNamespace(pid=frontend_proc.pid)
+        def fake_find(port_):
+            if port_ == port:
+                return original(port)
+            return None
 
-        monkeypatch.setattr(manage, "spawn_service", fake_spawn)
-        monkeypatch.setattr(manage, "wait_for_port", lambda port, timeout: False)
-        (paths.project_root / ".venv").mkdir()
-        (paths.frontend_dir / "node_modules").mkdir(parents=True)
-        fake_shutil = types_mod.SimpleNamespace(which=lambda name: "/usr/bin/node")
-        monkeypatch.setattr(manage, "shutil", fake_shutil)
-        # 拦截 playwright install 的 subprocess.run（该路径下仅此一处 subprocess.run）
-        real_run = manage.subprocess.run
-
-        def fake_run(args, *rest, **kwargs):
-            if args and "playwright" in " ".join(str(a) for a in args):
-                return types_mod.SimpleNamespace(returncode=0)
-            return real_run(args, *rest, **kwargs)
-
-        monkeypatch.setattr(manage.subprocess, "run", fake_run)
-
-        rc = manage.cmd_start(paths)
-        assert rc == 0
-        assert paths.backend_pid_file.read_text().strip() == str(backend_proc.pid)
-        assert paths.frontend_pid_file.read_text().strip() == str(frontend_proc.pid)
-    finally:
-        for p in (backend_proc, frontend_proc):
-            try:
-                p.kill()
-                p.wait()
-            except Exception:
-                pass
-
-
-def test_kill_process_tree_sigkill_when_sigterm_ignored():
-    """进程忽略 SIGTERM 时，kill_process_tree 应在 5 秒内 SIGKILL 强杀，不挂死。"""
-    if manage.IS_WINDOWS:
-        import pytest
-
-        pytest.skip(reason="POSIX 信号语义")
-    proc = subprocess.Popen(
-        [
-            sys.executable,
-            "-c",
-            "import signal, time; signal.signal(signal.SIGTERM, signal.SIG_IGN); time.sleep(60)",
-        ],
-        start_new_session=True,
-    )
-    start = time.monotonic()
-    try:
-        manage.kill_process_tree(proc.pid)
-        elapsed = time.monotonic() - start
-        assert elapsed < 15
+        monkeypatch.setattr(manage, "find_pid_on_port", fake_find)
+        # 改 BACKEND_PORT 让 cmd_stop 命中我们的测试端口
+        monkeypatch.setattr(manage, "BACKEND_PORT", port)
+        monkeypatch.setattr(manage, "FRONTEND_PORT", free_port())
+        assert manage.cmd_stop(paths) == 0
+        out = capsys.readouterr().out
+        assert f"停止端口 {port}" in out
         for _ in range(50):
-            if not manage.pid_is_running(proc.pid):
+            if not manage._pid_alive(proc.pid):
                 break
             time.sleep(0.1)
-        assert not manage.pid_is_running(proc.pid)
+        assert not manage._pid_alive(proc.pid)
     finally:
         try:
             proc.kill()
             proc.wait()
         except Exception:
             pass
+
+
+# ── cmd_restart ────────────────────────────────────────────────────────────
 
 
 def test_cmd_restart_passes_paths_to_stop_and_start(paths, monkeypatch):
@@ -308,6 +319,42 @@ def test_cmd_restart_passes_paths_to_stop_and_start(paths, monkeypatch):
     rc = manage.cmd_restart(paths)
     assert rc == 0
     assert received == [("stop", paths), ("start", paths)]
+
+
+# ── kill_process_tree ──────────────────────────────────────────────────────
+
+
+def test_kill_process_tree_sigkill_when_sigterm_ignored():
+    """进程忽略 SIGTERM 时，kill_process_tree 应在 5 秒内 SIGKILL 强杀，不挂死。"""
+    if manage.IS_WINDOWS:
+        pytest.skip(reason="POSIX 信号语义")
+    proc = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            "import signal, time; signal.signal(signal.SIGTERM, signal.SIG_IGN); time.sleep(60)",
+        ],
+        start_new_session=True,
+    )
+    start = time.monotonic()
+    try:
+        manage.kill_process_tree(proc.pid)
+        elapsed = time.monotonic() - start
+        assert elapsed < 15
+        for _ in range(50):
+            if not manage._pid_alive(proc.pid):
+                break
+            time.sleep(0.1)
+        assert not manage._pid_alive(proc.pid)
+    finally:
+        try:
+            proc.kill()
+            proc.wait()
+        except Exception:
+            pass
+
+
+# ── rotate_log_if_oversized ────────────────────────────────────────────────
 
 
 def test_rotate_log_if_oversized(tmp_path):

@@ -25,7 +25,7 @@
 
 ## 其他文件
 
-- `backend.pid` / `frontend.pid`：运行中服务的 PID，`stop` 据此清理进程。不入库。
+不再生成 PID 文件——`stop` 按端口查 PID（`lsof` / `netstat`），`logs/` 只保留日志文件。
 
 ## 为什么只有 backend.log 一个后端日志
 

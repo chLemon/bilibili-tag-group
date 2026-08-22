@@ -28,8 +28,6 @@ if str(PROJECT_ROOT) not in sys.path:
 from app.config import settings  # noqa: E402
 
 LOG_DIR = PROJECT_ROOT / "logs"
-BACKEND_PID_FILE = LOG_DIR / "backend.pid"
-FRONTEND_PID_FILE = LOG_DIR / "frontend.pid"
 BACKEND_HOST = settings.backend_host
 BACKEND_PORT = settings.backend_port
 FRONTEND_PORT = settings.frontend_port
@@ -51,8 +49,6 @@ class LauncherPaths:
 
     project_root: Path
     log_dir: Path
-    backend_pid_file: Path
-    frontend_pid_file: Path
     frontend_dir: Path
     private_data_dir: Path
 
@@ -60,15 +56,63 @@ class LauncherPaths:
 DEFAULT_PATHS = LauncherPaths(
     project_root=PROJECT_ROOT,
     log_dir=LOG_DIR,
-    backend_pid_file=BACKEND_PID_FILE,
-    frontend_pid_file=FRONTEND_PID_FILE,
     frontend_dir=FRONTEND_DIR,
     private_data_dir=PRIVATE_DATA_DIR,
 )
 
 
-def pid_is_running(pid: int) -> bool:
-    """判断进程是否存活。POSIX 用 kill(pid, 0) 探测（EPERM 也算存活），Windows 查 tasklist。"""
+def port_in_use(port: int) -> bool:
+    """单次探测端口是否被占用（连得上 = 有服务在跑）。用于 start 时判断"已在运行"。"""
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=0.5):
+            return True
+    except OSError:
+        return False
+
+
+def find_pid_on_port(port: int) -> int | None:
+    """查占指定端口的 PID。POSIX 用 lsof，Windows 解析 netstat 输出。
+    工具缺失或端口未被占用返回 None。"""
+    if IS_WINDOWS:
+        result = subprocess.run(
+            ["netstat", "-ano"], capture_output=True,
+        )
+        # 按字节匹配，避免 PYTHONUTF8=1 下编码问题；找 LISTENING 行的 :<port>
+        # 行形如 "  TCP    0.0.0.0:3333           0.0.0.0:0              LISTENING       12345"
+        target = f":{port}".encode()
+        listening = b"LISTENING"
+        for line in result.stdout.splitlines():
+            if target not in line or listening not in line:
+                continue
+            parts = line.split()
+            if len(parts) >= 1:
+                try:
+                    return int(parts[-1])
+                except ValueError:
+                    continue
+        return None
+    try:
+        result = subprocess.run(
+            ["lsof", "-ti", f":{port}", "-sTCP:LISTEN"],
+            capture_output=True,
+        )
+    except FileNotFoundError:
+        return None
+    if result.returncode != 0:
+        return None
+    out = result.stdout.decode(errors="replace").strip()
+    if not out:
+        return None
+    # 多行取第一个（多进程监听同端口极少见）
+    first = out.splitlines()[0].strip()
+    try:
+        return int(first)
+    except ValueError:
+        return None
+
+
+def _pid_alive(pid: int) -> bool:
+    """判断进程是否存活。POSIX 用 kill(pid, 0)，Windows 查 tasklist。仅 kill_process_tree 内部用。"""
     if pid <= 0:
         return False
     if IS_WINDOWS:
@@ -89,21 +133,6 @@ def pid_is_running(pid: int) -> bool:
     except PermissionError:
         return True
     return True
-
-
-def read_live_pid(pid_file: Path) -> int | None:
-    """读取 PID 文件；内容非法或进程已死则清理文件并返回 None。"""
-    if not pid_file.exists():
-        return None
-    try:
-        pid = int(pid_file.read_text().strip())
-    except ValueError:
-        pid_file.unlink(missing_ok=True)
-        return None
-    if pid_is_running(pid):
-        return pid
-    pid_file.unlink(missing_ok=True)
-    return None
 
 
 def wait_for_port(port: int, timeout_seconds: float) -> bool:
@@ -132,10 +161,10 @@ def kill_process_tree(pid: int) -> None:
             return
     # 等 SIGTERM 起效，最多 5 秒；超时则 SIGKILL 强杀
     for _ in range(50):
-        if not pid_is_running(pid):
+        if not _pid_alive(pid):
             break
         time.sleep(0.1)
-    if pid_is_running(pid):
+    if _pid_alive(pid):
         try:
             os.killpg(pid, signal.SIGKILL)
         except (ProcessLookupError, PermissionError):
@@ -149,15 +178,15 @@ def kill_process_tree(pid: int) -> None:
         pass
 
 
-def stop_services(pid_files: list[Path]) -> bool:
-    """按 PID 文件终止服务并清理文件；有进程被终止则返回 True。"""
+def stop_services_by_port(ports: list[int]) -> bool:
+    """按端口查 PID 并终止；有进程被终止则返回 True。kill 前打印 PID + 端口供用户确认。"""
     stopped = False
-    for pid_file in pid_files:
-        pid = read_live_pid(pid_file)
+    for port in ports:
+        pid = find_pid_on_port(port)
         if pid is None:
             continue
+        print(f"停止端口 {port} 上的进程 (PID {pid})")
         kill_process_tree(pid)
-        pid_file.unlink(missing_ok=True)
         stopped = True
     return stopped
 
@@ -277,9 +306,9 @@ def spawn_service(command: list[str], log_file: Path, cwd: Path) -> subprocess.P
 def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
     """幂等启动：前后端都在跑就只开浏览器；缺哪个补哪个（含依赖安装与日志轮替）。"""
     paths.log_dir.mkdir(exist_ok=True)
-    backend_pid = read_live_pid(paths.backend_pid_file)
-    frontend_pid = read_live_pid(paths.frontend_pid_file)
-    if backend_pid is not None and frontend_pid is not None:
+    backend_running = port_in_use(BACKEND_PORT)
+    frontend_running = port_in_use(FRONTEND_PORT)
+    if backend_running and frontend_running:
         print("服务已在运行，直接打开浏览器...")
         webbrowser.open(FRONTEND_URL)
         return 0
@@ -287,7 +316,7 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
     backend_log = paths.log_dir / "backend.log"
     frontend_log = paths.log_dir / "frontend.log"
 
-    if backend_pid is None:
+    if not backend_running:
         if not (paths.project_root / ".venv").exists():
             print("未找到 .venv，执行 uv sync --extra dev ...")
             if shutil.which("uv") is None:
@@ -310,7 +339,7 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
             print("[WARN] Playwright chromium 安装失败，resolve-name 可能不可用")
 
         rotate_log_if_oversized(backend_log)
-        backend = spawn_service(
+        spawn_service(
             [
                 "uv",
                 "run",
@@ -325,15 +354,14 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
             cwd=paths.project_root,
         )
         print(f"等待后端端口 {BACKEND_PORT} ...")
-        paths.backend_pid_file.write_text(str(backend.pid))
         if wait_for_port(BACKEND_PORT, 15):
-            print(f"后端就绪 (PID {backend.pid})")
+            print("后端就绪")
         else:
-            print(f"[WARN] 后端 15 秒内未就绪，见 {backend_log}（PID 已写入，stop 可清理）")
+            print(f"[WARN] 后端 15 秒内未就绪，见 {backend_log}")
     else:
-        print(f"后端已在运行 (PID {backend_pid})")
+        print("后端已在运行")
 
-    if frontend_pid is None:
+    if not frontend_running:
         if shutil.which("node") is None:
             print("[ERROR] 未找到 node，请先安装 Node.js")
             return 1
@@ -348,16 +376,15 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
                 return 1
 
         rotate_log_if_oversized(frontend_log)
-        frontend = spawn_service(["npm", "run", "dev"], frontend_log, cwd=paths.frontend_dir)
+        spawn_service(["npm", "run", "dev"], frontend_log, cwd=paths.frontend_dir)
         print(f"等待前端端口 {FRONTEND_PORT} ...")
-        paths.frontend_pid_file.write_text(str(frontend.pid))
         frontend_ready = wait_for_port(FRONTEND_PORT, 30)
         if frontend_ready:
-            print(f"前端就绪 (PID {frontend.pid})")
+            print("前端就绪")
         else:
-            print(f"[WARN] 前端 30 秒内未就绪，见 {frontend_log}（PID 已写入，stop 可清理）")
+            print(f"[WARN] 前端 30 秒内未就绪，见 {frontend_log}")
     else:
-        print(f"前端已在运行 (PID {frontend_pid})")
+        print("前端已在运行")
         frontend_ready = True
 
     if frontend_ready:
@@ -373,7 +400,7 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
 
 def cmd_stop(paths: LauncherPaths = DEFAULT_PATHS) -> int:
     """停止前后端，然后尝试备份数据仓库；备份失败只警告、不影响停止结果。"""
-    if stop_services([paths.backend_pid_file, paths.frontend_pid_file]):
+    if stop_services_by_port([BACKEND_PORT, FRONTEND_PORT]):
         print("服务已停止")
     else:
         print("未发现运行中的服务")
