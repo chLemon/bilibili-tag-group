@@ -193,6 +193,33 @@ def test_backup_not_a_repo_returns_false(tmp_path, capsys):
     assert "跳过备份" in capsys.readouterr().out
 
 
+# ── pull_data_repo ─────────────────────────────────────────────────────────
+
+
+def test_pull_data_repo_not_a_repo_returns_false(tmp_path, capsys):
+    """不是 git 仓库时返回 False 并打印 ERROR，调用方据此阻断。"""
+    assert manage.pull_data_repo(tmp_path) is False
+    out = capsys.readouterr().out
+    assert "不是 git 仓库" in out
+    assert "[ERROR]" in out
+
+
+def test_pull_data_repo_pull_failure_returns_false(data_repo, monkeypatch, capsys):
+    """git pull 失败时返回 False 并打印 ERROR。"""
+    # 把 git 改名让 git_ok 调用失败
+    monkeypatch.setenv("PATH", "/nonexistent")
+    assert manage.pull_data_repo(data_repo) is False
+    out = capsys.readouterr().out
+    assert "拉取失败" in out
+    assert "[ERROR]" in out
+
+
+def test_pull_data_repo_success_returns_true(data_repo, capsys):
+    """正常拉取返回 True。"""
+    assert manage.pull_data_repo(data_repo) is True
+    assert "数据仓库已拉取最新" in capsys.readouterr().out
+
+
 # ── spawn_service ──────────────────────────────────────────────────────────
 
 
@@ -218,6 +245,7 @@ def test_cmd_start_idempotent_when_both_ports_in_use(paths, monkeypatch):
     opened = []
     monkeypatch.setattr(manage.webbrowser, "open", opened.append)
     monkeypatch.setattr(manage, "port_in_use", lambda port: True)
+    monkeypatch.setattr(manage, "pull_data_repo", lambda private_data: True)
 
     def forbidden(*args, **kwargs):
         raise AssertionError("不应启动新进程")
@@ -225,6 +253,17 @@ def test_cmd_start_idempotent_when_both_ports_in_use(paths, monkeypatch):
     monkeypatch.setattr(manage, "spawn_service", forbidden)
     assert manage.cmd_start(paths) == 0
     assert opened == [manage.FRONTEND_URL]
+
+
+def test_cmd_start_blocks_when_pull_fails(paths, monkeypatch, capsys):
+    """pull_data_repo 失败时，start 阻断并返回 1。"""
+    monkeypatch.setattr(manage, "pull_data_repo", lambda private_data: False)
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("pull 失败不应启动新进程")
+
+    monkeypatch.setattr(manage, "spawn_service", forbidden)
+    assert manage.cmd_start(paths) == 1
 
 
 def test_cmd_start_starts_only_dead_service(paths, monkeypatch):
@@ -239,6 +278,7 @@ def test_cmd_start_starts_only_dead_service(paths, monkeypatch):
         return port == manage.BACKEND_PORT
 
     monkeypatch.setattr(manage, "port_in_use", port_in_use)
+    monkeypatch.setattr(manage, "pull_data_repo", lambda private_data: True)
 
     opened = []
     monkeypatch.setattr(manage.webbrowser, "open", opened.append)

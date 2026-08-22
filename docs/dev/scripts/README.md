@@ -39,22 +39,30 @@ uv run python scripts/manage.py restart   # stop + start
 - `stop_services_by_port(ports)`：循环 `find_pid_on_port` + `kill_process_tree`，kill 前打印"停止端口 X 上的进程 (PID Y)"。
 - `wait_for_port(port, timeout)`：轮询端口就绪，后端 15s、前端 30s，就绪才开浏览器。
 
+### 数据仓库同步
+
+`private-data` 是跨机器同步本地数据（观看状态、标签等）的 git 仓库，启停时各负责一个方向：
+
+- `pull_data_repo(private_data)`（start 时调）：`git pull --ff-only` 拉远端更新。失败（不是 git 仓库 / 无 remote / 冲突 / git 命令缺失）打印 `[ERROR]` 并返回 `False`，`cmd_start` 据此**阻断启动**（返回 1，不拉起服务）——保证本地数据是最新的才允许启动。
+- `backup_data_repo(private_data)`（stop 时调）：`git add -- bilibili-tag-group/*.json` → 无变更跳过 → 有变更 `commit` + `push`。任何一步失败只打 `[WARN]`，不影响停止结果（停止已完成，备份是附加）。
+- `git_ok(args, cwd)`：跑 git 子命令，`FileNotFoundError`（git 不存在）或非零退出码都返回 `False`。
+
 ### 启动流程 `cmd_start`
 
-1. `port_in_use` 探测前后端端口；都在跑就直接开浏览器。
-2. 后端未跑：`.venv` 缺则 `uv sync --extra dev`；`uv run playwright install chromium`（走 npmmirror 镜像）；轮替 `backend.log`；`spawn_service` 后台拉起 `uv run uvicorn app.main:app --host <BACKEND_HOST> --port <BACKEND_PORT>`，stdout/stderr → `backend.log`，stdin = `DEVNULL`（setsid 后读 tty 会 EIO，vite 的 readline 会崩）；`wait_for_port` 等就绪。
-3. 前端未跑：`node_modules` 缺则 `npm install`；轮替 `frontend.log`；`spawn_service` 拉起 `npm run dev`；`wait_for_port` 等就绪（vite 自身也读 `config.json` 的 `frontend_port`，两边一致）。
-4. 前端就绪后开浏览器，打印 Backend / Frontend / Logs 地址。
+1. `pull_data_repo` 拉取 private-data；失败则返回 1，不启动。
+2. `port_in_use` 探测前后端端口；都在跑就直接开浏览器。
+3. 后端未跑：`.venv` 缺则 `uv sync --extra dev`；`uv run playwright install chromium`（走 npmmirror 镜像）；轮替 `backend.log`；`spawn_service` 后台拉起 `uv run uvicorn app.main:app --host <BACKEND_HOST> --port <BACKEND_PORT>`，stdout/stderr → `backend.log`，stdin = `DEVNULL`（setsid 后读 tty 会 EIO，vite 的 readline 会崩）；`wait_for_port` 等就绪。
+4. 前端未跑：`node_modules` 缺则 `npm install`；轮替 `frontend.log`；`spawn_service` 拉起 `npm run dev`；`wait_for_port` 等就绪（vite 自身也读 `config.json` 的 `frontend_port`，两边一致）。
+5. 前端就绪后开浏览器，打印 Backend / Frontend / Logs 地址。
 
 ### 停止流程 `cmd_stop`
 
 1. `stop_services_by_port([BACKEND_PORT, FRONTEND_PORT])`：按端口查 PID 并终止。
 2. `backup_data_repo(private_data_dir)`：
-   - `../private-data/.git` 不存在则警告跳过。
-   - `git pull --ff-only`（失败不阻断）。
+   - `../private-data/.git` 不存在则 `[WARN]` 跳过。
    - `git add -- bilibili-tag-group/*.json`。
    - 无变更跳过；有变更 `commit` + `push`。
-   - 任何一步失败只打 `[WARN]`，不影响停止结果。
+   - 任何一步失败只打 `[WARN]`，不影响停止结果（`cmd_stop` 始终返回 0）。
 
 ### 日志轮替 `rotate_log_if_oversized`
 
@@ -100,5 +108,6 @@ Windows 专用，启停前确保 `uv` 可用：
 - **端口是唯一真相**：启动判断用 `port_in_use`，停止取 PID 用 `find_pid_on_port`。不写 PID 文件，避免 PID 复用误杀与残留文件。代价是 stop 时若端口被别的程序占会杀掉它——但端口是我们配的 3333/2222，被占概率极低，且 kill 前会打印 PID + 端口供用户确认。
 - **进程组终止**：POSIX `start_new_session` 启动 + `killpg` 终止，保证 uvicorn / vite 派生的子进程（Playwright、esbuild 等）一并清理。
 - **幂等启动**：服务已运行时只开浏览器，不重启、不重装依赖。
-- **备份解耦**：停止完成就算备份失败也不回滚，本地提交即使 push 失败也保留。
+- **start 阻断 pull 失败**：`pull_data_repo` 失败则不启动，保证本地数据是最新的才允许运行；避免基于过期数据操作后又被 stop 覆盖。
+- **备份解耦**：停止已完成就算备份失败也不回滚，本地提交即使 push 失败也保留，下次 start 会再尝试 pull。
 - **跨平台分支集中在 manage.py**：`.sh` / `.bat` 只做最少的事，所有"如果 Windows 则…"的分支都在 Python 里。

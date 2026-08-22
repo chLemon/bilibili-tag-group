@@ -192,8 +192,24 @@ def stop_services_by_port(ports: list[int]) -> bool:
 
 
 def git_ok(args: list[str], cwd: Path) -> bool:
-    """执行 git 子命令，返回是否成功（静默，不打印输出）。"""
-    return subprocess.run(["git", *args], cwd=cwd, capture_output=True).returncode == 0
+    """执行 git 子命令，返回是否成功（静默，不打印输出）。git 不存在或失败都返回 False。"""
+    try:
+        return subprocess.run(["git", *args], cwd=cwd, capture_output=True).returncode == 0
+    except FileNotFoundError:
+        return False
+
+
+def pull_data_repo(private_data: Path) -> bool:
+    """启动前拉取 private-data 远端更新，保证本地数据是最新的。
+    不是 git 仓库或 pull 失败则返回 False，调用方应阻断启动。"""
+    if not (private_data / ".git").exists():
+        print(f"[ERROR] {private_data} 不是 git 仓库，无法拉取")
+        return False
+    if not git_ok(["pull", "--ff-only"], private_data):
+        print(f"[ERROR] {private_data} 拉取失败（无 remote 或冲突？），已阻断启动")
+        return False
+    print("数据仓库已拉取最新")
+    return True
 
 
 def backup_data_repo(private_data: Path) -> bool:
@@ -201,7 +217,6 @@ def backup_data_repo(private_data: Path) -> bool:
     if not (private_data / ".git").exists():
         print(f"[WARN] {private_data} 不是 git 仓库，跳过备份")
         return False
-    git_ok(["pull", "--ff-only"], private_data)  # 失败（如无 remote）不阻断
     subprocess.run(
         ["git", "add", "--", f"{PRIVATE_DATA_REPO_SUBDIR}/*.json"],
         cwd=private_data,
@@ -304,8 +319,10 @@ def spawn_service(command: list[str], log_file: Path, cwd: Path) -> subprocess.P
 
 
 def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
-    """幂等启动：前后端都在跑就只开浏览器；缺哪个补哪个（含依赖安装与日志轮替）。"""
+    """幂等启动：前后端都在跑就只开浏览器；缺哪个补某个（含依赖安装与日志轮替）。"""
     paths.log_dir.mkdir(exist_ok=True)
+    if not pull_data_repo(paths.private_data_dir):
+        return 1
     backend_running = port_in_use(BACKEND_PORT)
     frontend_running = port_in_use(FRONTEND_PORT)
     if backend_running and frontend_running:
