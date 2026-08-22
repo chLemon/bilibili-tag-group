@@ -26,11 +26,19 @@ uv run python scripts/manage.py restart   # stop + start
 
 - `PROJECT_ROOT`：脚本所在目录的上一级，即项目根。
 - `LOG_DIR = PROJECT_ROOT / "logs"`：存放 `backend.pid` / `frontend.pid` / `backend.log` / `frontend.log` / `launcher.log`。
-- `BACKEND_PORT = 8000`、`FRONTEND_PORT = 5173`：固定端口，前端 vite 开发服务器与后端 uvicorn 各占一个。
+- `BACKEND_HOST` / `BACKEND_PORT` / `FRONTEND_PORT`：从 `app/config.settings` 读取（默认 `127.0.0.1` / `3333` / `2222`），`.env` 可覆盖（`BACKEND_HOST` / `BACKEND_PORT` / `FRONTEND_PORT`）。前端 vite 开发服务器与后端 uvicorn 各占一个端口，`frontend/vite.config.ts` 也读同一份 `.env`，改端口只动一处。
 - `PRIVATE_DATA_DIR = PROJECT_ROOT.parent / "private-data"`：数据仓库根，备份目标。
 - `PRIVATE_DATA_REPO_SUBDIR = "bilibili-tag-group"`：本项目在数据仓库下的子目录，备份时只 `git add` 这个子目录下的 `*.json`。
 - `IS_WINDOWS = os.name == "nt"`：分支用，决定进程探测/终止方式。
 - `LOG_ROTATE_THRESHOLD = 10MB`：单份日志超过该阈值则在下次启动前轮替为 `<name>.1`，只留一份备份。
+
+### 端口配置源
+
+端口统一在 `app/config.py` 的 `Settings` 里定义（`backend_host` / `backend_port` / `frontend_port`），`.env` 覆盖，参考 `.env.example`。三处共享：
+
+- `scripts/manage.py`：`from app.config import settings` 后赋给模块级常量 `BACKEND_HOST` / `BACKEND_PORT` / `FRONTEND_PORT`，启动 uvicorn 传 `--host` / `--port`，`wait_for_port` 等就绪，`webbrowser.open` 用 `FRONTEND_URL`。
+- `frontend/vite.config.ts`：用 `loadEnv(mode, path.resolve(__dirname, ".."), "")` 读项目根 `.env`，`server.port` 用 `FRONTEND_PORT`，`proxy."/api".target` 用 `BACKEND_PORT`。
+- 后端 uvicorn 本身由 `manage.py` 传参启动，不自行读配置。
 
 `LauncherPaths` 是一个 frozen dataclass，把启停涉及的所有路径打包，便于测试时注入临时目录；`DEFAULT_PATHS` 是生产用的默认实例。
 
@@ -57,12 +65,12 @@ uv run python scripts/manage.py restart   # stop + start
    - `.venv` 不存在则先 `uv sync --extra dev`；`uv` 不在 PATH 直接报错退出。
    - 跑 `uv run playwright install chromium`，走 `PLAYWRIGHT_DOWNLOAD_HOST=https://cdn.npmmirror.com/binaries/playwright` 镜像（国内默认 CDN 经常下不完，会导致每次启动都重下）。
    - 超阈值则轮替 `backend.log`。
-   - `spawn_service` 用 `start_new_session=True`（POSIX）或 `CREATE_NO_WINDOW` + `cmd` 包装（Windows）后台拉起 `uv run uvicorn app.main:app --host 127.0.0.1 --port 8000`，stdout/stderr 重定向到 `backend.log`，stdin 接 `DEVNULL`（setsid 后失去控制终端，继承的 tty 被读会 EIO，vite 的 readline 会因此崩溃）。
-   - 写 PID 文件，`wait_for_port(8000, 15)` 等就绪。
+   - `spawn_service` 用 `start_new_session=True`（POSIX）或 `CREATE_NO_WINDOW` + `cmd` 包装（Windows）后台拉起 `uv run uvicorn app.main:app --host <BACKEND_HOST> --port <BACKEND_PORT>`，stdout/stderr 重定向到 `backend.log`，stdin 接 `DEVNULL`（setsid 后失去控制终端，继承的 tty 被读会 EIO，vite 的 readline 会因此崩溃）。
+   - 写 PID 文件，`wait_for_port(BACKEND_PORT, 15)` 等就绪。
 4. 前端缺失时：
    - `node` 不在 PATH 报错退出。
    - `node_modules` 缺失则 `npm install`（Windows 用 `shell=True` 走 cmd）。
-   - 轮替 `frontend.log`，`spawn_service` 拉起 `npm run dev`，写 PID，`wait_for_port(5173, 30)` 等就绪。
+   - 轮替 `frontend.log`，`spawn_service` 拉起 `npm run dev`，写 PID，`wait_for_port(FRONTEND_PORT, 30)` 等就绪（vite 自身也读 `.env` 的 `FRONTEND_PORT` 决定监听端口，两边一致）。
 5. 前端就绪后打开浏览器，打印 Backend / Frontend / Logs 三个地址。
 
 ### 停止流程 `cmd_stop`

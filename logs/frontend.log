@@ -301,3 +301,27 @@ Re-optimizing dependencies because lockfile has changed
 [2m22:37:48[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/ImmediateTagsSection.tsx[22m
 [2m22:37:48[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/SyncPage.tsx, /src/pages/CreatorsPage.tsx, /src/pages/TagsPage.tsx, /src/pages/CreatorDetailPage.tsx, /src/components/BatchImportModal.tsx, /src/components/CreatorForm.tsx[22m
 [2m22:37:48[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/SyncPage.tsx[22m
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 109 ms
+
+  ➜  Local:   http://127.0.0.1:5173/
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 101 ms
+
+  ➜  Local:   http://127.0.0.1:5174/
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 151 ms
+
+  ➜  Local:   http://127.0.0.1:2222/

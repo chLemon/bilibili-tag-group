@@ -2449,3 +2449,40 @@ INFO:     127.0.0.1:9647 - "GET /api/sync/task/current HTTP/1.1" 200 OK
 INFO:     127.0.0.1:4061 - "GET /api/sync/task/current HTTP/1.1" 200 OK
 INFO:     127.0.0.1:6966 - "GET /api/sync/task/current HTTP/1.1" 200 OK
 INFO:     127.0.0.1:13209 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     Started server process [16596]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:50920 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50922 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50924 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16596]
+INFO:     Started server process [16698]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8010 (Press CTRL+C to quit)
+INFO:     127.0.0.1:50967 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50969 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50971 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50980 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50984 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16698]
+INFO:     Started server process [18111]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:3333 (Press CTRL+C to quit)
+INFO:     127.0.0.1:51576 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51578 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51580 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51586 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51590 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [18111]

@@ -18,6 +18,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 常用命令
 
+## 配置文件
+
+- 项目根目录 `.env`（不入 git，参考 `.env.example`）统一覆盖 `app/config.py` 的 `Settings`：端口（`BACKEND_HOST` / `BACKEND_PORT` / `FRONTEND_PORT`）、同步间隔（`SYNC_INTERVAL_MINUTES`）、B 站 Cookie（`BILIBILI_COOKIE`）。
+- 前后端与 `scripts/manage.py` 共用同一份端口配置：`manage.py` 通过 `from app.config import settings` 读取，`frontend/vite.config.ts` 用 `loadEnv` 读项目根 `.env`。改端口只动 `.env` 一处，无 `.env` 时走默认值 2222（前端）/ 3333（后端）。
+
 ## 一键启停
 
 - 启动前后端并打开主页：`uv run python scripts/manage.py start`（幂等，已运行则只开浏览器）
@@ -45,7 +50,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 直接启动后端 API：`uv run uvicorn app.main:app --reload`（首次启动会自动创建数据目录（默认 `../private-data/bilibili-tag-group/`）与 `logs/`）
 - 再启动前端开发服务器：`cd frontend && npm run dev`
-- 前端开发环境依赖 `frontend/vite.config.ts` 的 `/api` 代理到 `http://localhost:8000`，后端未启动时前端请求会失败
+- 前端开发环境依赖 `frontend/vite.config.ts` 的 `/api` 代理到 `http://localhost:3333`，后端未启动时前端请求会失败
 
 ## 架构概览
 
@@ -55,7 +60,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 数据模型核心是 `Creator`、`Tag`、`CreatorTag`、`Video`、`VideoStatus`、`SyncTask`。标签挂在 UP 主上，不挂在视频上；标签页展示的是”属于该标签下 UP 主的未看视频”。
 - 抓取链路是 `app/fetcher/playwright_fetcher.py` → `app/services/sync_service.py`：抓取 B 站公开视频、写入本地 `Video`，并为新视频创建默认 `watched=False` 的 `VideoStatus`；全量同步结果写入 `SyncTask`。
 - 前端是 Vite + React + TypeScript。根路由在 `frontend/src/App.tsx`，只有三个页面：`/tags`、`/creators`、`/sync`，访问 `/` 会直接跳转到 `/tags`。
-- 前端 API 封装在 `frontend/src/api/client.ts`，直接复用后端 `snake_case` 字段；开发环境下由 `frontend/vite.config.ts` 将 `/api` 代理到 `http://localhost:8000`。
+- 前端 API 封装在 `frontend/src/api/client.ts`，直接复用后端 `snake_case` 字段；开发环境下由 `frontend/vite.config.ts` 将 `/api` 代理到 `http://localhost:3333`。
 
 ## 项目约束与注意事项
 

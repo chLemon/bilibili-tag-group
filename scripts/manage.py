@@ -19,12 +19,20 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+# uv run python scripts/manage.py 时 Python 只把 scripts/ 加入 sys.path，
+# 项目根不在内，无法 import app.*；这里手动补上
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from app.config import settings  # noqa: E402
+
 LOG_DIR = PROJECT_ROOT / "logs"
 BACKEND_PID_FILE = LOG_DIR / "backend.pid"
 FRONTEND_PID_FILE = LOG_DIR / "frontend.pid"
-BACKEND_PORT = 8000
-FRONTEND_PORT = 5173
+BACKEND_HOST = settings.backend_host
+BACKEND_PORT = settings.backend_port
+FRONTEND_PORT = settings.frontend_port
 FRONTEND_URL = f"http://localhost:{FRONTEND_PORT}"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 PRIVATE_DATA_DIR = PROJECT_ROOT.parent / "private-data"
@@ -309,7 +317,7 @@ def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
                 "uvicorn",
                 "app.main:app",
                 "--host",
-                "127.0.0.1",
+                BACKEND_HOST,
                 "--port",
                 str(BACKEND_PORT),
             ],

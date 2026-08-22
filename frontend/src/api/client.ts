@@ -2,7 +2,7 @@
  * API 客户端：封装对后端 REST 接口的请求。
  *
  * 约定：
- * - 所有路径以 /api 开头，开发环境由 vite.config.ts 代理到 http://localhost:8000
+ * - 所有路径以 /api 开头，开发环境由 vite.config.ts 代理到 http://localhost:3333
  * - 请求/响应字段沿用后端 snake_case 命名
  * - 非 2xx 响应抛出 Error("HTTP {status}: {body}")，调用方负责错误处理
  */

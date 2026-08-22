@@ -38,7 +38,7 @@ cd frontend && npm install
 cd frontend && npm run dev
 ```
 
-开发环境下前端 `/api` 请求由 Vite 代理到 `http://localhost:8000`，需先启动后端。
+开发环境下前端 `/api` 请求由 Vite 代理到 `http://localhost:3333`，需先启动后端。
 
 ### 一键启停
 

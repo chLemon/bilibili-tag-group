@@ -6,7 +6,7 @@ Vite + React + TypeScript 单页应用，三个页面：标签视图、UP 主管
 
 ```bash
 npm install        # 安装依赖
-npm run dev        # 开发服务器（/api 代理到 http://localhost:8000，需先启动后端）
+npm run dev        # 开发服务器（/api 代理到 http://localhost:3333，需先启动后端）
 npm test           # vitest 全部测试
 npx vitest run tests/TagsPage.test.tsx   # 单个测试文件
 npm run build      # 类型检查 + 构建（tsc && vite build）

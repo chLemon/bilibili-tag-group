@@ -1,6 +1,6 @@
 # API 接口文档
 
-FastAPI 后端全部接口。基础路径 `/api`，开发环境由前端 Vite 代理到 `http://localhost:8000`。
+FastAPI 后端全部接口。基础路径 `/api`，开发环境由前端 Vite 代理到 `http://localhost:3333`。
 
 通用约定：
 
