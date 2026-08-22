@@ -2,7 +2,7 @@
 
 日期：2026-07-22（建议补充于同日，**每条建议均待用户确认后才可动代码**）
 
-`app/fetcher/` 与 `sync_creator` 的抓取逻辑是校准过的基准行为（见 `docs/superpowers/specs/2026-07-22-refactor-design.md` D4），本次重构不改动。以下是阅读代码时发现的疑点，每条附处理建议，后续逐一确认。基准行为的完整描述见 `docs/fetcher.md`。
+`app/fetcher/` 与 `sync_creator` 的抓取逻辑是校准过的基准行为，不擅自改动。以下是阅读代码时发现的疑点，每条附处理建议，后续逐一确认。基准行为的完整描述见 `docs/fetcher.md`。
 
 ## 1. `_any_known` 早停逻辑未生效
 

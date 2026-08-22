@@ -2,7 +2,7 @@
 
 日期：2026-07-22
 
-`app/fetcher/` 与 `SyncService.sync_creator` 的抓取逻辑是**用户校准过的基准行为**（设计决策 D4，见 `docs/superpowers/specs/2026-07-22-refactor-design.md`）。本文档记录这套行为的完整事实，作为今后任何改动的对照基准。**改动前必须先阅读本文档与 `docs/fetcher-review.md`，并与用户确认。**
+`app/fetcher/` 与 `SyncService.sync_creator` 的抓取逻辑是**用户校准过的基准行为**。本文档记录这套行为的完整事实，作为今后任何改动的对照基准。**改动前必须先阅读本文档与 `docs/fetcher-review.md`，并与用户确认。**
 
 ## 为什么用 Playwright DOM 提取
 
