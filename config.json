@@ -1,0 +1,6 @@
+{
+  "backend_host": "127.0.0.1",
+  "backend_port": 3333,
+  "frontend_port": 2222,
+  "sync_interval_minutes": 60
+}

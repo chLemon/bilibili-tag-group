@@ -13,7 +13,6 @@ B 站的 WBI 签名接口有风控，直接调 API 容易被拦。抓取层改�
 - 启动参数（`_BROWSER_ARGS`）：`--disable-blink-features=AutomationControlled`、`--disable-features=IsolateOrigins,site-per-process`、`--no-sandbox`、`--disable-setuid-sandbox`
 - 上下文：viewport 1920×1080、locale `zh-CN`、时区 `Asia/Shanghai`
 - `add_init_script` 注入：`navigator.webdriver` 置空、伪造 `plugins`/`languages`、补 `window.chrome`
-- 若配置了 `BILIBILI_COOKIE`，按 `;` 拆分注入 `.bilibili.com` 域（提高反爬成功率）
 - 浏览器实例复用：存在 fetcher 实例上，断开时自动重建；`close_browser()` 在应用关闭时释放
 
 ## 抓取流程（fetch_new_videos）

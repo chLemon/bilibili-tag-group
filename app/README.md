@@ -7,7 +7,7 @@
 ```
 app/
 ├── main.py                  # FastAPI 应用入口，lifespan 管理调度器
-├── config.py                # 配置（数据目录、同步间隔、Cookie）
+├── config.py                # 配置：读项目根 config.json，暴露 settings
 ├── dependencies.py          # FastAPI 依赖注入（get_store / get_fetcher / get_sync_service）
 ├── logging_config.py        # 日志配置：输出到 stderr，由 manage.py 重定向到 logs/backend.log
 ├── scheduler.py             # asyncio 定时同步调度器
@@ -106,13 +106,16 @@ SyncTask（scope="all" 的全量同步记录，含进度追踪与探活心跳）
 
 ## 配置
 
-通过 `.env` 文件或环境变量配置（参见 `config.py`）：
+根目录 `config.json` 是前后端共享的唯一配置源（入 git）：
 
-| 变量 | 默认值 | 说明 |
+| 字段 | 默认值 | 说明 |
 |------|--------|------|
-| `DATA_DIR` | `../private-data/bilibili-tag-group/` | JSON 数据文件目录 |
-| `SYNC_INTERVAL_MINUTES` | `60` | 定时同步间隔（分钟） |
-| `BILIBILI_COOKIE` | （空） | B 站登录 Cookie，提高反爬成功率 |
+| `backend_host` | `127.0.0.1` | 后端监听地址 |
+| `backend_port` | `3333` | 后端端口 |
+| `frontend_port` | `2222` | 前端开发服务器端口 |
+| `sync_interval_minutes` | `60` | 定时同步间隔（分钟） |
+
+`data_dir` 默认 `../private-data/bilibili-tag-group/`，在 `app/config.py` 里推导，不放 `config.json`。`config.json` 缺失或非法时用代码默认值兜底。
 
 ## 启动
 

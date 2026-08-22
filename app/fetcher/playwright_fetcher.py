@@ -78,8 +78,7 @@ class PlaywrightBilibiliFetcher:
     浏览器实例存储在 fetcher 实例上，通过 close_browser() 释放资源。
     """
 
-    def __init__(self, cookie: str | None = None, headless: bool = True) -> None:
-        self._cookie = cookie
+    def __init__(self, headless: bool = True) -> None:
         self._headless = headless
         self._playwright = None
         self._browser = None
@@ -119,7 +118,7 @@ class PlaywrightBilibiliFetcher:
     # ── 浏览器上下文 ────────────────────────────────────────────
 
     async def _create_context(self) -> BrowserContext:
-        """创建带反检测配置和 Cookie 注入的浏览器上下文。"""
+        """创建带反检测配置的浏览器上下文。"""
         browser = await self._get_browser()
         context = await browser.new_context(
             viewport={"width": 1920, "height": 1080},
@@ -132,22 +131,6 @@ class PlaywrightBilibiliFetcher:
             Object.defineProperty(navigator, 'languages', { get: () => ['zh-CN', 'zh', 'en'] });
             window.chrome = { runtime: {} };
         """)
-        if self._cookie:
-            cookies = []
-            for part in self._cookie.split(";"):
-                part = part.strip()
-                if "=" in part:
-                    name, _, value = part.partition("=")
-                    cookies.append(
-                        {
-                            "name": name.strip(),
-                            "value": value.strip(),
-                            "domain": ".bilibili.com",
-                            "path": "/",
-                        }
-                    )
-            if cookies:
-                await context.add_cookies(cookies)
         return context
 
     # ── 缓存读写 ────────────────────────────────────────────────

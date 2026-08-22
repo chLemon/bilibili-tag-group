@@ -140,13 +140,16 @@ cd frontend && npm test
 
 ## 配置
 
-通过 `.env` 或环境变量（见 `app/config.py`）：
+根目录 `config.json` 是前后端共享的唯一配置源（入 git，改端口只动这一处）：
 
-| 变量 | 默认值 | 说明 |
+| 字段 | 默认值 | 说明 |
 |------|--------|------|
-| `DATA_DIR` | `../private-data/bilibili-tag-group/` | JSON 数据目录 |
-| `SYNC_INTERVAL_MINUTES` | `60` | 定时同步间隔（分钟） |
-| `BILIBILI_COOKIE` | （空） | B 站登录 Cookie，提高反爬成功率 |
+| `backend_host` | `127.0.0.1` | 后端监听地址 |
+| `backend_port` | `3333` | 后端端口 |
+| `frontend_port` | `2222` | 前端开发服务器端口 |
+| `sync_interval_minutes` | `60` | 定时同步间隔（分钟） |
+
+`data_dir` 是 Python 专属路径，默认 `../private-data/bilibili-tag-group/`，不放 `config.json`，在 `app/config.py` 里推导。`config.json` 缺失或非法时用代码默认值兜底。
 
 ## 目录结构
 

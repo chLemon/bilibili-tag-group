@@ -20,8 +20,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 配置文件
 
-- 项目根目录 `.env`（不入 git，参考 `.env.example`）统一覆盖 `app/config.py` 的 `Settings`：端口（`BACKEND_HOST` / `BACKEND_PORT` / `FRONTEND_PORT`）、同步间隔（`SYNC_INTERVAL_MINUTES`）、B 站 Cookie（`BILIBILI_COOKIE`）。
-- 前后端与 `scripts/manage.py` 共用同一份端口配置：`manage.py` 通过 `from app.config import settings` 读取，`frontend/vite.config.ts` 用 `loadEnv` 读项目根 `.env`。改端口只动 `.env` 一处，无 `.env` 时走默认值 2222（前端）/ 3333（后端）。
+- 项目根目录 `config.json`（入 git）是前后端共享的唯一配置源，字段：`backend_host` / `backend_port` / `frontend_port` / `sync_interval_minutes`。改端口只动这一处。
+- `app/config.py` 读 `config.json` 并暴露 `settings`（`data_dir` 是 Python 专属路径，不放 JSON，留在 `config.py` 里默认推导）。`scripts/manage.py` 通过 `from app.config import settings` 用。
+- `frontend/vite.config.ts` 直接 `JSON.parse(fs.readFileSync(...))` 读项目根 `config.json`，与后端共用同一份端口。
+- `config.json` 缺失或非法时，`app/config.py` 用代码里的默认值兜底（3333/2222/60），不崩。
 
 ## 一键启停
 

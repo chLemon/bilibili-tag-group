@@ -325,3 +325,19 @@ Re-optimizing dependencies because lockfile has changed
   VITE v5.4.21  ready in 151 ms
 
   ➜  Local:   http://127.0.0.1:2222/
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 154 ms
+
+  ➜  Local:   http://127.0.0.1:2222/
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 129 ms
+
+  ➜  Local:   http://127.0.0.1:5174/
