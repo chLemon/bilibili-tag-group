@@ -7,6 +7,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 本项目的文档、说明、代码注释尽量使用中文。
 - 命令、配置键、库名、协议名等技术标识保持原文。
 
+## docs 目录
+
+`docs/` 存放项目文档，分为两部分：
+
+- 根目录下的散放 md：领域与行为基准文档，包括 `requirements.md`（需求）、`api.md`（HTTP 接口）、`fetcher.md`（抓取层行为基准）、`fetcher-review.md`（抓取层疑点与待确认建议）、`logging.md`（日志规范）。
+- `docs/dev/`：代码层面的说明，包括模块逻辑、设计取舍、实现思路。目前有 `scripts/README.md` 说明根目录 `scripts/` 下启停脚本的功能与设计。
+
+**代码修改必须同步更新对应文档**：改动涉及接口、数据模型、抓取行为、启停流程、日志规范等已文档化的内容时，要一并修订 `docs/` 下相关文件，保持文档与代码一致。新增重要模块或子目录时，在 `docs/dev/` 下补充对应说明。
+
 ## 常用命令
 
 ## 一键启停
