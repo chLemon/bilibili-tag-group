@@ -1,5 +1,2 @@
-===== 2026-08-22 23:47:33 manage.py stop =====
-停止端口 3333 上的进程 (PID 30355)
-停止端口 2222 上的进程 (PID 30400)
-服务已停止
-[WARN] /Users/chen/Documents/chen/ai/personal/private-data 不是 git 仓库，跳过备份
+===== 2026-08-23 00:42:55 manage.py start =====
+[ERROR] /Users/chen/Documents/chen/ai/personal/private-data 不是 git 仓库，无法拉取

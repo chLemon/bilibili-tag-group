@@ -2547,3 +2547,62 @@ INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
 INFO:     Finished server process [30284]
+INFO:     Started server process [35098]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:3333 (Press CTRL+C to quit)
+INFO:     127.0.0.1:62918 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62920 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62922 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62935 - "GET /api/tags/untagged/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62939 - "GET /api/tags/2/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62944 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62953 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62954 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62961 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62962 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62982 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62981 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62983 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62986 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62991 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62987 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62999 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62995 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63006 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63007 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63011 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63015 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63019 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [35098]
+INFO:     Started server process [35427]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:3333 (Press CTRL+C to quit)
+INFO:     127.0.0.1:63058 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63060 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63062 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63079 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63081 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63083 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63097 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63099 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63101 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [35427]
+INFO:     Started server process [49451]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:3333 (Press CTRL+C to quit)
+INFO:     127.0.0.1:64704 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64706 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64708 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [49451]
