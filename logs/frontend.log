@@ -295,3 +295,9 @@ Re-optimizing dependencies because lockfile has changed
   [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m5036[22m[2m[0m ms[22m
 
   [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5173[22m/[39m
+[2m22:37:48[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/ImmediateTagsSection.tsx[22m
+[2m22:37:48[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CreatorsPage.tsx[22m
+[2m22:37:48[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CreatorsPage.tsx[22m
+[2m22:37:48[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/ImmediateTagsSection.tsx[22m
+[2m22:37:48[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/SyncPage.tsx, /src/pages/CreatorsPage.tsx, /src/pages/TagsPage.tsx, /src/pages/CreatorDetailPage.tsx, /src/components/BatchImportModal.tsx, /src/components/CreatorForm.tsx[22m
+[2m22:37:48[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/SyncPage.tsx[22m

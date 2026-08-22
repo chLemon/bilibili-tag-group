@@ -2069,3 +2069,383 @@ Call log:
   - waiting for locator(".nickname").first
 
 INFO:     127.0.0.1:4348 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F1525355 HTTP/1.1" 502 Bad Gateway
+INFO:     127.0.0.1:4846 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F1525355 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6728 - "POST /api/tags HTTP/1.1" 201 Created
+INFO:     127.0.0.1:11345 - "POST /api/creators HTTP/1.1" 201 Created
+INFO:     127.0.0.1:11855 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11647 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2372 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2373 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2376 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2374 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2375 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11335 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11336 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11338 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10117 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5409 - "POST /api/sync/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9001 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14783 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13442 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11782 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3508 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2027 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7385 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2790 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13194 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4351 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9562 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:56:45 [WARNING] app.services.sync_service: 获取 UP 主信息失败，跳过信息更新 uid=1525355
+Traceback (most recent call last):
+  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 249, in fetch_creator_info
+    name = await name_el.text_content()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\async_api\_generated.py", line 20027, in text_content
+    await self._impl_obj.text_content(timeout=to_milliseconds(timeout))
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_locator.py", line 678, in text_content
+    return await self._frame.text_content(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_frame.py", line 732, in text_content
+    return await self._channel.send(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 563, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Locator.text_content: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator(".nickname").first
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\chen\bilibili-tag-group\app\services\sync_service.py", line 66, in sync_creator
+    info = await self._fetcher.fetch_creator_info(uid)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\chen\bilibili-tag-group\app\fetcher\playwright_fetcher.py", line 293, in fetch_creator_info
+    raise FetchError(f"获取 UP 主信息失败，uid={uid}: {exc}") from exc
+app.fetcher.playwright_fetcher.FetchError: 获取 UP 主信息失败，uid=1525355: Locator.text_content: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator(".nickname").first
+
+2026-08-09 21:56:45 [INFO] app.fetcher.playwright_fetcher: 开始抓取 1525355 的视频
+INFO:     127.0.0.1:7706 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12415 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1333 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10609 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5911 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5628 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:57:02 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+INFO:     127.0.0.1:7020 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5252 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:57:09 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+INFO:     127.0.0.1:4168 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3912 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:57:15 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+INFO:     127.0.0.1:9169 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8981 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8953 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:57:23 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+INFO:     127.0.0.1:1031 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10654 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:57:31 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+INFO:     127.0.0.1:6243 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12229 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11828 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:57:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+INFO:     127.0.0.1:8108 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6475 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:57:45 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+INFO:     127.0.0.1:12346 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10510 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:57:52 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+INFO:     127.0.0.1:6701 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8787 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7601 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:57:59 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+INFO:     127.0.0.1:1857 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10572 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:58:06 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+INFO:     127.0.0.1:5425 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5513 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:58:12 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+INFO:     127.0.0.1:5372 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2057 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2654 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:58:20 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+INFO:     127.0.0.1:13439 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1113 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:58:27 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+INFO:     127.0.0.1:5799 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8661 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:58:34 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+INFO:     127.0.0.1:14867 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14569 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12444 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:58:43 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+INFO:     127.0.0.1:9252 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2047 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14872 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:58:50 [INFO] app.fetcher.playwright_fetcher: 抓取第 16 页的数据
+INFO:     127.0.0.1:13683 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2987 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:58:56 [INFO] app.fetcher.playwright_fetcher: 抓取第 17 页的数据
+INFO:     127.0.0.1:11105 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8466 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 21:59:04 [INFO] app.fetcher.playwright_fetcher: 抓取第 18 页的数据
+INFO:     127.0.0.1:3292 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9170 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7948 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9475 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13625 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12392 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5610 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7338 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7339 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9965 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9967 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1178 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1177 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12880 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12882 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4715 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4714 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3856 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3857 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10640 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10639 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12541 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6866 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9941 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14807 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7358 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1424 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9608 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9612 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9610 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9614 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9618 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9616 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14555 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14558 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14559 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10854 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2183 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2182 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14057 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2881 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12467 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1158 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7991 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8501 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7462 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14492 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10249 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4996 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10251 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3141 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3143 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9911 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12136 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12138 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12636 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5168 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1273 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5473 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7853 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14449 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12695 - "GET /api/creators/resolve-name?profile_url=https%3A%2F%2Fspace.bilibili.com%2F383454644 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9106 - "POST /api/creators HTTP/1.1" 201 Created
+INFO:     127.0.0.1:3747 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1256 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8857 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8858 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8859 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8861 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8860 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1320 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5791 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5793 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8186 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3506 - "POST /api/sync/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3846 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 22:29:06 [INFO] app.fetcher.playwright_fetcher: 开始抓取 1525355 的视频
+INFO:     127.0.0.1:8024 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3771 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3912 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3910 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12178 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10508 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6133 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2510 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2515 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2513 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2514 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14247 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5649 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5658 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5667 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11296 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3098 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6697 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1601 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9766 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12331 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11683 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2638 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1502 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1469 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13733 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3390 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12322 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5614 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3130 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5605 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3130 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5186 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7742 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5364 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-09 22:30:19 [INFO] app.fetcher.playwright_fetcher: 开始抓取 383454644 的视频
+INFO:     127.0.0.1:13938 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7300 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10092 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3779 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5498 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9941 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7801 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3941 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7198 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1213 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5327 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5671 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9653 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12246 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11923 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14970 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9358 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1038 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3994 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3850 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1658 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9483 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4248 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4249 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4247 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4250 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4251 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4253 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1884 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1883 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1882 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1885 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9818 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6616 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5959 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7694 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11706 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7303 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4300 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5706 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5705 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5707 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5708 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5709 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3512 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5943 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5941 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7146 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13953 - "GET /api/tags HTTP/1.1" 200 OK
+2026-08-09 22:44:17 [INFO] app.fetcher.playwright_fetcher: 开始抓取 1525355 的视频
+2026-08-09 22:45:03 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-08-09 22:45:10 [INFO] app.fetcher.playwright_fetcher: 抓取第 2 页的数据
+2026-08-09 22:45:18 [INFO] app.fetcher.playwright_fetcher: 抓取第 3 页的数据
+2026-08-09 22:45:26 [INFO] app.fetcher.playwright_fetcher: 抓取第 4 页的数据
+2026-08-09 22:45:33 [INFO] app.fetcher.playwright_fetcher: 抓取第 5 页的数据
+2026-08-09 22:45:39 [INFO] app.fetcher.playwright_fetcher: 抓取第 6 页的数据
+2026-08-09 22:45:48 [INFO] app.fetcher.playwright_fetcher: 抓取第 7 页的数据
+2026-08-09 22:45:55 [INFO] app.fetcher.playwright_fetcher: 抓取第 8 页的数据
+2026-08-09 22:46:03 [INFO] app.fetcher.playwright_fetcher: 抓取第 9 页的数据
+2026-08-09 22:46:10 [INFO] app.fetcher.playwright_fetcher: 抓取第 10 页的数据
+2026-08-09 22:46:17 [INFO] app.fetcher.playwright_fetcher: 抓取第 11 页的数据
+2026-08-09 22:46:26 [INFO] app.fetcher.playwright_fetcher: 抓取第 12 页的数据
+2026-08-09 22:46:32 [INFO] app.fetcher.playwright_fetcher: 抓取第 13 页的数据
+2026-08-09 22:46:40 [INFO] app.fetcher.playwright_fetcher: 抓取第 14 页的数据
+2026-08-09 22:46:47 [INFO] app.fetcher.playwright_fetcher: 抓取第 15 页的数据
+2026-08-09 22:46:54 [INFO] app.fetcher.playwright_fetcher: 抓取第 16 页的数据
+2026-08-09 22:47:01 [INFO] app.fetcher.playwright_fetcher: 抓取第 17 页的数据
+2026-08-09 22:47:07 [INFO] app.fetcher.playwright_fetcher: 抓取第 18 页的数据
+INFO:     127.0.0.1:5846 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8348 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5844 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5847 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8350 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12211 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14256 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14259 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4032 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4031 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13431 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13430 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1051 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1053 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6368 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6370 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14565 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14564 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1388 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1389 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1390 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1391 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9847 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2879 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9953 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1603 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9461 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3428 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13283 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8518 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1201 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12102 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12103 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14419 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2420 - "GET /api/creators HTTP/1.1" 200 OK
+2026-08-09 22:47:41 [INFO] app.fetcher.playwright_fetcher: 开始抓取 383454644 的视频
+INFO:     127.0.0.1:1868 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3363 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3361 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9919 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9916 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9920 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9921 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9922 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11290 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9759 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9757 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9755 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9758 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6825 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3144 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6357 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2907 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7586 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12977 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11613 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9145 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6825 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1986 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13847 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11661 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3740 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9491 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4076 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7837 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13680 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10534 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5286 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1152 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9647 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4061 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6966 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13209 - "GET /api/sync/latest HTTP/1.1" 200 OK
