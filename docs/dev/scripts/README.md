@@ -1,20 +1,18 @@
 # scripts 目录说明
 
-项目根目录下的 `scripts/` 负责前后端服务的一键启停与数据备份，所有跨平台逻辑集中在 `manage.py`，`.sh` / `.bat` 只是转发入口。
+`scripts/` 负责前后端一键启停与数据备份，跨平台逻辑集中在 `manage.py`，`.sh` / `.bat` 只是转发入口。
 
 ## 文件清单
 
 | 文件 | 平台 | 作用 |
 | --- | --- | --- |
-| `manage.py` | 全平台 | 启停核心逻辑：拉起前后端、写 PID、轮替日志、停止时备份数据仓库 |
-| `start.sh` / `start.bat` | POSIX / Windows | `manage.py start` 的入口，双击即可运行 |
-| `stop.sh` / `stop.bat` | POSIX / Windows | `manage.py stop` 的入口 |
-| `restart.sh` / `restart.bat` | POSIX / Windows | `manage.py restart` 的入口（= stop + start） |
-| `ensure-uv.bat` | Windows only | 启停前检测 `uv` 是否可用，缺失则通过 `pip --user` 装一份并补进当前会话 PATH |
+| `manage.py` | 全平台 | 启停核心：端口探测判断在跑、按端口查 PID 终止、轮替日志、停止时备份数据仓库 |
+| `start.sh` / `start.bat` | POSIX / Windows | `manage.py start` 入口，双击可运行 |
+| `stop.sh` / `stop.bat` | POSIX / Windows | `manage.py stop` 入口 |
+| `restart.sh` / `restart.bat` | POSIX / Windows | `manage.py restart` 入口（= stop + start） |
+| `ensure-uv.bat` | Windows only | 启停前确保 `uv` 可用，缺失则 `pip --user` 装并补进会话 PATH |
 
 ## manage.py
-
-启停的唯一真实实现，命令行用法：
 
 ```
 uv run python scripts/manage.py start     # 幂等启动：已在运行则只开浏览器
@@ -22,112 +20,85 @@ uv run python scripts/manage.py stop      # 停止服务 + 备份 ../private-dat
 uv run python scripts/manage.py restart   # stop + start
 ```
 
-### 关键常量与路径
+### 关键常量
 
-- `PROJECT_ROOT`：脚本所在目录的上一级，即项目根。
-- `LOG_DIR = PROJECT_ROOT / "logs"`：存放 `backend.log` / `frontend.log` / `launcher.log`（不再写 PID 文件）。
-- `BACKEND_HOST` / `BACKEND_PORT` / `FRONTEND_PORT`：从 `app/config.settings` 读取（默认 `127.0.0.1` / `3333` / `2222`），值来自项目根 `config.json`。前端 vite 开发服务器与后端 uvicorn 各占一个端口，`frontend/vite.config.ts` 也读同一份 `config.json`，改端口只动一处。
+- `PROJECT_ROOT`：脚本上一级，即项目根。
+- `LOG_DIR = PROJECT_ROOT / "logs"`：`backend.log` / `frontend.log` / `launcher.log`。
+- `BACKEND_HOST` / `BACKEND_PORT` / `FRONTEND_PORT`：取自 `app/config.settings`，值来自项目根 `config.json`（默认 `127.0.0.1` / `3333` / `2222`）。`frontend/vite.config.ts` 也读同一份，改端口只动一处。
 - `PRIVATE_DATA_DIR = PROJECT_ROOT.parent / "private-data"`：数据仓库根，备份目标。
-- `PRIVATE_DATA_REPO_SUBDIR = "bilibili-tag-group"`：本项目在数据仓库下的子目录，备份时只 `git add` 这个子目录下的 `*.json`。
+- `PRIVATE_DATA_REPO_SUBDIR = "bilibili-tag-group"`：备份时只 `git add` 该子目录下的 `*.json`。
 - `IS_WINDOWS = os.name == "nt"`：分支用，决定进程探测/终止方式。
-- `LOG_ROTATE_THRESHOLD = 10MB`：单份日志超过该阈值则在下次启动前轮替为 `<name>.1`，只留一份备份。
+- `LOG_ROTATE_THRESHOLD = 10MB`：单份日志超阈值则在下次启动前轮替为 `<name>.1`，只留一份。
 
-### 端口配置源
+### 进程探测与终止（纯端口方案）
 
-端口统一在项目根 `config.json` 里定义（`backend_host` / `backend_port` / `frontend_port` / `sync_interval_minutes`），入 git，前后端共享。三处读取：
-
-- `app/config.py`：`_load_settings()` 读 `config.json` 覆盖默认值，文件缺失或非法用默认值兜底（3333/2222/60）；`settings` 暴露给 `scripts/manage.py` 与 `app/main.py`。
-- `scripts/manage.py`：`from app.config import settings` 后赋给模块级常量 `BACKEND_HOST` / `BACKEND_PORT` / `FRONTEND_PORT`，启动 uvicorn 传 `--host` / `--port`，`wait_for_port` 等就绪，`webbrowser.open` 用 `FRONTEND_URL`。
-- `frontend/vite.config.ts`：`JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", "config.json")))` 直接读 JSON，`server.port` 用 `frontend_port`，`proxy."/api".target` 用 `backend_port`。
-
-`LauncherPaths` 是一个 frozen dataclass，把启停涉及的所有路径打包，便于测试时注入临时目录；`DEFAULT_PATHS` 是生产用的默认实例。
-
-### 进程探测与终止
-
-纯端口方案，不写 PID 文件：
-
-- `port_in_use(port)`：单次 `socket.create_connection(("127.0.0.1", port), timeout=0.5)`，连得上 = 有服务在跑。用于 `cmd_start` 判断"已在运行"。
-- `find_pid_on_port(port)`：查占指定端口的 PID。POSIX 调 `lsof -ti :<port> -sTCP:LISTEN`（`-t` 只输出 PID，`-sTCP:LISTEN` 只匹配监听状态，多行取第一个）；Windows 解析 `netstat -ano` 输出，按字节匹配 `:<port>` 与 `LISTENING`，取行末 PID（按字节匹配避开 `PYTHONUTF8=1` 编码问题）。工具缺失或端口未被占用返回 `None`。
-- `_pid_alive(pid)`：仅 `kill_process_tree` 内部用，轮询等进程退出。POSIX `os.kill(pid, 0)`（`ProcessLookupError` = 已死，`PermissionError` = 存活）；Windows 沿用 `tasklist` CSV 按字节比对。
-- `kill_process_tree(pid)`：
-  - POSIX 用 `os.killpg(pid, SIGTERM)`（子进程用 `start_new_session=True` 启动，PID 即 PGID），失败回退到单进程 `SIGTERM`；最多等 5 秒，超时 `SIGKILL` 强杀，最后 `waitpid` 收尸。
-  - Windows 用 `taskkill /T /F /PID <pid>`，`/T` 连同子进程一起终止。
-- `stop_services_by_port(ports)`：循环 `find_pid_on_port` + `kill_process_tree`，kill 前打印"停止端口 X 上的进程 (PID Y)"供用户确认。只要有进程被终止就返回 `True`。
-
-### 端口就绪探测
-
-`wait_for_port(port, timeout)` 轮询 `socket.create_connection(("127.0.0.1", port), timeout=1)`，每 0.5 秒一次直到超时。后端给 15 秒、前端给 30 秒（前端要等 vite 起来 + 首次 npm install 可能较慢）。探测成功才打开浏览器，避免打开太早看到 `ECONNREFUSED`。
+- `port_in_use(port)`：`socket.create_connection(("127.0.0.1", port), timeout=0.5)`，连得上 = 在跑。`cmd_start` 判断用。
+- `find_pid_on_port(port)`：POSIX `lsof -ti :<port> -sTCP:LISTEN`；Windows 解析 `netstat -ano` 按 `:<port>` + `LISTENING` 取行末 PID（按字节匹配避开 `PYTHONUTF8=1` 编码问题）。工具缺失或端口未占返回 `None`。
+- `_pid_alive(pid)`：`kill_process_tree` 内部轮询用。POSIX `os.kill(pid, 0)`；Windows `tasklist` CSV 按字节比对。
+- `kill_process_tree(pid)`：POSIX `os.killpg(pid, SIGTERM)`（子进程 `start_new_session=True` 启动，PID 即 PGID），失败回退单进程；最多等 5 秒，超时 `SIGKILL` 强杀，最后 `waitpid` 收尸。Windows `taskkill /T /F /PID <pid>`。
+- `stop_services_by_port(ports)`：循环 `find_pid_on_port` + `kill_process_tree`，kill 前打印"停止端口 X 上的进程 (PID Y)"。
+- `wait_for_port(port, timeout)`：轮询端口就绪，后端 15s、前端 30s，就绪才开浏览器。
 
 ### 启动流程 `cmd_start`
 
-1. 确保 `logs/` 存在；用 `port_in_use` 探测前后端端口。
-2. 如果两个端口都被占：直接 `webbrowser.open(FRONTEND_URL)`，不重启。
-3. 后端端口未被占时：
-   - `.venv` 不存在则先 `uv sync --extra dev`；`uv` 不在 PATH 直接报错退出。
-   - 跑 `uv run playwright install chromium`，走 `PLAYWRIGHT_DOWNLOAD_HOST=https://cdn.npmmirror.com/binaries/playwright` 镜像（国内默认 CDN 经常下不完，会导致每次启动都重下）。
-   - 超阈值则轮替 `backend.log`。
-   - `spawn_service` 用 `start_new_session=True`（POSIX）或 `CREATE_NO_WINDOW` + `cmd` 包装（Windows）后台拉起 `uv run uvicorn app.main:app --host <BACKEND_HOST> --port <BACKEND_PORT>`，stdout/stderr 重定向到 `backend.log`，stdin 接 `DEVNULL`（setsid 后失去控制终端，继承的 tty 被读会 EIO，vite 的 readline 会因此崩溃）。不再写 PID 文件。
-   - `wait_for_port(BACKEND_PORT, 15)` 等就绪。
-4. 前端端口未被占时：
-   - `node` 不在 PATH 报错退出。
-   - `node_modules` 缺失则 `npm install`（Windows 用 `shell=True` 走 cmd）。
-   - 轮替 `frontend.log`，`spawn_service` 拉起 `npm run dev`，`wait_for_port(FRONTEND_PORT, 30)` 等就绪（vite 自身也读 `config.json` 的 `frontend_port` 决定监听端口，两边一致）。
-5. 前端就绪后打开浏览器，打印 Backend / Frontend / Logs 三个地址。
+1. `port_in_use` 探测前后端端口；都在跑就直接开浏览器。
+2. 后端未跑：`.venv` 缺则 `uv sync --extra dev`；`uv run playwright install chromium`（走 npmmirror 镜像）；轮替 `backend.log`；`spawn_service` 后台拉起 `uv run uvicorn app.main:app --host <BACKEND_HOST> --port <BACKEND_PORT>`，stdout/stderr → `backend.log`，stdin = `DEVNULL`（setsid 后读 tty 会 EIO，vite 的 readline 会崩）；`wait_for_port` 等就绪。
+3. 前端未跑：`node_modules` 缺则 `npm install`；轮替 `frontend.log`；`spawn_service` 拉起 `npm run dev`；`wait_for_port` 等就绪（vite 自身也读 `config.json` 的 `frontend_port`，两边一致）。
+4. 前端就绪后开浏览器，打印 Backend / Frontend / Logs 地址。
 
 ### 停止流程 `cmd_stop`
 
-1. `stop_services_by_port([BACKEND_PORT, FRONTEND_PORT])`：对每个端口调 `find_pid_on_port` 查 PID，找到就打印"停止端口 X 上的进程 (PID Y)"并 `kill_process_tree` 终止。
+1. `stop_services_by_port([BACKEND_PORT, FRONTEND_PORT])`：按端口查 PID 并终止。
 2. `backup_data_repo(private_data_dir)`：
-   - `../private-data/.git` 不存在则警告并跳过（用户没把数据目录初始化成 git 仓库）。
-   - `git pull --ff-only` 尝试拉远端（失败不阻断，比如没配 remote）。
-   - `git add -- bilibili-tag-group/*.json` 只添加本项目的数据文件，不误伤同仓库下的其他项目。
-   - `git status --porcelain` 判断有无变更；无变更直接返回，不造空提交。
-   - 有变更则 `git commit -m "backup: bilibili-tag-group data snapshot (YYYY-MM-DD HH:MM)"`，再 `git push`。
-   - 任何一步失败都只打 `[WARN]`，不影响停止结果——停止本身已经完成，备份是附加动作。
+   - `../private-data/.git` 不存在则警告跳过。
+   - `git pull --ff-only`（失败不阻断）。
+   - `git add -- bilibili-tag-group/*.json`。
+   - 无变更跳过；有变更 `commit` + `push`。
+   - 任何一步失败只打 `[WARN]`，不影响停止结果。
 
 ### 日志轮替 `rotate_log_if_oversized`
 
-单份日志超 10MB 则改名为 `<name>.1`，旧的 `.1` 先删。只在启动前检查一次，进程内不滚动（`backend.log` / `frontend.log` 是子进程重定向，无法在运行时轮替）。
+单份日志超 10MB 改名为 `<name>.1`，旧的 `.1` 先删。只在启动前检查，进程内不滚动（子进程重定向，运行时无法轮替）。
 
 ### 控制台双写 `tee_console_to`
 
-把 `sys.stdout` / `sys.stderr` 包成 `_Tee`，同时写一份到 `logs/launcher.log`，窗口关闭后仍可回查启停过程。每次运行覆盖重写（只留最近一次），防止膨胀。只覆盖 `manage.py` 自身的 `print`；子进程（`uv sync`、`npm install` 等）直接继承控制台 fd，不经 `sys.stdout`，不会入档。
+`sys.stdout` / `sys.stderr` 包成 `_Tee`，同时写一份到 `logs/launcher.log`，窗口关闭后仍可回查。每次运行覆盖重写，只留最近一次。只覆盖 `manage.py` 自身的 `print`；子进程直接继承控制台 fd，不经 `sys.stdout`，不会入档。
 
 ## 平台入口脚本
 
-`start.sh` / `stop.sh` / `restart.sh`：
+`.sh`：
 
 ```sh
 cd "$(dirname "$0")/.."
 exec uv run python scripts/manage.py <command>
 ```
 
-切到项目根目录后转发，保证在任何目录下执行都生效，`exec` 替换进程避免多余的 shell 层。
+切到项目根后转发，`exec` 替换进程避免多余 shell 层。
 
-`start.bat` / `stop.bat` / `restart.bat`：
+`.bat`：
 
-- `cd /d "%~dp0.."` 切到项目根（`/d` 跨盘符切换）。
-- `set PYTHONUTF8=1` 让 `manage.py` 输出 UTF-8，与 macOS/Linux 一致。
-- `call scripts\ensure-uv.bat` 确保 uv 可用。
-- `uv run python scripts\manage.py <command>` 转发。
-- 末尾 `pause` 保持窗口，方便双击用户读取输出。
+- `cd /d "%~dp0.."` 切到项目根（`/d` 跨盘符）。
+- `set PYTHONUTF8=1` 让 `manage.py` 输出 UTF-8。
+- `call scripts\ensure-uv.bat`。
+- `uv run python scripts\manage.py <command>`。
+- 末尾 `pause` 保持窗口。
 
-所有 `.bat` 强制保持纯 ASCII：cmd 用系统 ANSI 代码页（zh-CN 下是 GBK）解析批处理，`chcp 65001` 不能可靠修复非 ASCII 行的解析，所以所有中文输出都放在 `manage.py` 里。
+所有 `.bat` 保持纯 ASCII：cmd 用系统 ANSI 代码页（zh-CN 下是 GBK）解析批处理，`chcp 65001` 不能可靠修复非 ASCII 行，所以中文输出都在 `manage.py` 里。
 
 ## ensure-uv.bat
 
 Windows 专用，启停前确保 `uv` 可用：
 
-1. `where uv` 找到则直接退出。
-2. 找不到时优先 `where python`，回退到 `where py`（py launcher），都没有就报错退出。
-3. `<python> -m pip install --user uv` 装到用户目录。
-4. 把 pip 用户 Scripts 目录与 Python 自带 Scripts 目录都追加到当前会话 PATH；用户目录那一份通过 PowerShell 写注册表持久化到用户 PATH（不用 `setx`，因为它在 1024 字符处截断，会损坏已有 PATH）。
+1. `where uv` 找到则退出。
+2. 否则 `where python` → 回退 `where py`，都没有报错退出。
+3. `<python> -m pip install --user uv`。
+4. 把 pip 用户 Scripts 目录与 Python 自带 Scripts 目录追加到当前会话 PATH；用户目录那份通过 PowerShell 写注册表持久化（不用 `setx`，它在 1024 字符处截断会损坏 PATH）。
 5. 再次 `where uv` 确认。
 
 ## 关键设计点
 
-- **端口是唯一真相**：启动判断用 `port_in_use`（连得上 = 在跑），停止取 PID 用 `find_pid_on_port`（`lsof` / `netstat` 查占端口的进程）。不写 PID 文件，避免 PID 复用误杀与残留文件问题。代价是 stop 时若端口被别的程序占会杀掉它——但端口是我们配的 3333/2222，被占的概率极低，且 kill 前会打印 PID + 端口供用户确认。
-- **进程组终止**：POSIX 用 `start_new_session` 启动 + `killpg` 终止，保证 uvicorn / vite 派生的子进程（Playwright、esbuild 等）一并清理。
+- **端口是唯一真相**：启动判断用 `port_in_use`，停止取 PID 用 `find_pid_on_port`。不写 PID 文件，避免 PID 复用误杀与残留文件。代价是 stop 时若端口被别的程序占会杀掉它——但端口是我们配的 3333/2222，被占概率极低，且 kill 前会打印 PID + 端口供用户确认。
+- **进程组终止**：POSIX `start_new_session` 启动 + `killpg` 终止，保证 uvicorn / vite 派生的子进程（Playwright、esbuild 等）一并清理。
 - **幂等启动**：服务已运行时只开浏览器，不重启、不重装依赖。
-- **备份解耦**：停止已经完成就算备份失败也不回滚，数据本地提交即使 push 失败也保留。
-- **跨平台分支集中在 manage.py**：`.sh` / `.bat` 只做最少的事，所有"如果 Windows 则…"的分支都在 Python 里，便于维护和测试。
+- **备份解耦**：停止完成就算备份失败也不回滚，本地提交即使 push 失败也保留。
+- **跨平台分支集中在 manage.py**：`.sh` / `.bat` 只做最少的事，所有"如果 Windows 则…"的分支都在 Python 里。
