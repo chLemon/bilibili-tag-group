@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel
 
-from app.schemas._datetime import BeijingDateTime
+from app.shared.time import BeijingDateTime
 
 
 class SyncTaskRead(BaseModel):

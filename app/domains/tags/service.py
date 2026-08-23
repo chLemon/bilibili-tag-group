@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from app.models.tag import Tag
-from app.schemas.video import VideoRead
-from app.store.store import DataStore
+from app.domains.tags.models import Tag
+from app.domains.videos.schemas import VideoRead
+from app.shared.store import DataStore
 
 
 class TagService:

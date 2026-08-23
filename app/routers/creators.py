@@ -6,18 +6,18 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.dependencies import get_fetcher, get_store
-from app.fetcher.playwright_fetcher import FetchError, PlaywrightBilibiliFetcher
-from app.schemas.creator import (
+from app.domains.creators.schemas import (
     BatchCreatorRequest,
     BatchCreatorResponse,
     CreatorCreate,
     CreatorRead,
     CreatorUpdate,
 )
-from app.schemas.video import VideoDetail, VideoStatusUpdate
-from app.services.creator_service import CreatorService
-from app.services.video_service import VideoService
-from app.store.store import DataStore
+from app.domains.creators.service import CreatorService
+from app.domains.videos.schemas import VideoDetail, VideoStatusUpdate
+from app.domains.videos.service import VideoService
+from app.fetcher.playwright_fetcher import FetchError, PlaywrightBilibiliFetcher
+from app.shared.store import DataStore
 
 logger = logging.getLogger(__name__)
 
@@ -30,14 +30,26 @@ _video_svc = VideoService()
 async def create_creator(
     payload: CreatorCreate,
     store: Annotated[DataStore, Depends(get_store)],
+    fetcher: Annotated[PlaywrightBilibiliFetcher, Depends(get_fetcher)],
 ) -> CreatorRead:
-    """添加新 UP 主（可同时关联标签）。"""
+    """添加新 UP 主（可同时关联标签）。
+
+    avatar_url 缺失或 video_count 缺失时走 resolve 拿到；resolve 失败返回 502。
+    """
+    try:
+        info = await _creator_svc.resolve_creator_info(fetcher, payload.profile_url)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except FetchError as exc:
+        logger.exception("创建 UP 主-获取信息失败 url=%s", payload.profile_url)
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
     creator = await _creator_svc.create_creator(
         store=store,
         name=payload.name,
         profile_url=payload.profile_url,
         tag_ids=payload.tag_ids,
-        avatar_url=payload.avatar_url,
+        avatar_url=payload.avatar_url or info["avatar_url"],
+        video_count=info["video_count"],
         alias=payload.alias,
     )
     return _creator_svc.to_read(store, creator)

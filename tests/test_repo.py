@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from app.models.tag import Tag
-from app.store.repo import JsonRepo, JsonRepoError
+from app.domains.tags.models import Tag
+from app.shared.repo import JsonRepo, JsonRepoError
 
 
 async def test_concurrent_adds_have_unique_ids(tmp_path):

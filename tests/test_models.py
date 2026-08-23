@@ -2,10 +2,9 @@
 
 from datetime import datetime
 
-from app.models.creator import Creator
-from app.models.tag import Tag
-from app.models.video import Video
-from app.models.video_status import VideoStatus
+from app.domains.creators.models import Creator
+from app.domains.tags.models import Tag
+from app.domains.videos.models import Video, VideoStatus
 
 
 def test_video_status_defaults_to_unwatched():
@@ -16,15 +15,19 @@ def test_video_status_defaults_to_unwatched():
 
 
 def test_creator_fields():
-    """Creator 具备 id, name, profile_url, enabled 字段。"""
+    """Creator 具备 id, name, profile_url, avatar_url, video_count, enabled 字段。"""
     creator = Creator(
         id=1,
         name="影视飓风",
         profile_url="https://space.bilibili.com/946974",
+        avatar_url="https://example.com/avatar.png",
+        video_count=100,
     )
     assert creator.id == 1
     assert creator.name == "影视飓风"
     assert creator.profile_url == "https://space.bilibili.com/946974"
+    assert creator.avatar_url == "https://example.com/avatar.png"
+    assert creator.video_count == 100
     assert creator.enabled is True
 
 
@@ -34,6 +37,8 @@ def test_creator_can_be_disabled():
         id=1,
         name="测试UP",
         profile_url="https://space.bilibili.com/3",
+        avatar_url="https://example.com/avatar.png",
+        video_count=0,
         enabled=False,
     )
     assert creator.enabled is False

@@ -90,7 +90,11 @@ class TestBatchCreateCreators:
 
     def test_batch_create_success(self, client, mock_fetcher):
         mock_fetcher.fetch_creator_info = AsyncMock(
-            return_value={"name": "UP1", "avatar_url": None, "video_count": 3}
+            return_value={
+                "name": "UP1",
+                "avatar_url": "https://example.com/avatar.png",
+                "video_count": 3,
+            }
         )
         response = client.post(
             "/api/creators/batch",
@@ -102,9 +106,15 @@ class TestBatchCreateCreators:
         assert result["creator"]["name"] == "UP1"
         assert result["creator"]["tag_ids"] != []
 
-    def test_batch_create_with_name_and_avatar_skips_fetch(self, client, mock_fetcher):
-        """已提供昵称和头像时直接使用，不再请求 B 站。"""
-        mock_fetcher.fetch_creator_info = AsyncMock()
+    def test_batch_create_with_name_and_avatar_prefers_user_values(self, client, mock_fetcher):
+        """用户传 name + avatar_url 时优先用用户传的值；但仍 fetch 拿 video_count。"""
+        mock_fetcher.fetch_creator_info = AsyncMock(
+            return_value={
+                "name": "FetchedName",
+                "avatar_url": "https://example.com/fetched.png",
+                "video_count": 7,
+            }
+        )
         response = client.post(
             "/api/creators/batch",
             json={
@@ -120,8 +130,10 @@ class TestBatchCreateCreators:
         assert response.status_code == 200
         result = response.json()["results"][0]
         assert result["success"] is True
+        assert result["creator"]["name"] == "UP1"
         assert result["creator"]["avatar_url"] == "https://i0.hdslb.com/bfs/face/abc.jpg"
-        mock_fetcher.fetch_creator_info.assert_not_called()
+        assert result["creator"]["video_count"] == 7
+        mock_fetcher.fetch_creator_info.assert_called_once()
 
     def test_batch_create_fetch_failure(self, client, mock_fetcher):
         from app.fetcher.playwright_fetcher import FetchError
@@ -341,7 +353,7 @@ class TestSyncLatest:
 
     async def test_returns_latest_sync_log(self, client, store, seeded_data):
         """有同步记录时返回最近一条。"""
-        from app.models.sync_task import SyncTask
+        from app.domains.sync.models import SyncTask
 
         task = SyncTask(
             scope="all",

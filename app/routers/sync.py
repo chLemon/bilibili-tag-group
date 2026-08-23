@@ -8,9 +8,9 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.dependencies import get_store, get_sync_service
-from app.schemas.sync import SyncTaskRead
-from app.services.sync_service import SyncService
-from app.store.store import DataStore
+from app.domains.sync.schemas import SyncTaskRead
+from app.domains.sync.service import SyncService
+from app.shared.store import DataStore
 
 logger = logging.getLogger(__name__)
 

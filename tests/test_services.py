@@ -3,17 +3,16 @@
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
+from app.domains.creators.models import Creator
+from app.domains.creators.service import CreatorService
+from app.domains.sync.models import SyncTask
+from app.domains.sync.service import SyncService
+from app.domains.tags.models import Tag
+from app.domains.tags.service import TagService
+from app.domains.videos.models import Video, VideoStatus
+from app.domains.videos.service import VideoService
 from app.fetcher.models import FetchedVideo
-from app.models.creator import Creator
-from app.models.sync_task import SyncTask
-from app.models.tag import Tag
-from app.models.video import Video
-from app.models.video_status import VideoStatus
-from app.services.creator_service import CreatorService
-from app.services.sync_service import SyncService
-from app.services.tag_service import TagService
-from app.services.video_service import VideoService
-from app.utils.time import now_utc as _now_utc
+from app.shared.time import now_utc as _now_utc
 
 
 def _make_fetched_video(bvid: str, title: str = "默认标题", offset: int = 0) -> FetchedVideo:
@@ -31,6 +30,8 @@ async def _make_creator_async(store, uid: str = "12345", enabled: bool = True) -
     creator = Creator(
         name="测试UP主",
         profile_url=f"https://space.bilibili.com/{uid}",
+        avatar_url="https://example.com/avatar.png",
+        video_count=0,
         enabled=enabled,
     )
     await store.creators.add(creator)
@@ -298,9 +299,13 @@ class TestCreatorService:
             name="测试UP",
             profile_url="https://space.bilibili.com/1",
             tag_ids=[],
+            avatar_url="https://example.com/avatar.png",
+            video_count=10,
         )
         assert creator.id > 0
         assert creator.name == "测试UP"
+        assert creator.avatar_url == "https://example.com/avatar.png"
+        assert creator.video_count == 10
         persisted = store.creators.get(creator.id)
         assert persisted is not None
 
@@ -314,6 +319,8 @@ class TestCreatorService:
             name="测试UP",
             profile_url="https://space.bilibili.com/2",
             tag_ids=[tag.id],
+            avatar_url="https://example.com/avatar.png",
+            video_count=5,
         )
         links = store.creator_tags.filter(creator_id=creator.id)
         assert len(links) == 1
@@ -522,7 +529,12 @@ class TestVideoService:
 
     async def test_batch_set_status_applies_to_all_videos(self, store):
         """一键操作对所有状态的视频生效（含已看/不看），否则"一键未看"是空操作。"""
-        creator = Creator(name="c", profile_url="https://space.bilibili.com/9")
+        creator = Creator(
+            name="c",
+            profile_url="https://space.bilibili.com/9",
+            avatar_url="https://example.com/avatar.png",
+            video_count=0,
+        )
         await store.creators.add(creator)
         videos = []
         for i, status in enumerate([0, 1, 2]):

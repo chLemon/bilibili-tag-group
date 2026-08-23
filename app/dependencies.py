@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from app.fetcher.playwright_fetcher import PlaywrightBilibiliFetcher
-from app.services.sync_service import SyncService
-from app.store.store import DataStore
+from app.domains.sync.service import SyncService
+from app.shared.store import DataStore
 
 _store: DataStore | None = None
 _fetcher: PlaywrightBilibiliFetcher | None = None

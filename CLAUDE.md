@@ -58,9 +58,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 这是一个完全本地运行的 B 站订阅管理 MVP：手动维护 UP 主，用标签给 UP 主分组，在本地页面查看各标签下的未看视频，并在本地记录已看状态与同步日志。
 - 后端是 FastAPI + Pydantic + JSON 文件存储。应用入口在 `app/main.py`，通过 lifespan 启动 asyncio 定时同步任务；HTTP 路由分布在 `app/routers/creators.py`、`app/routers/tags.py`、`app/routers/videos.py`、`app/routers/sync.py`。
-- 数据以 JSON 文件存储在 `../private-data/bilibili-tag-group/`（`creators.json` 等），由用户自行用 git 管理版本；`logs/*.log` 有意纳入本仓库 git，用于跨机器排查问题。模型使用 Pydantic v2 BaseModel，通过 `app/store/repo.py` 的 `JsonRepo[T]` 泛型仓库进行读写。
+- 代码按领域组织：`app/domains/{creators,tags,videos,sync}/` 下各放 `models.py`、`schemas.py`、`service.py`；跨领域共享的基础设施在 `app/shared/`（`repo.py`、`store.py`、`time.py`、`_datetime.py`）；路由 `app/routers/` 与抓取 `app/fetcher/` 保持独立。
+- 数据以 JSON 文件存储在 `../private-data/bilibili-tag-group/`（`creators.json` 等），由用户自行用 git 管理版本；`logs/*.log` 有意纳入本仓库 git，用于跨机器排查问题。模型使用 Pydantic v2 BaseModel，通过 `app/shared/repo.py` 的 `JsonRepo[T]` 泛型仓库进行读写，由 `app/shared/store.py` 的 `DataStore` 聚合。
 - 数据模型核心是 `Creator`、`Tag`、`CreatorTag`、`Video`、`VideoStatus`、`SyncTask`。标签挂在 UP 主上，不挂在视频上；标签页展示的是”属于该标签下 UP 主的未看视频”。
-- 抓取链路是 `app/fetcher/playwright_fetcher.py` → `app/services/sync_service.py`：抓取 B 站公开视频、写入本地 `Video`，并为新视频创建默认 `watched=False` 的 `VideoStatus`；全量同步结果写入 `SyncTask`。
+- 抓取链路是 `app/fetcher/playwright_fetcher.py` → `app/domains/sync/service.py`：抓取 B 站公开视频、写入本地 `Video`，并为新视频创建默认 `watched=False` 的 `VideoStatus`；全量同步结果写入 `SyncTask`。
 - 前端是 Vite + React + TypeScript。根路由在 `frontend/src/App.tsx`，只有三个页面：`/tags`、`/creators`、`/sync`，访问 `/` 会直接跳转到 `/tags`。
 - 前端 API 封装在 `frontend/src/api/client.ts`，直接复用后端 `snake_case` 字段；开发环境下由 `frontend/vite.config.ts` 将 `/api` 代理到 `http://localhost:3333`。
 

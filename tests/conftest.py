@@ -12,14 +12,12 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 
 from app.dependencies import get_fetcher, get_store, get_sync_service
+from app.domains.creators.models import Creator, CreatorTag
+from app.domains.sync.service import SyncService
+from app.domains.tags.models import Tag
+from app.domains.videos.models import Video, VideoStatus
 from app.main import app
-from app.models.creator import Creator
-from app.models.creator_tag import CreatorTag
-from app.models.tag import Tag
-from app.models.video import Video
-from app.models.video_status import VideoStatus
-from app.services.sync_service import SyncService
-from app.store.store import DataStore
+from app.shared.store import DataStore
 
 
 @pytest.fixture
@@ -51,7 +49,12 @@ async def seeded_data(store) -> SeededData:
     tag = Tag(name="测试标签")
     await store.tags.add(tag)
 
-    creator = Creator(name="测试UP主", profile_url="https://space.bilibili.com/12345")
+    creator = Creator(
+        name="测试UP主",
+        profile_url="https://space.bilibili.com/12345",
+        avatar_url="https://example.com/avatar.png",
+        video_count=0,
+    )
     await store.creators.add(creator)
 
     ct = CreatorTag(creator_id=creator.id, tag_id=tag.id)
@@ -78,7 +81,11 @@ def mock_fetcher():
     """默认 mock 抓取器：昵称/头像固定返回，视频列表为空。"""
     m = MagicMock()
     m.fetch_creator_info = AsyncMock(
-        return_value={"name": "测试UP主", "avatar_url": None, "video_count": 0}
+        return_value={
+            "name": "测试UP主",
+            "avatar_url": "https://example.com/avatar.png",
+            "video_count": 0,
+        }
     )
     m.fetch_new_videos = AsyncMock(return_value=[])
     return m

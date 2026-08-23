@@ -5,17 +5,16 @@ from __future__ import annotations
 import logging
 import re
 
-from app.fetcher.playwright_fetcher import FetchError, PlaywrightBilibiliFetcher
-from app.models.creator import Creator
-from app.models.creator_tag import CreatorTag
-from app.models.tag import Tag
-from app.schemas.creator import (
+from app.domains.creators.models import Creator, CreatorTag
+from app.domains.creators.schemas import (
     BatchCreatorItem,
     BatchCreatorResponse,
     BatchCreatorResult,
     CreatorRead,
 )
-from app.store.store import DataStore
+from app.domains.tags.models import Tag
+from app.fetcher.playwright_fetcher import FetchError, PlaywrightBilibiliFetcher
+from app.shared.store import DataStore
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +74,7 @@ class CreatorService:
                     avatar_url=creator.avatar_url,
                     tag_ids=tag_ids_by_creator.get(creator.id, []),
                     enabled=creator.enabled,
-                    video_count=creator.video_count or 0,
+                    video_count=creator.video_count,
                     synced_video_count=len(video_ids),
                     unwatched_count=unwatched,
                     last_synced_at=creator.last_synced_at,
@@ -96,27 +95,29 @@ class CreatorService:
         fetcher: PlaywrightBilibiliFetcher,
         items: list[BatchCreatorItem],
     ) -> BatchCreatorResponse:
-        """批量添加 UP 主：逐条抓取昵称、关联标签、创建记录，单条失败不影响整体。"""
+        """批量添加 UP 主：逐条 resolve 拿 video_count（与缺失的 name/avatar_url），关联标签，创建记录。
+
+        单条失败不影响整体。用户传的 name/avatar_url 优先，未传的从 resolve 取；
+        video_count 始终从 resolve 取（前端不传）。
+        """
         results: list[BatchCreatorResult] = []
         for item in items:
             try:
                 profile_url = f"https://space.bilibili.com/{item.uid}"
-                if item.name:
-                    creator_name = item.name
-                    avatar_url = item.avatar_url
-                else:
-                    try:
-                        info = await fetcher.fetch_creator_info(item.uid)
-                        creator_name = info["name"]
-                        avatar_url = info.get("avatar_url")
-                    except FetchError as exc:
-                        logger.exception("批量添加-获取 UP 主信息失败 uid=%s", item.uid)
-                        results.append(
-                            BatchCreatorResult(
-                                uid=item.uid, success=False, error=f"获取 UP 主信息失败：{exc}"
-                            )
+                try:
+                    info = await fetcher.fetch_creator_info(item.uid)
+                except FetchError as exc:
+                    logger.exception("批量添加-获取 UP 主信息失败 uid=%s", item.uid)
+                    results.append(
+                        BatchCreatorResult(
+                            uid=item.uid, success=False, error=f"获取 UP 主信息失败：{exc}"
                         )
-                        continue
+                    )
+                    continue
+
+                creator_name = item.name or info["name"]
+                avatar_url = item.avatar_url or info["avatar_url"]
+                video_count = info["video_count"]
 
                 tags = await self.find_or_create_tags(store, item.tag_names)
                 creator = await self.create_creator(
@@ -125,6 +126,7 @@ class CreatorService:
                     profile_url=profile_url,
                     tag_ids=[t.id for t in tags],
                     avatar_url=avatar_url,
+                    video_count=video_count,
                 )
                 results.append(
                     BatchCreatorResult(
@@ -142,14 +144,16 @@ class CreatorService:
         name: str,
         profile_url: str,
         tag_ids: list[int],
-        avatar_url: str | None = None,
+        avatar_url: str,
+        video_count: int,
         alias: str | None = None,
     ) -> Creator:
-        """创建新 UP 主，并可选择同时关联标签。"""
+        """创建新 UP 主，并可选择同时关联标签。avatar_url 与 video_count 必填，调用方负责 resolve。"""
         creator = Creator(
             name=name,
             profile_url=self.normalize_profile_url(profile_url),
             avatar_url=avatar_url,
+            video_count=video_count,
             alias=alias,
         )
         await store.creators.add(creator)

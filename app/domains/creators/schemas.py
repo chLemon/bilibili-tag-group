@@ -31,10 +31,10 @@ class CreatorRead(BaseModel):
     name: str
     alias: str | None = None
     profile_url: str
-    avatar_url: str | None = None
+    avatar_url: str
     tag_ids: list[int] = []
     enabled: bool = True
-    video_count: int = 0
+    video_count: int
     synced_video_count: int = 0
     unwatched_count: int = 0
     last_synced_at: datetime | None = None

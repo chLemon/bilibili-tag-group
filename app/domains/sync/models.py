@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.utils.time import now_utc
+from app.shared.time import now_utc
 
 
 class SyncTask(BaseModel):

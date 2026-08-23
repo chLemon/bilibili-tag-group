@@ -6,16 +6,15 @@ import asyncio
 import logging
 from datetime import timedelta
 
+from app.domains.creators.models import Creator
+from app.domains.creators.service import CreatorService
+from app.domains.sync.models import SyncTask
+from app.domains.tags.models import TagSyncConfig
+from app.domains.videos.models import Video, VideoStatus
 from app.fetcher.models import FetchedVideo
 from app.fetcher.playwright_fetcher import PlaywrightBilibiliFetcher
-from app.models.creator import Creator
-from app.models.sync_task import SyncTask
-from app.models.tag_sync_config import TagSyncConfig
-from app.models.video import Video
-from app.models.video_status import VideoStatus
-from app.services.creator_service import CreatorService
-from app.store.store import DataStore
-from app.utils.time import now_utc as _now_utc
+from app.shared.store import DataStore
+from app.shared.time import now_utc as _now_utc
 
 logger = logging.getLogger(__name__)
 
@@ -70,12 +69,9 @@ class SyncService:
 
         try:
             info = await self._fetcher.fetch_creator_info(uid)
-            if info.get("name"):
-                creator.name = info["name"]
-            if info.get("avatar_url"):
-                creator.avatar_url = info["avatar_url"]
-            if info.get("video_count") is not None:
-                creator.video_count = info["video_count"]
+            creator.name = info["name"]
+            creator.avatar_url = info["avatar_url"]
+            creator.video_count = info["video_count"]
         except Exception:
             # 信息更新失败不阻断视频同步，但必须留痕：风控时段若静默跳过，
             # 表象会误成"无新视频"

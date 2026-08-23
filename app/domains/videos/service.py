@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from app.models.creator import Creator
-from app.models.video_status import VideoStatus
-from app.schemas.video import VideoDetail
-from app.store.store import DataStore
-from app.utils.time import now_utc as _now_utc
+from app.domains.creators.models import Creator
+from app.domains.videos.models import VideoStatus
+from app.domains.videos.schemas import VideoDetail
+from app.shared.store import DataStore
+from app.shared.time import now_utc as _now_utc
 
 
 class VideoService:

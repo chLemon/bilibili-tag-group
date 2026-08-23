@@ -2,12 +2,10 @@
 
 from datetime import datetime
 
-from app.models.creator import Creator
-from app.models.creator_tag import CreatorTag
-from app.models.tag import Tag
-from app.models.video import Video
-from app.models.video_status import VideoStatus
-from app.services.tag_service import TagService
+from app.domains.creators.models import Creator, CreatorTag
+from app.domains.tags.models import Tag
+from app.domains.tags.service import TagService
+from app.domains.videos.models import Video, VideoStatus
 
 
 async def _seed(store):
@@ -17,9 +15,30 @@ async def _seed(store):
     """
     t1 = await store.tags.add(Tag(name="科技"))
     t2 = await store.tags.add(Tag(name="生活"))
-    c1 = await store.creators.add(Creator(name="c1", profile_url="https://space.bilibili.com/1"))
-    c2 = await store.creators.add(Creator(name="c2", profile_url="https://space.bilibili.com/2"))
-    c3 = await store.creators.add(Creator(name="c3", profile_url="https://space.bilibili.com/3"))
+    c1 = await store.creators.add(
+        Creator(
+            name="c1",
+            profile_url="https://space.bilibili.com/1",
+            avatar_url="https://example.com/c1.png",
+            video_count=0,
+        )
+    )
+    c2 = await store.creators.add(
+        Creator(
+            name="c2",
+            profile_url="https://space.bilibili.com/2",
+            avatar_url="https://example.com/c2.png",
+            video_count=0,
+        )
+    )
+    c3 = await store.creators.add(
+        Creator(
+            name="c3",
+            profile_url="https://space.bilibili.com/3",
+            avatar_url="https://example.com/c3.png",
+            video_count=0,
+        )
+    )
     await store.creator_tags.add(CreatorTag(creator_id=c1.id, tag_id=t1.id))
     await store.creator_tags.add(CreatorTag(creator_id=c2.id, tag_id=t1.id))
     await store.creator_tags.add(CreatorTag(creator_id=c2.id, tag_id=t2.id))

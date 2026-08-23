@@ -5,9 +5,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.dependencies import get_store
-from app.schemas.video import VideoStatusUpdate
-from app.services.video_service import VideoService
-from app.store.store import DataStore
+from app.domains.videos.schemas import VideoStatusUpdate
+from app.domains.videos.service import VideoService
+from app.shared.store import DataStore
 
 router = APIRouter(prefix="/api/videos", tags=["videos"])
 _video_svc = VideoService()

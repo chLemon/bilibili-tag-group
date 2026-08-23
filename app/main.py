@@ -18,8 +18,8 @@ from app.routers.sync import set_sync_context
 from app.routers.tags import router as tags_router
 from app.routers.videos import router as videos_router
 from app.scheduler import run_sync_loop
-from app.services.sync_service import SyncService
-from app.store.store import DataStore
+from app.domains.sync.service import SyncService
+from app.shared.store import DataStore
 
 logger = logging.getLogger(__name__)
 

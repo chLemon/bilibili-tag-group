@@ -4,14 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from app.models.creator import Creator
-from app.models.creator_tag import CreatorTag
-from app.models.sync_task import SyncTask
-from app.models.tag import Tag
-from app.models.tag_sync_config import TagSyncConfig
-from app.models.video import Video
-from app.models.video_status import VideoStatus
-from app.store.repo import JsonRepo
+from app.domains.creators.models import Creator, CreatorTag
+from app.domains.sync.models import SyncTask
+from app.domains.tags.models import Tag, TagSyncConfig
+from app.domains.videos.models import Video, VideoStatus
+from app.shared.repo import JsonRepo
 
 
 class DataStore:

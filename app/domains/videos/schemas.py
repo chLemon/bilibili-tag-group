@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, Field
 
-from app.schemas._datetime import BeijingDateTime
+from app.shared.time import BeijingDateTime
 
 
 class VideoStatusUpdate(BaseModel):

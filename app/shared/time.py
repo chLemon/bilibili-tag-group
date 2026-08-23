@@ -1,6 +1,7 @@
-"""自定义 datetime 序列化类型。
+"""时间工具：统一 naive UTC 约定，并提供北京时间序列化类型。
 
-后端存储 naive UTC 时间，序列化为 JSON 时转换为北京时间（UTC+8）的 ISO8601 字符串。
+- `now_utc()`：产生当前 naive UTC datetime，给 model/service 运行时用
+- `BeijingDateTime`：Pydantic 类型，给 schema 序列化用——API 响应时把 naive UTC 转为北京时间 ISO8601 字符串
 """
 
 from datetime import UTC, datetime, timedelta, timezone
@@ -9,6 +10,11 @@ from typing import Annotated
 from pydantic import PlainSerializer
 
 _BEIJING_TZ = timezone(timedelta(hours=8))
+
+
+def now_utc() -> datetime:
+    """返回当前 UTC 时间（naive datetime，不含 tzinfo）。"""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def _serialize_datetime(dt: datetime) -> str:

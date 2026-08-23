@@ -11,35 +11,32 @@ app/
 ├── dependencies.py          # FastAPI 依赖注入（get_store / get_fetcher / get_sync_service）
 ├── logging_config.py        # 日志配置：输出到 stderr，由 manage.py 重定向到 logs/backend.log
 ├── scheduler.py             # asyncio 定时同步调度器
-├── utils/
-│   └── time.py              # now_utc()：统一 naive UTC 时间工具
-├── models/                  # Pydantic 数据模型
-│   ├── creator.py           #   UP 主
-│   ├── tag.py               #   标签
-│   ├── creator_tag.py       #   UP 主-标签多对多关联
-│   ├── video.py             #   视频
-│   ├── video_status.py      #   视频观看状态
-│   ├── sync_task.py         #   同步任务
-│   └── tag_sync_config.py   #   标签同步配置
-├── store/                   # JSON 文件存储层
+├── domains/                 # 按领域组织的业务层（model + schema + service 合一）
+│   ├── creators/            #   UP 主领域
+│   │   ├── models.py        #     Creator + CreatorTag
+│   │   ├── schemas.py       #     CreatorCreate / CreatorRead / Batch*
+│   │   └── service.py       #     CreatorService
+│   ├── tags/                #   标签领域
+│   │   ├── models.py        #     Tag + TagSyncConfig
+│   │   ├── schemas.py       #     TagCreate / TagRead
+│   │   └── service.py       #     TagService
+│   ├── videos/              #   视频领域
+│   │   ├── models.py        #     Video + VideoStatus
+│   │   ├── schemas.py       #     VideoRead / VideoDetail / VideoStatusUpdate
+│   │   └── service.py       #     VideoService
+│   └── sync/                #   同步领域
+│       ├── models.py        #     SyncTask
+│       ├── schemas.py       #     SyncTaskRead（含 BeijingDateTime）
+│       └── service.py       #     SyncService：抓取 → 写入 JSON 文件
+├── shared/                  # 跨领域共享的基础设施
 │   ├── repo.py              #   JsonRepo[T] 泛型仓库
-│   └── store.py             #   DataStore 聚合所有 repo
-├── schemas/                 # Pydantic 请求/响应 Schema
-│   ├── _datetime.py         #   北京时间序列化类型
-│   ├── creator.py           #   UP 主 schema
-│   ├── tag.py               #   标签 schema
-│   ├── video.py             #   视频 schema
-│   └── sync.py              #   同步任务 schema（SyncTaskRead + BeijingDateTime）
+│   ├── store.py             #   DataStore 聚合所有 repo
+│   └── time.py              #   now_utc() + BeijingDateTime：naive UTC 时间约定 + 北京时间序列化
 ├── routers/                 # HTTP 路由：只做参数解析与错误映射
 │   ├── creators.py          #   /api/creators — UP 主管理端点
 │   ├── tags.py              #   /api/tags — 标签列表与标签下未看视频
 │   ├── videos.py            #   /api/videos — 视频状态更新
 │   └── sync.py              #   /api/sync — 同步触发、任务查询、立即同步标签管理
-├── services/                # 业务逻辑层
-│   ├── creator_service.py   #   UP 主管理
-│   ├── tag_service.py       #   标签与未看视频聚合查询
-│   ├── video_service.py     #   视频观看状态管理
-│   └── sync_service.py      #   同步核心：抓取 → 写入 JSON 文件
 └── fetcher/                 # B 站数据抓取层（已冻结，勿擅动）
     ├── models.py            #   FetchedVideo dataclass
     └── playwright_fetcher.py #  基于 Playwright 无头浏览器的抓取器
@@ -60,7 +57,7 @@ private-data/bilibili-tag-group/
   tag_sync_configs.json
 ```
 
-每个文件对应一个 `JsonRepo[T]` 实例，提供按需 IO 读写。写操作使用 `asyncio.Lock` 保护并发安全。
+每个文件对应一个 `JsonRepo[T]`（`app/shared/repo.py`）实例，由 `DataStore`（`app/shared/store.py`）聚合，提供按需 IO 读写。写操作使用 `asyncio.Lock` 保护并发安全。
 
 ## 数据模型关系
 
@@ -129,6 +126,6 @@ uv run uvicorn app.main:app --reload
 
 ## 抓取器
 
-使用 **`PlaywrightBilibiliFetcher`** — 通过 Playwright 无头浏览器打开 UP 主空间投稿页，从 DOM 视频卡片逐页提取数据，绕过 WBI 签名风控；带内存缓存（视频 1h、昵称 24h）。
+使用 **`PlaywrightBilibiliFetcher`** — 通过 Playwright 无头浏览器打开 UP 主空间投稿页，从 DOM 视频卡片逐页提取数据，绕过 WBI 签名风控。
 
 抓取层是校准过的冻结基准，完整行为描述见 [../docs/fetcher.md](../docs/fetcher.md)。

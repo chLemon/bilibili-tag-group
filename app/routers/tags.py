@@ -5,10 +5,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 
 from app.dependencies import get_store
-from app.schemas.tag import TagCreate, TagRead
-from app.schemas.video import VideoRead
-from app.services.tag_service import TagService
-from app.store.store import DataStore
+from app.domains.tags.schemas import TagCreate, TagRead
+from app.domains.tags.service import TagService
+from app.domains.videos.schemas import VideoRead
+from app.shared.store import DataStore
 
 router = APIRouter(prefix="/api/tags", tags=["tags"])
 _tag_svc = TagService()

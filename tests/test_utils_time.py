@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 
-from app.utils.time import now_utc
+from app.shared.time import now_utc
 
 
 def test_now_utc_returns_naive_datetime():
