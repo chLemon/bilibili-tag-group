@@ -2,6 +2,7 @@
 
 import logging
 from collections.abc import AsyncIterator
+from datetime import datetime
 
 import pytest
 import pytest_asyncio
@@ -37,12 +38,17 @@ class TestPlaywrightBilibiliFetcher:
         videos: list[FetchedVideo] = await fetcher.fetch_new_videos(TEST_UID)
         assert videos, "应至少抓到一个视频"
         assert len(videos) == 48, f"应抓到 48 个视频，实际 {len(videos)}"
+
+        bvids = [v.bvid for v in videos]
+        assert len(bvids) == len(set(bvids)), "bvid 不应重复出现"
+
         for v in videos:
-            assert v.bvid
-            assert v.title
-            assert v.video_url
-            assert v.published_at is not None
-            assert v.cover_url
+            assert v.bvid.startswith("BV"), f"bvid 应以 BV 开头: {v.bvid}"
+            assert v.title.strip(), f"title 不应为空白: {v.bvid}"
+            assert v.video_url == f"https://www.bilibili.com/video/{v.bvid}"
+            assert v.cover_url.startswith("https://"), \
+                f"cover_url 应是 https 开头: {v.cover_url}"
+            assert isinstance(v.published_at, datetime)
             assert v.duration_seconds >= 0
         logging.info(videos[0])
         logging.info(len(videos))
@@ -50,7 +56,10 @@ class TestPlaywrightBilibiliFetcher:
     async def test_fetch_creator_info(self, fetcher: PlaywrightBilibiliFetcher):
         creator_info: dict = await fetcher.fetch_creator_info(TEST_UID)
         assert creator_info["name"] == EXPECTED_NAME
-        assert creator_info["avatar_url"]
+        assert creator_info["name"].strip() == creator_info["name"], "name 不应有前后空白"
+        assert creator_info["avatar_url"].startswith("https://"), \
+            f"avatar_url 应是 https 开头: {creator_info['avatar_url']}"
+        assert isinstance(creator_info["video_count"], int)
         assert creator_info["video_count"] > 0
         logging.info(creator_info)
 
@@ -68,5 +77,14 @@ class TestPlaywrightBilibiliFetcher:
 
         # 返回的是并集：本次抓到的 + known 里未抓到的，bvid 集合应与全集一致
         assert {v.bvid for v in partial} == {v.bvid for v in full}
+
+    async def test_fetch_creator_info_video_count_matches_videos(
+        self, fetcher: PlaywrightBilibiliFetcher
+    ):
+        """侧栏 video_count 应与 fetch_new_videos 抓到的视频数一致。"""
+        creator_info = await fetcher.fetch_creator_info(TEST_UID)
+        videos = await fetcher.fetch_new_videos(TEST_UID)
+        assert creator_info["video_count"] == len(videos), \
+            f"video_count={creator_info['video_count']} 但 fetch_new_videos 返回 {len(videos)}"
 
 
