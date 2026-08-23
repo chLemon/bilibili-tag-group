@@ -6,6 +6,7 @@ from collections.abc import AsyncIterator
 import pytest
 import pytest_asyncio
 
+from app.config import settings
 from app.fetcher.models import FetchedVideo
 from app.fetcher.playwright_fetcher import (
     PlaywrightBilibiliFetcher,
@@ -22,7 +23,7 @@ pytestmark = pytest.mark.asyncio(loop_scope="module")
 @pytest_asyncio.fixture(scope="module")
 async def fetcher() -> AsyncIterator[PlaywrightBilibiliFetcher]:
     """模块级共享 fetcher：chromium 只启动一次，所有测试复用，模块结束统一关闭。"""
-    f = PlaywrightBilibiliFetcher()
+    f = PlaywrightBilibiliFetcher(cookies=settings.cookies)
     try:
         yield f
     finally:

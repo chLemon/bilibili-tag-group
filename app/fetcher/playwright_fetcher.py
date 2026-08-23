@@ -71,8 +71,11 @@ class PlaywrightBilibiliFetcher:
     浏览器实例存储在 fetcher 实例上，通过 close() 释放资源。
     """
 
-    def __init__(self, headless: bool = True) -> None:
+    def __init__(
+        self, headless: bool = True, cookies: dict[str, str] | None = None
+    ) -> None:
         self._headless = headless
+        self._cookies = cookies or {}
         self._playwright = None
         self._browser = None
 
@@ -117,6 +120,13 @@ class PlaywrightBilibiliFetcher:
             locale="zh-CN",
             timezone_id="Asia/Shanghai",
         )
+        if self._cookies:
+            await context.add_cookies(
+                [
+                    {"name": k, "value": v, "domain": ".bilibili.com", "path": "/"}
+                    for k, v in self._cookies.items()
+                ]
+            )
         await context.add_init_script("""
             Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
             Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });

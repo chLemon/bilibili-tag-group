@@ -13,6 +13,18 @@ B 站的 WBI 签名接口有风控，直接调 API 容易被拦。抓取层用 P
 - `add_init_script` 注入：`navigator.webdriver` 置空、伪造 `plugins`/`languages`、补 `window.chrome`
 - 浏览器实例复用：存在 fetcher 实例上，断开时自动重建；`close()` 在应用关闭时释放
 
+## Cookie 注入
+
+匿名访问 B 站空间页时，翻页 click 会频繁触发 412 风控（SPA 收到 412 只更新页码 UI 不刷新 cards，详见下节"风控与翻页重试"）。注入登录态 cookie 后，B 站对已登录浏览器会话明显更宽容，412 基本不再触发，翻页一次到位。
+
+- Cookie 来源：`data_dir/cookies.json`（即 `../private-data/bilibili-tag-group/cookies.json`），用户自维护，不入项目 git
+- 格式：`{name: value}` 字典，至少含 `SESSDATA` + `bili_jct` + `buvid3/4` + `buvid_fp`
+- 加载：`app/config.py` 在 `Settings` 初始化时读 `cookies.json`，文件缺失或非法则空 dict，退化为匿名抓取（不会崩）
+- 注入：`PlaywrightBilibiliFetcher(cookies=...)` 接受可选 `cookies` 参数，`_create_context` 里 `new_context` 后 `add_cookies`，每条 cookie 统一打 `domain=".bilibili.com"`、`path="/"`
+- 调用链：`app/main.py` lifespan 把 `settings.cookies` 传给 fetcher
+
+Cookie 有效期：`SESSDATA`/`bili_jct` 一般 1-2 年（B 站策略），失效后表现是抓取被风控（412 重试频繁失败）或识别为匿名。失效后用户重新从浏览器导出 `cookies.json` 即可。
+
 ## 抓取流程（fetch_new_videos）
 
 1. 打开投稿页，`wait_until="domcontentloaded"`，页面超时 30s

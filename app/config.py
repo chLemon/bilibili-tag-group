@@ -20,6 +20,8 @@ class Settings(BaseModel):
     backend_port: int = 3333
     frontend_port: int = 2222
     sync_interval_minutes: int = 60
+    # B 站登录态 cookie，从 data_dir/cookies.json 读取；文件缺失则空 dict，匿名抓取
+    cookies: dict[str, str] = {}
 
 
 def _load_settings() -> Settings:
@@ -30,7 +32,19 @@ def _load_settings() -> Settings:
             data = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             data = {}
-    return Settings.model_validate(data)
+    settings = Settings.model_validate(data)
+
+    # cookies 不放 config.json（敏感，单独存放于 data_dir，不入项目 git）
+    cookies_file = settings.data_dir / "cookies.json"
+    if cookies_file.exists():
+        try:
+            cookies = json.loads(cookies_file.read_text(encoding="utf-8"))
+            if isinstance(cookies, dict):
+                settings.cookies = {str(k): str(v) for k, v in cookies.items()}
+        except (OSError, json.JSONDecodeError):
+            pass
+
+    return settings
 
 
 settings = _load_settings()
