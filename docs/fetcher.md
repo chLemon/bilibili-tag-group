@@ -1,12 +1,10 @@
 # 抓取层行为文档
 
-日期：2026-07-22
-
 `app/fetcher/` 与 `SyncService.sync_creator` 的抓取逻辑是**用户校准过的基准行为**。本文档记录这套行为的完整事实，作为今后任何改动的对照基准。**改动前必须先阅读本文档，并与用户确认。**
 
 ## 为什么用 Playwright DOM 提取
 
-B 站的 WBI 签名接口有风控，直接调 API 容易被拦。抓取层改为用 Playwright 无头浏览器打开 UP 主空间投稿页（`https://space.bilibili.com/{uid}/upload/video`），从渲染后的 DOM 视频卡片中逐页提取数据。代价是慢（每个 UP 主要起页面、翻页有延迟），换来的是稳定。
+B 站的 WBI 签名接口有风控，直接调 API 容易被拦。抓取层用 Playwright 无头浏览器打开 UP 主空间投稿页（`https://space.bilibili.com/{uid}/upload/video`），从渲染后的 DOM 视频卡片中逐页提取数据。代价是慢（每个 UP 主要起页面、翻页有延迟），换来的是稳定。
 
 ## 反检测与浏览器配置
 
@@ -23,9 +21,9 @@ B 站的 WBI 签名接口有风控，直接调 API 容易被拦。抓取层改�
 4. 若"下一页"按钮 disabled 则结束；否则点击翻页，随机延迟 2.0–4.0s 继续
 5. 页数上限 1000
 
-翻页循环中有 `_any_known(page_bvids)` 早停分支（翻到含已知视频的页就提前结束），但当前实现恒返回 `False`，早停从未生效。
+翻页循环中有 `_any_known(page_bvids)` 早停分支（翻到含已知视频的页就提前结束），但恒返回 `False`，早停无效。
 
-观测性扩展（不改变抓取行为）：`fetch_new_videos` 每抓完一页会更新 `fetcher.current_page` 属性；`run_sync_task` 在抓取期间每 2 秒把它写入 `SyncTask.current_creator_pages`，供前端展示页级进度。
+观测性：`fetch_new_videos` 每抓完一页更新 `fetcher.current_page` 属性；`run_sync_task` 在抓取期间每 2 秒把它写入 `SyncTask.current_creator_pages`，供前端展示页级进度。
 
 ## 卡片字段提取
 

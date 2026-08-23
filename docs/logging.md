@@ -12,12 +12,8 @@
 
 uvicorn 进程的全部输出——uvicorn 启动/访问日志 + 应用日志（`app/logging_config.py` 把应用日志写到 stderr，被 `spawn_service` 重定向到这里）。排障看它即可。
 
-进程内无法滚动，改为 `cmd_start` spawn 前一次性轮替：超过 10MB rename 为 `backend.log.1`（只留一份）。只在重启服务时生效，单次长跑期间持续增长。
+`cmd_start` spawn 前一次性轮替：超过 10MB rename 为 `backend.log.1`（只留一份）。进程内不滚动，单次长跑期间持续增长。
 
 ## `frontend.log`
 
 vite dev server 的全部输出（启动信息、编译错误等）。滚动策略同 `backend.log`，vite 输出少，实践中几乎不触发轮替。
-
-## 进程管理
-
-不生成 PID 文件。`stop` 按端口查 PID（`lsof` / `netstat`）后 kill，`logs/` 只保留日志文件。
