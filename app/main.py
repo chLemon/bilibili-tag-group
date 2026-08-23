@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             await sync_loop_task
         except asyncio.CancelledError:
             pass
-        await fetcher.close_browser()
+        await fetcher.close()
 
 
 app = FastAPI(title="my_bilibili", lifespan=lifespan)

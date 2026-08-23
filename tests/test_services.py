@@ -23,6 +23,7 @@ def _make_fetched_video(bvid: str, title: str = "默认标题", offset: int = 0)
         video_url=f"https://www.bilibili.com/video/{bvid}",
         published_at=datetime(2024, 1, 1 + offset, 12, 0, 0),
         duration_seconds=300 + offset * 10,
+        cover_url=f"https://example.com/cover/{bvid}.jpg",
     )
 
 
@@ -101,23 +102,6 @@ class TestSyncCreatorGuards:
         assert count == 0
         mock_fetcher.fetch_new_videos.assert_not_called()
         mock_fetcher.fetch_creator_info.assert_not_called()
-
-    async def test_video_without_published_at_is_skipped(self, store):
-        creator = await _make_creator_async(store)
-        bad = FetchedVideo(
-            bvid="BV_bad_date",
-            title="无日期",
-            video_url="https://example.com",
-            published_at=None,
-            duration_seconds=60,
-        )
-        good = _make_fetched_video("BV_good_date")
-        mock_fetcher = _make_mock_fetcher(fetch_new_videos=[bad, good])
-        service = SyncService(fetcher=mock_fetcher)
-        count = await service.sync_creator(store, creator)
-        assert count == 1
-        bvids = [v.bvid for v in store.videos.filter(creator_id=creator.id)]
-        assert bvids == ["BV_good_date"]
 
 
 class TestSyncCreatorExistingVideos:

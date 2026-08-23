@@ -44,11 +44,6 @@ _PAGE_TIMEOUT = 30_000
 _CARD_WAIT_TIMEOUT = 10_000
 _MAX_PAGES = 1000
 
-# ── 缓存 TTL ──────────────────────────────────────────────────────
-
-_NAME_CACHE_TTL = timedelta(hours=24)
-_VIDEOS_CACHE_TTL = timedelta(hours=1)
-
 # ── 浏览器启动参数 ────────────────────────────────────────────────
 
 _BROWSER_ARGS = [
@@ -68,16 +63,19 @@ class PlaywrightBilibiliFetcher:
     """使用 Playwright 无头浏览器从 B 站空间页抓取视频列表和 UP 主信息。
 
     内部通过内存 dict 管理缓存，TTL 内命中缓存则跳过远程请求。
-    浏览器实例存储在 fetcher 实例上，通过 close_browser() 释放资源。
+    浏览器实例存储在 fetcher 实例上，通过 close() 释放资源。
     """
 
     def __init__(self, headless: bool = True) -> None:
         self._headless = headless
         self._playwright = None
         self._browser = None
-        self._cache: dict[str, dict] = {}
         self.current_page = 0
         """fetch_new_videos 最近一次完成的页码，同步任务据此展示页级进度"""
+
+    async def close(self) -> None:
+        """对外暴露的资源释放入口，应用关闭时调用。"""
+        await self._close_browser()
 
     # ── 浏览器生命周期 ──────────────────────────────────────────
 
@@ -99,7 +97,7 @@ class PlaywrightBilibiliFetcher:
 
         return self._browser
 
-    async def close_browser(self) -> None:
+    async def _close_browser(self) -> None:
         """关闭浏览器实例，释放资源。"""
         if self._browser is not None:
             await self._browser.close()
@@ -107,8 +105,6 @@ class PlaywrightBilibiliFetcher:
         if self._playwright is not None:
             await self._playwright.stop()
             self._playwright = None
-
-    # ── 浏览器上下文 ────────────────────────────────────────────
 
     async def _create_context(self) -> BrowserContext:
         """创建带反检测配置的浏览器上下文。"""
@@ -126,33 +122,13 @@ class PlaywrightBilibiliFetcher:
         """)
         return context
 
-    # ── 缓存读写 ────────────────────────────────────────────────
-
-    @staticmethod
-    def _cache_key(uid: str, kind: str) -> str:
-        return f"fetcher:{uid}:{kind}"
-
-    def _get_cached(self, uid: str, kind: str) -> dict | None:
-        key = self._cache_key(uid, kind)
-        entry = self._cache.get(key)
-        if entry is None:
-            return None
-        ts = datetime.fromisoformat(entry["ts"])
-        ttl = _NAME_CACHE_TTL if kind == "name" else _VIDEOS_CACHE_TTL
-        if datetime.now(UTC).replace(tzinfo=None) - ts > ttl:
-            return None
-        return entry["payload"]
-
-    def _set_cache(self, uid: str, kind: str, payload) -> None:
-        key = self._cache_key(uid, kind)
-        self._cache[key] = {
-            "ts": datetime.now(UTC).replace(tzinfo=None).isoformat(),
-            "payload": payload,
-        }
-
     # ── 公开抓取方法 ────────────────────────────────────────────
 
-    async def fetch_new_videos(self, uid: str) -> list[FetchedVideo]:
+    async def fetch_new_videos(
+        self,
+        uid: str,
+        known_videos: list[FetchedVideo] | None = None,
+    ) -> list[FetchedVideo]:
         """抓取某个 up 主的视频列表
 
 
@@ -161,6 +137,11 @@ class PlaywrightBilibiliFetcher:
         3. 从前往后翻页继续抓取，直到完成
 
         如果某页抓取失败，则整个失败。
+
+        known_videos 为调用方已持有的该 UP 主视频集合（来自本地存储）。
+        翻页时若某页出现已知 bvid，提前停止翻页，并把 known_videos 中
+        本次未抓到的视频补回返回值——返回的是"已知 ∪ 本次新抓"的并集，
+        早停只省抓取量，不损失返回完整性。
 
         抓取过程中每完成一页会更新 self.current_page（仅观测用，供
         同步任务展示页级进度，不影响抓取行为）。
@@ -179,6 +160,7 @@ class PlaywrightBilibiliFetcher:
 
             videos: list[FetchedVideo] = []
             self.current_page = 0
+            known_bvids: set[str] = {v.bvid for v in known_videos} if known_videos else set()
 
             # 翻页抓取
             while True:
@@ -196,8 +178,8 @@ class PlaywrightBilibiliFetcher:
                     page_bvids.add(video.bvid)
                 self.current_page = current_page_num
 
-                if page_bvids and self._any_known(page_bvids):
-                    # 已经获取到了db里有的视频，那么提前返回即可
+                if page_bvids and page_bvids & known_bvids:
+                    # 翻到含已知视频的页，提前停止
                     break
 
                 next_button = page.locator(_NEXT_BUTTON_SELECTOR)
@@ -210,6 +192,12 @@ class PlaywrightBilibiliFetcher:
                 # 模拟延迟
                 delay = random.uniform(2.0, 4.0)
                 await asyncio.sleep(delay)
+
+            # 早停或翻完都走这里：把 known 中本次未抓到的补回，返回完整并集
+            fetched_bvids = {v.bvid for v in videos}
+            for kv in known_videos or []:
+                if kv.bvid not in fetched_bvids:
+                    videos.append(kv)
 
             return videos
         finally:
@@ -311,11 +299,6 @@ class PlaywrightBilibiliFetcher:
         active_page_locator = page.locator(_CURRENT_PAGE_NUM_SELECTOR)
         return (await active_page_locator.text_content() or "").strip()
 
-    @staticmethod
-    def _any_known(bvids: set[str]) -> bool:
-        """判断是否有已知视频（内存缓存命中则提前终止翻页）。"""
-        return False
-
 
 # ── 模块级解析函数 ──────────────────────────────────────────────────
 
@@ -333,6 +316,9 @@ async def _parse_card(card) -> FetchedVideo | None:
 
     subtitle_el = card.locator(_SUBTITLE_CLASS + " span")
     date_str = (await subtitle_el.text_content() or "").strip()
+    if not date_str:
+        raise FetchError(f"视频卡片未提取到发布时间，bvid={bvid}")
+    published_at = _parse_date(date_str)
 
     stat_spans = card.locator(_DURATION_CLASS + " span")
     stat_count = await stat_spans.count()
@@ -341,18 +327,18 @@ async def _parse_card(card) -> FetchedVideo | None:
         duration_str = (
             await stat_spans.nth(stat_count - 1).text_content() or ""
         ).strip()
-
-    cover_url: str | None = None
-    cover_area = card.locator(".bili-video-card__cover")
-    if await cover_area.count() > 0:
-        cover_img = cover_area.locator("img").first
-        if await cover_img.count() > 0:
-            raw = await cover_img.get_attribute("src") or ""
-            if raw:
-                cover_url = f"https:{raw}" if raw.startswith("//") else raw
-
-    published_at = _parse_date(date_str) if date_str else None
     duration_seconds = _parse_duration(duration_str) if duration_str else 0
+
+    cover_area = card.locator(".bili-video-card__cover")
+    if await cover_area.count() == 0:
+        raise FetchError(f"视频卡片未提取到封面，bvid={bvid}")
+    cover_img = cover_area.locator("img").first
+    if await cover_img.count() == 0:
+        raise FetchError(f"视频卡片未提取到封面 img，bvid={bvid}")
+    raw = await cover_img.get_attribute("src") or ""
+    if not raw:
+        raise FetchError(f"视频卡片封面 img src 为空，bvid={bvid}")
+    cover_url = f"https:{raw}" if raw.startswith("//") else raw
 
     return FetchedVideo(
         bvid=bvid,
@@ -364,7 +350,7 @@ async def _parse_card(card) -> FetchedVideo | None:
     )
 
 
-def _parse_date(date_str: str) -> datetime | None:
+def _parse_date(date_str: str) -> datetime:
     date_str = date_str.strip()
     now = datetime.now(UTC).replace(tzinfo=None)
 
@@ -395,12 +381,12 @@ def _parse_date(date_str: str) -> datetime | None:
         elif unit == "个月":
             delta_seconds = num * 30 * 86400
         else:
-            return None
+            raise FetchError(f"无法解析发布时间：{date_str}")
         return (now - timedelta(seconds=delta_seconds)).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
 
-    return None
+    raise FetchError(f"无法解析发布时间：{date_str}")
 
 
 def _parse_duration(length: str) -> int:

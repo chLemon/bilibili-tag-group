@@ -75,16 +75,24 @@ class SyncService:
             # 表象会误成"无新视频"
             logger.warning("获取 UP 主信息失败，跳过信息更新 uid=%s", uid, exc_info=True)
 
-        fetched_list: list[FetchedVideo] = await self._fetcher.fetch_new_videos(uid)
-
         existing_videos_list = store.videos.filter(creator_id=creator.id)
         existing_videos: dict[str, Video] = {v.bvid: v for v in existing_videos_list}
+        # 传给 fetcher 用于早停判定；早停时 fetcher 会把本地已有但本次未抓到的补回返回值
+        known = [
+            FetchedVideo(
+                bvid=v.bvid,
+                title=v.title,
+                video_url=v.video_url,
+                published_at=v.published_at,
+                duration_seconds=v.duration_seconds,
+                cover_url=v.cover_url,
+            )
+            for v in existing_videos_list
+        ]
+        fetched_list: list[FetchedVideo] = await self._fetcher.fetch_new_videos(uid, known_videos=known)
 
         new_count = 0
         for fv in fetched_list:
-            if fv.published_at is None:
-                logger.warning("跳过无发布时间的视频 bvid=%s", fv.bvid)
-                continue
             if fv.bvid in existing_videos:
                 video = existing_videos[fv.bvid]
                 await store.videos.update(

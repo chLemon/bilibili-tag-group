@@ -1,35 +1,54 @@
-"""测试抓取层：PlaywrightBilibiliFetcher 与 FetchedVideo 标准化逻辑。"""
+"""测试抓取层：PlaywrightBilibiliFetcher 真实接口抓取。"""
 
 import logging
-
-import pytest
 
 from app.fetcher.models import FetchedVideo
 from app.fetcher.playwright_fetcher import (
     PlaywrightBilibiliFetcher,
 )
 
+# MayzaRun
+TEST_UID = "880104"
+EXPECTED_NAME = "MayzaRun"
+
 
 class TestPlaywrightBilibiliFetcher:
-    """测试 PlaywrightBilibiliFetcher 方法（mock 浏览器部分）。"""
+    """真实 B 站接口抓取，需网络与 chromium。"""
 
-    @pytest.mark.integration
     async def test_fetch_videos_success(self):
-        uid = "1024129080"  # 东哥，视频多
-
         fetcher = PlaywrightBilibiliFetcher()
-        videos: list[FetchedVideo] = await fetcher.fetch_new_videos(uid)
-        assert len(videos) > 999
+        videos: list[FetchedVideo] = await fetcher.fetch_new_videos(TEST_UID)
+        assert videos, "应至少抓到一个视频"
+        for v in videos:
+            assert v.bvid
+            assert v.title
+            assert v.video_url
+            assert v.published_at is not None
+            assert v.cover_url
+            assert v.duration_seconds >= 0
         logging.info(videos[0])
         logging.info(len(videos))
 
-    @pytest.mark.integration
     async def test_fetch_creator_info(self):
-        uid = "1024129080"  # 东哥，视频多
-
         fetcher = PlaywrightBilibiliFetcher()
-        creator_info: dict = await fetcher.fetch_creator_info(uid)
-        assert creator_info["name"] == "烧毁一切就是美"
-        assert len(creator_info["avatar_url"]) > 0
-        assert creator_info["video_count"] > 999
+        creator_info: dict = await fetcher.fetch_creator_info(TEST_UID)
+        assert creator_info["name"] == EXPECTED_NAME
+        assert creator_info["avatar_url"]
+        assert creator_info["video_count"] > 0
         logging.info(creator_info)
+
+    async def test_fetch_new_videos_returns_union_with_known(self):
+        """传 known_videos 时：翻到含已知 bvid 的页早停，并把未抓到的 known 补回返回值。"""
+        fetcher = PlaywrightBilibiliFetcher()
+        full = await fetcher.fetch_new_videos(TEST_UID)
+        assert len(full) > 2, "UP 主视频数不足以验证早停"
+
+        # 取第 2 页会出现的 bvid 作为 known（第 1 页的会立即触发早停，覆盖不到翻页）
+        # 构造 1 个已知视频：全集的最后一个（位于最末页）
+        known = [full[-1]]
+        partial = await fetcher.fetch_new_videos(TEST_UID, known_videos=known)
+
+        # 返回的是并集：本次抓到的 + known 里未抓到的，bvid 集合应与全集一致
+        assert {v.bvid for v in partial} == {v.bvid for v in full}
+
+

@@ -11,17 +11,17 @@ B 站的 WBI 签名接口有风控，直接调 API 容易被拦。抓取层用 P
 - 启动参数（`_BROWSER_ARGS`）：`--disable-blink-features=AutomationControlled`、`--disable-features=IsolateOrigins,site-per-process`、`--no-sandbox`、`--disable-setuid-sandbox`
 - 上下文：viewport 1920×1080、locale `zh-CN`、时区 `Asia/Shanghai`
 - `add_init_script` 注入：`navigator.webdriver` 置空、伪造 `plugins`/`languages`、补 `window.chrome`
-- 浏览器实例复用：存在 fetcher 实例上，断开时自动重建；`close_browser()` 在应用关闭时释放
+- 浏览器实例复用：存在 fetcher 实例上，断开时自动重建；`close()` 在应用关闭时释放
 
 ## 抓取流程（fetch_new_videos）
 
 1. 打开投稿页，`wait_until="networkidle"`，页面超时 30s
 2. `_wait_for_cards` 等待视频卡片出现（`.bili-video-card__title`，单次等待 10s）；等不到则随机延迟 1.0–2.5s 后刷新重试，最多刷新 4 次，仍失败则 `raise FetchError`（整页失败即整个 UP 主失败）
 3. 提取当前页所有卡片（单张卡片解析失败仅跳过该卡片）
-4. 若"下一页"按钮 disabled 则结束；否则点击翻页，随机延迟 2.0–4.0s 继续
+4. 若当前页 bvid 与 `known_videos` 有交集则提前结束；否则若"下一页"按钮 disabled 也结束，否则点击翻页，随机延迟 2.0–4.0s 继续
 5. 页数上限 1000
 
-翻页循环中有 `_any_known(page_bvids)` 早停分支（翻到含已知视频的页就提前结束），但恒返回 `False`，早停无效。
+`known_videos` 由调用方（`sync_creator`）传入本地已存的该 UP 主视频集合。早停只省抓取量——返回前会把 `known_videos` 中本次未抓到的视频补回，返回值始终是"已知 ∪ 本次新抓"的并集，不因早停而缺失。
 
 观测性：`fetch_new_videos` 每抓完一页更新 `fetcher.current_page` 属性；`run_sync_task` 在抓取期间每 2 秒把它写入 `SyncTask.current_creator_pages`，供前端展示页级进度。
 
@@ -31,29 +31,24 @@ B 站的 WBI 签名接口有风控，直接调 API 容易被拦。抓取层用 P
 |------|------|------|
 | bvid | 卡片链接 href | 正则 `/video/(BV\w+)`，匹配不到则跳过该卡片 |
 | title | `.bili-video-card__title` | 文本去空白 |
-| published_at | `.bili-video-card__subtitle span` | 见下方日期解析，**可能为 None** |
+| published_at | `.bili-video-card__subtitle span` | 见下方日期解析，解析失败抛 `FetchError` |
 | duration_seconds | `.bili-cover-card__stat span` 最后一个 | `分:秒` 或 `时:分:秒` 冒号拆分 |
-| cover_url | `.bili-video-card__cover img` src | `//` 开头补 `https:` |
+| cover_url | `.bili-video-card__cover img` src | `//` 开头补 `https:`；提取不到抛 `FetchError` |
 
 日期解析（`_parse_date`）依次尝试：
 
 1. `%Y-%m-%d` 绝对日期
 2. `%m-%d`（补当前年；若结果在未来则退一年）
 3. 相对时间 `N 分钟/小时/天/个月前`（"个月"按 30 天；统一归零到当天 00:00）
-4. 都不匹配返回 `None`——`sync_creator` 会跳过这种视频并记 warning
+4. 都不匹配抛 `FetchError`
 
 ## UP 主信息（fetch_creator_info）
 
 同一投稿页提取：昵称（`.nickname`，提取失败抛 `FetchError`）、头像（`#h-avatar img, .avatar img, .b-avatar img`，`//` 补 `https:`）、视频数（侧栏"视频"项的 `.side-nav__item__sub-text`）。头像/视频数虽是可选信息，但提取过程抛异常也会让整体失败。
 
-## 缓存与同步节奏
+## 同步节奏
 
-两层频率控制并存：
-
-| 层 | 位置 | 时长 | 说明 |
-|----|------|------|------|
-| 内存缓存 | fetcher `_cache` dict | 视频 1h、昵称 24h | 进程内有效，重启失效；TTL 内命中跳过远程请求 |
-| `last_synced_at` | `sync_creator` | 立即同步标签下 UP 主 5 分钟；普通 UP 主 50 分钟 | 距上次同步不足间隔则整个 UP 主跳过 |
+`last_synced_at` 频率控制：立即同步标签下 UP 主 5 分钟；普通 UP 主 50 分钟。距上次同步不足间隔则整个 UP 主跳过。
 
 同步侧其他节奏：
 
