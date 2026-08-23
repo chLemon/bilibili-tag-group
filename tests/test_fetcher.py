@@ -35,6 +35,7 @@ class TestPlaywrightBilibiliFetcher:
     async def test_fetch_videos_success(self, fetcher: PlaywrightBilibiliFetcher):
         videos: list[FetchedVideo] = await fetcher.fetch_new_videos(TEST_UID)
         assert videos, "应至少抓到一个视频"
+        assert len(videos) == 48, f"应抓到 48 个视频，实际 {len(videos)}"
         for v in videos:
             assert v.bvid
             assert v.title

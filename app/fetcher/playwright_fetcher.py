@@ -45,6 +45,9 @@ _DELAY_MAX = 2.5
 _PAGE_TIMEOUT = 30_000
 _CARD_WAIT_TIMEOUT = 10_000
 _MAX_PAGES = 1000
+_PAGINATION_RETRY_MAX = 3
+_RETRY_DELAY_MIN = 20.0
+_RETRY_DELAY_MAX = 40.0
 
 # ── 浏览器启动参数 ────────────────────────────────────────────────
 
@@ -161,11 +164,40 @@ class PlaywrightBilibiliFetcher:
             )
 
             videos: list[FetchedVideo] = []
+            seen_bvids: set[str] = set()
             known_bvids: set[str] = {v.bvid for v in known_videos} if known_videos else set()
             total_pages = 0
+            prev_page_num: str | None = None
 
             # 翻页抓取
             while True:
+                # 翻页后等激活页码变化 + 新 bvid 出现；失败多半是 B 站风控（412），
+                # reload 回到第 1 页再 click 下一页，重试 N 次仍失败才放弃
+                if prev_page_num is not None:
+                    success = False
+                    for retry in range(_PAGINATION_RETRY_MAX + 1):
+                        if await self._wait_for_page_change(page, prev_page_num) and \
+                           await self._wait_for_new_bvid(page, seen_bvids):
+                            success = True
+                            break
+                        if retry >= _PAGINATION_RETRY_MAX:
+                            break
+                        _logger.warning(
+                            f"{uid} 翻页后等不到新 bvid（retry {retry + 1}/"
+                            f"{_PAGINATION_RETRY_MAX}），疑似 B 站风控，reload 后重试"
+                        )
+                        await asyncio.sleep(random.uniform(_RETRY_DELAY_MIN, _RETRY_DELAY_MAX))
+                        await page.reload(wait_until="domcontentloaded", timeout=_PAGE_TIMEOUT)
+                        if not await self._wait_for_cards(page):
+                            continue
+                        next_button = page.locator(_NEXT_BUTTON_SELECTOR)
+                        if await next_button.is_disabled():
+                            break
+                        await next_button.click()
+                        await asyncio.sleep(random.uniform(2.0, 4.0))
+                    if not success:
+                        raise FetchError
+
                 # 刷新直到有视频卡片
                 if not await self._wait_for_cards(page):
                     raise FetchError
@@ -180,8 +212,15 @@ class PlaywrightBilibiliFetcher:
 
                 page_bvids: set[str] = set()
                 for video in await self._extract_videos_from_page(page):
-                    videos.append(video)
+                    if video.bvid in seen_bvids:
+                        continue
+                    seen_bvids.add(video.bvid)
                     page_bvids.add(video.bvid)
+                    videos.append(video)
+                _logger.info(f"{uid} 第 {current_page_num} 页抓到 {len(page_bvids)} 个视频")
+                _logger.debug(
+                    f"{uid} 第 {current_page_num} 页 bvid: {', '.join(sorted(page_bvids))}"
+                )
 
                 if on_page_progress is not None:
                     current_num = int(current_page_num) if current_page_num.isdigit() else 0
@@ -197,16 +236,19 @@ class PlaywrightBilibiliFetcher:
                     break
 
                 # 翻页
+                prev_page_num = current_page_num
                 await next_button.click()
                 # 模拟延迟
                 delay = random.uniform(2.0, 4.0)
                 await asyncio.sleep(delay)
 
             # 早停或翻完都走这里：把 known 中本次未抓到的补回，返回完整并集
+            fetched_count = len(videos)
             fetched_bvids = {v.bvid for v in videos}
             for kv in known_videos or []:
                 if kv.bvid not in fetched_bvids:
                     videos.append(kv)
+            _logger.info(f"{uid} 抓取到 {fetched_count} 个视频，最终返回 {len(videos)} 个")
 
             return videos
         finally:
@@ -285,6 +327,68 @@ class PlaywrightBilibiliFetcher:
                     await asyncio.sleep(random.uniform(_DELAY_MIN, _DELAY_MAX))
                     await page.reload(wait_until="domcontentloaded", timeout=_PAGE_TIMEOUT)
         return False
+
+    async def _wait_for_page_change(
+        self, page, prev_page_num: str, timeout_ms: int = _PAGE_TIMEOUT
+    ) -> bool:
+        """等待激活页码变化，确认翻页生效（防止 DOM 未刷新时重复抓上一页）。"""
+        try:
+            await page.wait_for_function(
+                f"""() => {{
+                    const el = document.querySelector('{_CURRENT_PAGE_NUM_SELECTOR}');
+                    return el && el.textContent.trim() !== '{prev_page_num}';
+                }}""",
+                timeout=timeout_ms,
+            )
+            return True
+        except Exception:
+            return False
+
+    async def _wait_for_new_bvid(
+        self, page, seen_bvids: set[str], timeout_ms: int = _PAGE_TIMEOUT
+    ) -> bool:
+        """等待 DOM 中出现未抓过的 bvid，确认翻页后 cards 真刷新而非上一页残留。"""
+        seen_js = ",".join(f"'{b}'" for b in seen_bvids)
+        try:
+            await page.wait_for_function(
+                f"""() => {{
+                    const seen = new Set([{seen_js}]);
+                    const links = document.querySelectorAll('{_CARD_CLASS} a[href*="/video/BV"]');
+                    for (const a of links) {{
+                        const m = (a.href || '').match(/\\/video\\/(BV\\w+)/);
+                        if (m && !seen.has(m[1])) return true;
+                    }}
+                    return false;
+                }}""",
+                timeout=timeout_ms,
+            )
+            return True
+        except Exception:
+            try:
+                diag = await page.evaluate(
+                    f"""() => {{
+                        const links = document.querySelectorAll('{_CARD_CLASS} a[href*="/video/BV"]');
+                        const bvids = [];
+                        for (const a of links) {{
+                            const m = (a.href || '').match(/\\/video\\/(BV\\w+)/);
+                            if (m) bvids.push(m[1]);
+                        }}
+                        return {{
+                            total: bvids.length,
+                            unique: new Set(bvids).size,
+                            current_page: (document.querySelector('{_CURRENT_PAGE_NUM_SELECTOR}') || {{}}).textContent || '',
+                        }};
+                    }}"""
+                )
+                _logger.debug(
+                    f"_wait_for_new_bvid 失败：cards={diag.get('total')}, "
+                    f"unique_bvids={diag.get('unique')}, "
+                    f"current_page={diag.get('current_page')!r}, "
+                    f"seen={len(seen_bvids)}"
+                )
+            except Exception:
+                pass
+            return False
 
     # ── 数据提取 ────────────────────────────────────────────────
 
