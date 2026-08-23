@@ -16,6 +16,7 @@
 
 ```
 uv run python scripts/manage.py start     # 幂等启动：已在运行则只开浏览器
+uv run python scripts/manage.py start --no-pull   # 跳过 private-data 的 git pull，用于本地开发
 uv run python scripts/manage.py stop      # 停止服务 + 备份 ../private-data
 uv run python scripts/manage.py restart   # stop + start
 ```
@@ -49,7 +50,7 @@ uv run python scripts/manage.py restart   # stop + start
 
 ### 启动流程 `cmd_start`
 
-1. `pull_data_repo` 拉取 private-data；失败则返回 1，不启动。
+1. `pull_data_repo` 拉取 private-data；失败则返回 1，不启动。`--no-pull` 时跳过，用于本地开发（如 private-data 是无 remote 的本地仓库）。
 2. `port_in_use` 探测前后端端口；都在跑就直接开浏览器。
 3. 后端未跑：`.venv` 缺则 `uv sync --extra dev`；`uv run playwright install chromium`（走 npmmirror 镜像）；轮替 `backend.log`；`spawn_service` 后台拉起 `uv run uvicorn app.main:app --host <BACKEND_HOST> --port <BACKEND_PORT>`，stdout/stderr → `backend.log`，stdin = `DEVNULL`（setsid 后读 tty 会 EIO，vite 的 readline 会崩）；`wait_for_port` 等就绪。
 4. 前端未跑：`node_modules` 缺则 `npm install`；轮替 `frontend.log`；`spawn_service` 拉起 `npm run dev`；`wait_for_port` 等就绪（vite 自身也读 `config.json` 的 `frontend_port`，两边一致）。

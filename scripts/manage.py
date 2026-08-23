@@ -318,10 +318,12 @@ def spawn_service(command: list[str], log_file: Path, cwd: Path) -> subprocess.P
     )
 
 
-def cmd_start(paths: LauncherPaths = DEFAULT_PATHS) -> int:
+def cmd_start(paths: LauncherPaths = DEFAULT_PATHS, no_pull: bool = False) -> int:
     """幂等启动：前后端都在跑就只开浏览器；缺哪个补某个（含依赖安装与日志轮替）。"""
     paths.log_dir.mkdir(exist_ok=True)
-    if not pull_data_repo(paths.private_data_dir):
+    if no_pull:
+        print("跳过数据仓库拉取（--no-pull）")
+    elif not pull_data_repo(paths.private_data_dir):
         return 1
     backend_running = port_in_use(BACKEND_PORT)
     frontend_running = port_in_use(FRONTEND_PORT)
@@ -435,13 +437,22 @@ def main(argv: list[str] | None = None) -> int:
     """解析 start/stop/restart 子命令并分发。argv 可注入以便测试。"""
     parser = argparse.ArgumentParser(prog="manage.py", description="一键启停前后端服务")
     sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("start", help="幂等启动前后端（已运行则只打开浏览器）")
+    start_parser = sub.add_parser("start", help="幂等启动前后端（已运行则只打开浏览器）")
+    start_parser.add_argument(
+        "--no-pull",
+        action="store_true",
+        help="跳过 private-data 仓库的 git pull，用于本地开发",
+    )
     sub.add_parser("stop", help="停止前后端并备份数据仓库")
     sub.add_parser("restart", help="先 stop 再 start")
     args = parser.parse_args(argv)
     DEFAULT_PATHS.log_dir.mkdir(exist_ok=True)
     tee_console_to(DEFAULT_PATHS.log_dir / "launcher.log", args.command)
-    handlers = {"start": cmd_start, "stop": cmd_stop, "restart": cmd_restart}
+    handlers = {
+        "start": lambda: cmd_start(no_pull=args.no_pull),
+        "stop": cmd_stop,
+        "restart": cmd_restart,
+    }
     return handlers[args.command]()
 
 
