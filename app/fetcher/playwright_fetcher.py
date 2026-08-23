@@ -156,7 +156,7 @@ class PlaywrightBilibiliFetcher:
             # 前往页面
             await page.goto(
                 f"https://space.bilibili.com/{uid}/upload/video",
-                wait_until="networkidle",
+                wait_until="domcontentloaded",
                 timeout=_PAGE_TIMEOUT,
             )
 
@@ -220,7 +220,7 @@ class PlaywrightBilibiliFetcher:
         try:
             await page.goto(
                 f"https://space.bilibili.com/{uid}/upload/video",
-                wait_until="networkidle",
+                wait_until="domcontentloaded",
                 timeout=_PAGE_TIMEOUT,
             )
             name_el = page.locator(".nickname").first
@@ -283,7 +283,7 @@ class PlaywrightBilibiliFetcher:
             except Exception:
                 if refresh < max_refresh:
                     await asyncio.sleep(random.uniform(_DELAY_MIN, _DELAY_MAX))
-                    await page.reload(wait_until="networkidle", timeout=_PAGE_TIMEOUT)
+                    await page.reload(wait_until="domcontentloaded", timeout=_PAGE_TIMEOUT)
         return False
 
     # ── 数据提取 ────────────────────────────────────────────────

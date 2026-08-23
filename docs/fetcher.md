@@ -15,7 +15,7 @@ B 站的 WBI 签名接口有风控，直接调 API 容易被拦。抓取层用 P
 
 ## 抓取流程（fetch_new_videos）
 
-1. 打开投稿页，`wait_until="networkidle"`，页面超时 30s
+1. 打开投稿页，`wait_until="domcontentloaded"`，页面超时 30s
 2. `_wait_for_cards` 等待视频卡片出现（`.bili-video-card__title`，单次等待 10s）；等不到则随机延迟 1.0–2.5s 后刷新重试，最多刷新 4 次，仍失败则 `raise FetchError`（整页失败即整个 UP 主失败）
 3. 提取当前页所有卡片（单张卡片解析失败仅跳过该卡片）
 4. 若当前页 bvid 与 `known_videos` 有交集则提前结束；否则若"下一页"按钮 disabled 也结束，否则点击翻页，随机延迟 2.0–4.0s 继续

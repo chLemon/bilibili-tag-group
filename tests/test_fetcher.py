@@ -1,6 +1,10 @@
 """测试抓取层：PlaywrightBilibiliFetcher 真实接口抓取。"""
 
 import logging
+from collections.abc import AsyncIterator
+
+import pytest
+import pytest_asyncio
 
 from app.fetcher.models import FetchedVideo
 from app.fetcher.playwright_fetcher import (
@@ -11,12 +15,24 @@ from app.fetcher.playwright_fetcher import (
 TEST_UID = "880104"
 EXPECTED_NAME = "MayzaRun"
 
+# 整个模块共享一个 module 级事件循环，让 module-scoped fixture 能跨测试复用 chromium
+pytestmark = pytest.mark.asyncio(loop_scope="module")
+
+
+@pytest_asyncio.fixture(scope="module")
+async def fetcher() -> AsyncIterator[PlaywrightBilibiliFetcher]:
+    """模块级共享 fetcher：chromium 只启动一次，所有测试复用，模块结束统一关闭。"""
+    f = PlaywrightBilibiliFetcher()
+    try:
+        yield f
+    finally:
+        await f.close()
+
 
 class TestPlaywrightBilibiliFetcher:
     """真实 B 站接口抓取，需网络与 chromium。"""
 
-    async def test_fetch_videos_success(self):
-        fetcher = PlaywrightBilibiliFetcher()
+    async def test_fetch_videos_success(self, fetcher: PlaywrightBilibiliFetcher):
         videos: list[FetchedVideo] = await fetcher.fetch_new_videos(TEST_UID)
         assert videos, "应至少抓到一个视频"
         for v in videos:
@@ -29,17 +45,17 @@ class TestPlaywrightBilibiliFetcher:
         logging.info(videos[0])
         logging.info(len(videos))
 
-    async def test_fetch_creator_info(self):
-        fetcher = PlaywrightBilibiliFetcher()
+    async def test_fetch_creator_info(self, fetcher: PlaywrightBilibiliFetcher):
         creator_info: dict = await fetcher.fetch_creator_info(TEST_UID)
         assert creator_info["name"] == EXPECTED_NAME
         assert creator_info["avatar_url"]
         assert creator_info["video_count"] > 0
         logging.info(creator_info)
 
-    async def test_fetch_new_videos_returns_union_with_known(self):
+    async def test_fetch_new_videos_returns_union_with_known(
+        self, fetcher: PlaywrightBilibiliFetcher
+    ):
         """传 known_videos 时：翻到含已知 bvid 的页早停，并把未抓到的 known 补回返回值。"""
-        fetcher = PlaywrightBilibiliFetcher()
         full = await fetcher.fetch_new_videos(TEST_UID)
         assert len(full) > 2, "UP 主视频数不足以验证早停"
 
