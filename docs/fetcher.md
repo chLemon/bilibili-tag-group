@@ -44,7 +44,7 @@ B 站 SPA 跳页后，前端发 XHR 请求目标页 cards 数据；触发安全�
 
 应对：`_wait_for_new_bvid` 失败后 reload 当前页（回到第 1 页），随机延迟 20–40s 等风控冷却，再 `_jump_to_page` 跳回原 `target_page` 重试；最多重试 3 次（`_PAGINATION_RETRY_MAX`），仍失败则 `raise FetchError`。重试期间 `_wait_for_new_bvid` 失败会输出 warning 级诊断日志（cards 数 / unique bvid / 当前页码 / seen 数）便于排查。风控是否放行受 IP、访问频率、时间窗口影响，重试只提高恢复概率不保证成功；恢复失败时整个 UP 主本次抓取失败，由 `sync_creator` 上层收集到 `SyncTask.error_message`。
 
-观测性：`fetch_new_videos` 接受可选的 `on_page_progress` 回调，每完成一页以 `(当前页码, 总页数)` 调用一次。总页数从分页按钮 `.vui_pagenation--btns button` 中数字页码的最大值取得，首次抓取第 1 页时提取一次。`sync_creator` 传入回调把页码与总页数写入 `SyncTask.current_creator_pages` / `current_creator_total_pages`，供前端展示页级进度。日志方面，每页抓取完成后输出 info 级日志（页码与本页抓到的视频数）与 debug 级 bvid 列表；翻完或早停后输出 info 级汇总（本次抓到多少、最终返回多少，含补回的 known 视频）。
+观测性：`fetch_new_videos` 接受可选的 `on_page_progress` 回调，每完成一页以 `(当前页码, 总页数)` 调用一次。总页数从分页按钮 `.vui_pagenation--btns button` 中数字页码的最大值取得，首次抓取第 1 页时提取一次。`sync_creator` 传入回调把进度字符串写入 `SyncTask.current_creator_progress`，供前端展示页级进度。日志方面，每页抓取完成后输出 info 级日志（页码与本页抓到的视频数）与 debug 级 bvid 列表；翻完或早停后输出 info 级汇总（本次抓到多少、最终返回多少，含补回的 known 视频）。
 
 ## 卡片字段提取
 

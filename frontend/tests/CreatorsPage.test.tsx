@@ -1,7 +1,7 @@
 /**
  * CreatorsPage 页面测试
  */
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
@@ -147,7 +147,6 @@ describe("CreatorsPage", () => {
   });
 
   it("确认后删除 UP 主并从列表移除", async () => {
-    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
     render(
       <MemoryRouter>
         <CreatorsPage />
@@ -155,15 +154,17 @@ describe("CreatorsPage", () => {
     );
     await waitFor(() => screen.getByText("测试UP主"));
     await userEvent.click(screen.getByRole("button", { name: /删除/ }));
+    const dialog = await screen.findByRole("dialog", { name: "删除 UP 主" });
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "删除" })
+    );
     await waitFor(() => {
       expect(client.deleteCreator).toHaveBeenCalledWith(1);
       expect(screen.queryByText("测试UP主")).not.toBeInTheDocument();
     });
-    vi.unstubAllGlobals();
   });
 
   it("取消确认则不删除", async () => {
-    vi.stubGlobal("confirm", vi.fn().mockReturnValue(false));
     render(
       <MemoryRouter>
         <CreatorsPage />
@@ -171,8 +172,11 @@ describe("CreatorsPage", () => {
     );
     await waitFor(() => screen.getByText("测试UP主"));
     await userEvent.click(screen.getByRole("button", { name: /删除/ }));
+    const dialog = await screen.findByRole("dialog", { name: "删除 UP 主" });
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "取消" })
+    );
     expect(client.deleteCreator).not.toHaveBeenCalled();
     expect(screen.getByText("测试UP主")).toBeInTheDocument();
-    vi.unstubAllGlobals();
   });
 });

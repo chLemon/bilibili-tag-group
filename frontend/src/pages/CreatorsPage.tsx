@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import CreatorForm from "../components/CreatorForm";
 import BatchImportModal from "../components/BatchImportModal";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { useCreators } from "../hooks/useCreators";
 import { displayName } from "../utils/format";
 import { formatRelativeTime } from "../utils/time";
@@ -56,6 +57,7 @@ export default function CreatorsPage() {
 
   const [formMode, setFormMode] = useState<FormMode>({ type: "none" });
   const [showBatchModal, setShowBatchModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Creator | null>(null);
 
   if (loading) {
     return (
@@ -302,16 +304,7 @@ export default function CreatorsPage() {
                 </button>
                 <button
                   className="btn-edit"
-                  onClick={async () => {
-                    if (
-                      !window.confirm(
-                        `删除 UP 主「${displayName(c)}」？其视频与观看记录将一并删除。`
-                      )
-                    )
-                      return;
-                    const ok = await removeCreator(c.id);
-                    if (!ok) window.alert("删除失败，请查看后端日志");
-                  }}
+                  onClick={() => setDeleteTarget(c)}
                 >
                   <Trash2 size={12} />
                   删除
@@ -380,6 +373,21 @@ export default function CreatorsPage() {
             appendCreators(newCreators);
             setShowBatchModal(false);
           }}
+        />
+      )}
+
+      {/* 删除确认弹窗 */}
+      {deleteTarget && (
+        <ConfirmDialog
+          title="删除 UP 主"
+          message={`删除 UP 主「${displayName(deleteTarget)}」？其视频与观看记录将一并删除。`}
+          confirmText="删除"
+          danger
+          onConfirm={async () => {
+            await removeCreator(deleteTarget.id);
+            setDeleteTarget(null);
+          }}
+          onClose={() => setDeleteTarget(null)}
         />
       )}
     </div>

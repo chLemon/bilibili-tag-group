@@ -485,3 +485,28 @@ AggregateError [ECONNREFUSED]:
   VITE v5.4.21  ready in 139 ms
 
   ➜  Local:   http://127.0.0.1:2222/
+23:54:21 [vite] hmr update /src/pages/CreatorDetailPage.tsx, /src/pages/SyncPage.tsx, /src/pages/TagsPage.tsx, /src/components/BatchImportModal.tsx, /src/pages/CreatorsPage.tsx, /src/components/CreatorForm.tsx
+23:54:22 [vite] hmr update /src/pages/SyncPage.tsx
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 128 ms
+
+  ➜  Local:   http://127.0.0.1:2222/
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 120 ms
+
+  ➜  Local:   http://127.0.0.1:2222/
+00:15:05 [vite] hmr update /src/pages/CreatorsPage.tsx
+00:15:06 [vite] hmr update /src/pages/CreatorsPage.tsx
+00:15:07 [vite] hmr update /src/pages/CreatorsPage.tsx
+00:15:19 [vite] hmr update /src/pages/CreatorsPage.tsx
+00:15:45 [vite] hmr update /src/components/ConfirmDialog.tsx
+00:18:48 [vite] hmr update /src/components/BatchImportModal.tsx
+00:19:12 [vite] hmr update /src/components/BatchImportModal.tsx

@@ -69,9 +69,12 @@ class SyncService:
 
         try:
             info = await self._fetcher.fetch_creator_info(uid)
-            creator.name = info["name"]
-            creator.avatar_url = info["avatar_url"]
-            creator.video_count = info["video_count"]
+            await store.creators.update(
+                creator.id,
+                name=info["name"],
+                avatar_url=info["avatar_url"],
+                video_count=info["video_count"],
+            )
         except Exception:
             # 信息更新失败不阻断视频同步，但必须留痕：风控时段若静默跳过，
             # 表象会误成"无新视频"
@@ -95,7 +98,7 @@ class SyncService:
         async def _on_page_progress(current: int, total: int) -> None:
             if task_id is not None:
                 await store.sync_tasks.update(
-                    task_id, current_creator_pages=current, current_creator_total_pages=total
+                    task_id, current_creator_progress=f"已抓 {current}/{total} 页"
                 )
 
         fetched_list: list[FetchedVideo] = await self._fetcher.fetch_new_videos(
@@ -210,8 +213,7 @@ class SyncService:
                 await store.sync_tasks.update(
                     task_id,
                     current_creator_name=creator.name,
-                    current_creator_pages=0,
-                    current_creator_total_pages=0,
+                    current_creator_progress=None,
                 )
 
                 try:
@@ -229,8 +231,7 @@ class SyncService:
                     completed_creators=(task.completed_creators + 1),
                     new_videos=total_new,
                     current_creator_name=None,
-                    current_creator_pages=0,
-                    current_creator_total_pages=0,
+                    current_creator_progress=None,
                 )
 
             task = store.sync_tasks.get(task_id)

@@ -197,7 +197,7 @@ export default function BatchImportModal({ onClose, onSuccess }: Props) {
                 <thead>
                   <tr>
                     <th style={{ width: 100 }}>UID</th>
-                    <th style={{ width: 120 }}>名称</th>
+                    <th style={{ width: 180 }}>名称</th>
                     <th>标签</th>
                     <th style={{ width: 60 }}>状态</th>
                   </tr>
@@ -214,7 +214,28 @@ export default function BatchImportModal({ onClose, onSuccess }: Props) {
                         ) : item.error ? (
                           <span className="batch-preview-error-text">失败</span>
                         ) : (
-                          item.name
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            {item.avatar_url && (
+                              <img
+                                src={item.avatar_url}
+                                alt={item.name!}
+                                referrerPolicy="no-referrer"
+                                style={{
+                                  width: 20,
+                                  height: 20,
+                                  borderRadius: "50%",
+                                  objectFit: "cover",
+                                }}
+                              />
+                            )}
+                            {item.name}
+                          </span>
                         )}
                       </td>
                       <td>
