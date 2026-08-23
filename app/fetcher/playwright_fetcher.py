@@ -275,50 +275,37 @@ class PlaywrightBilibiliFetcher:
                 wait_until="domcontentloaded",
                 timeout=_PAGE_TIMEOUT,
             )
-            name_el = page.locator(".nickname").first
-            name = await name_el.text_content()
-            if not name or not name.strip():
-                raise FetchError(f"未能提取到 UP 主昵称，uid={uid}")
-            name = name.strip()
 
-            avatar_url: str | None = None
-            try:
-                avatar_img = page.locator(
-                    "#h-avatar img, .avatar img, .b-avatar img"
-                ).first
-                if await avatar_img.count() > 0:
-                    raw = await avatar_img.get_attribute("src") or ""
-                    if raw:
-                        avatar_url = f"https:{raw}" if raw.startswith("//") else raw
-            except Exception:
-                raise FetchError(f"未能提取到 UP 主头像，uid={uid}")
+            name = (await page.locator(".nickname").first.text_content() or "").strip()
+            raw = await page.locator(
+                "#h-avatar img, .avatar img, .b-avatar img"
+            ).first.get_attribute("src") or ""
+            avatar_url = f"https:{raw}" if raw.startswith("//") else raw
 
+            # 从侧栏"视频"项的 sub-text 取视频数
             video_count: int | None = None
-            try:
-                nav_items = page.locator(".side-nav__item")
-                count = await nav_items.count()
-                for i in range(count):
-                    item = nav_items.nth(i)
-                    text_el = item.locator(".side-nav__item__main-text")
-                    if await text_el.count() > 0 and "视频" in (
-                        await text_el.text_content() or ""
-                    ):
-                        count_el = item.locator(".side-nav__item__sub-text")
-                        if await count_el.count() > 0:
-                            count_text = (await count_el.text_content() or "").strip()
+            nav_items = page.locator(".side-nav__item")
+            for i in range(await nav_items.count()):
+                item = nav_items.nth(i)
+                text_el = item.locator(".side-nav__item__main-text")
+                if await text_el.count() > 0 and "视频" in (
+                    await text_el.text_content() or ""
+                ):
+                    count_el = item.locator(".side-nav__item__sub-text")
+                    if await count_el.count() > 0:
+                        count_text = (await count_el.text_content() or "").strip()
+                        if count_text:
                             video_count = int(count_text)
-                        break
-            except Exception:
-                raise FetchError(f"未能提取到 UP 主视频数量，uid={uid}")
+                    break
 
-            result = {
+            if not name or not avatar_url or video_count is None:
+                raise FetchError(f"获取 UP 主信息失败，uid={uid}")
+
+            return {
                 "name": name,
                 "avatar_url": avatar_url,
                 "video_count": video_count,
             }
-            return result
-        except FetchError:
-            raise
         except Exception as exc:
             raise FetchError(f"获取 UP 主信息失败，uid={uid}: {exc}") from exc
         finally:

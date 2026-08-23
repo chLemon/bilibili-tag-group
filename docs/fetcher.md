@@ -63,7 +63,7 @@ B 站 SPA 翻页 click 后，前端发 XHR 请求下一页 cards 数据；触发
 
 ## UP 主信息（fetch_creator_info）
 
-同一投稿页提取：昵称（`.nickname`，提取失败抛 `FetchError`）、头像（`#h-avatar img, .avatar img, .b-avatar img`，`//` 补 `https:`）、视频数（侧栏"视频"项的 `.side-nav__item__sub-text`）。头像/视频数虽是可选信息，但提取过程抛异常也会让整体失败。
+同一投稿页提取：昵称（`.nickname`）、头像（`#h-avatar img, .avatar img, .b-avatar img`，`//` 补 `https:`）、视频数（侧栏"视频"项的 `.side-nav__item__sub-text`）。三个字段都必填，任一缺失或为空都抛 `FetchError`。
 
 ## 同步节奏
 
