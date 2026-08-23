@@ -178,5 +178,4 @@ cd frontend && npm test
 - [frontend/README.md](frontend/README.md) — 前端结构、路由、约定、测试
 - [docs/api.md](docs/api.md) — 全部接口的请求/响应字段详细说明
 - [docs/fetcher.md](docs/fetcher.md) — 抓取层基准行为（已冻结，改动前必读）
-- [docs/fetcher-review.md](docs/fetcher-review.md) — 抓取层疑点与处理建议
 - [docs/docs.md](docs/docs.md) — 原始需求草稿（历史留存）

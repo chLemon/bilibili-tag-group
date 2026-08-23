@@ -2,7 +2,7 @@
 
 日期：2026-07-22
 
-`app/fetcher/` 与 `SyncService.sync_creator` 的抓取逻辑是**用户校准过的基准行为**。本文档记录这套行为的完整事实，作为今后任何改动的对照基准。**改动前必须先阅读本文档与 `docs/fetcher-review.md`，并与用户确认。**
+`app/fetcher/` 与 `SyncService.sync_creator` 的抓取逻辑是**用户校准过的基准行为**。本文档记录这套行为的完整事实，作为今后任何改动的对照基准。**改动前必须先阅读本文档，并与用户确认。**
 
 ## 为什么用 Playwright DOM 提取
 
@@ -23,7 +23,7 @@ B 站的 WBI 签名接口有风控，直接调 API 容易被拦。抓取层改�
 4. 若"下一页"按钮 disabled 则结束；否则点击翻页，随机延迟 2.0–4.0s 继续
 5. 页数上限 1000
 
-翻页循环中有 `_any_known(page_bvids)` 早停分支（翻到含已知视频的页就提前结束），但当前实现恒返回 `False`，早停从未生效——见 `docs/fetcher-review.md` 第 1 条。
+翻页循环中有 `_any_known(page_bvids)` 早停分支（翻到含已知视频的页就提前结束），但当前实现恒返回 `False`，早停从未生效。
 
 观测性扩展（不改变抓取行为）：`fetch_new_videos` 每抓完一页会更新 `fetcher.current_page` 属性；`run_sync_task` 在抓取期间每 2 秒把它写入 `SyncTask.current_creator_pages`，供前端展示页级进度。
 
@@ -46,11 +46,11 @@ B 站的 WBI 签名接口有风控，直接调 API 容易被拦。抓取层改�
 
 ## UP 主信息（fetch_creator_info）
 
-同一投稿页提取：昵称（`.nickname`，提取失败抛 `FetchError`）、头像（`#h-avatar img, .avatar img, .b-avatar img`，`//` 补 `https:`）、视频数（侧栏"视频"项的 `.side-nav__item__sub-text`）。头像/视频数虽是可选信息，但提取过程抛异常也会让整体失败（见 fetcher-review 第 3 条）。
+同一投稿页提取：昵称（`.nickname`，提取失败抛 `FetchError`）、头像（`#h-avatar img, .avatar img, .b-avatar img`，`//` 补 `https:`）、视频数（侧栏"视频"项的 `.side-nav__item__sub-text`）。头像/视频数虽是可选信息，但提取过程抛异常也会让整体失败。
 
 ## 缓存与同步节奏
 
-两层频率控制并存（见 fetcher-review 第 2 条）：
+两层频率控制并存：
 
 | 层 | 位置 | 时长 | 说明 |
 |----|------|------|------|
@@ -67,5 +67,5 @@ B 站的 WBI 签名接口有风控，直接调 API 容易被拦。抓取层改�
 
 ## 异常约定
 
-- `FetchError`：抓取失败的统一异常。部分抛出点缺少上下文（无 uid/阶段信息），见 fetcher-review 第 4 条
+- `FetchError`：抓取失败的统一异常。部分抛出点缺少上下文（无 uid/阶段信息）
 - `sync_creator` 中 UP 主信息（昵称/头像/视频数）更新失败会被吞掉（`except Exception: pass`），只有 `fetch_new_videos` 失败才向上抛

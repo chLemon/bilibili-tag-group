@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `docs/` 存放项目文档，分为两部分：
 
-- 根目录下的散放 md：领域与行为基准文档，包括 `requirements.md`（需求）、`api.md`（HTTP 接口）、`fetcher.md`（抓取层行为基准）、`fetcher-review.md`（抓取层疑点与待确认建议）、`logging.md`（日志规范）。
+- 根目录下的散放 md：领域与行为基准文档，包括 `requirements.md`（需求）、`api.md`（HTTP 接口）、`fetcher.md`（抓取层行为基准）、`logging.md`（日志规范）。
 - `docs/dev/`：代码层面的说明，包括模块逻辑、设计取舍、实现思路。目前有 `scripts/README.md` 说明根目录 `scripts/` 下启停脚本的功能与设计。
 
 **代码修改必须同步更新对应文档**：改动涉及接口、数据模型、抓取行为、启停流程、日志规范等已文档化的内容时，要一并修订 `docs/` 下相关文件，保持文档与代码一致。新增重要模块或子目录时，在 `docs/dev/` 下补充对应说明。
@@ -71,4 +71,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 后端声明 `requires-python = ">=3.12"`。使用 uv 管理依赖，运行测试和脚本统一用 `uv run` 前缀。
 - `app/config.py` 中 `data_dir` 默认指向项目根目录外的 `../private-data/bilibili-tag-group/`，用户自行在该目录下用 git 管理数据版本。
 - 时间字段统一使用 naive UTC；不要再引入 `datetime.utcnow()`。
-- `app/fetcher/` 与 `sync_creator` 的抓取逻辑是用户校准过的冻结基准，不要擅动；改动前先读 `docs/fetcher.md`（行为基准）与 `docs/fetcher-review.md`（疑点与待确认建议），并与用户确认。
+- `app/fetcher/` 与 `sync_creator` 的抓取逻辑是用户校准过的冻结基准，不要擅动；改动前先读 `docs/fetcher.md`（行为基准），并与用户确认。
