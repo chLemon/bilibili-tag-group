@@ -347,18 +347,17 @@ class PlaywrightBilibiliFetcher:
     async def _wait_for_new_bvid(
         self, page, seen_bvids: set[str], timeout_ms: int = _PAGE_TIMEOUT
     ) -> bool:
-        """等待 DOM 中出现未抓过的 bvid，确认翻页后 cards 真刷新而非上一页残留。"""
+        """等待 DOM 中最后一张卡片的 bvid 未抓过，确认翻页后 cards 真刷新而非上一页残留。"""
         seen_js = ",".join(f"'{b}'" for b in seen_bvids)
         try:
             await page.wait_for_function(
                 f"""() => {{
                     const seen = new Set([{seen_js}]);
                     const links = document.querySelectorAll('{_CARD_CLASS} a[href*="/video/BV"]');
-                    for (const a of links) {{
-                        const m = (a.href || '').match(/\\/video\\/(BV\\w+)/);
-                        if (m && !seen.has(m[1])) return true;
-                    }}
-                    return false;
+                    if (!links.length) return false;
+                    const last = links[links.length - 1];
+                    const m = (last.href || '').match(/\\/video\\/(BV\\w+)/);
+                    return !!(m && !seen.has(m[1]));
                 }}""",
                 timeout=timeout_ms,
             )
