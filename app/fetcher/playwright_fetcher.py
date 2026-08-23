@@ -12,6 +12,7 @@ import asyncio
 import logging
 import random
 import re
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 
 from playwright.async_api import Browser, BrowserContext, async_playwright
@@ -35,6 +36,7 @@ _NEXT_PAGE_SELECTOR = ".vui_pagenation--btn-side"
 _VIDEO_COUNT_SELECTOR = ".side-nav__item.active .side-nav__item__sub-text"
 _CURRENT_PAGE_NUM_SELECTOR = ".vui_pagenation--btns .vui_button--active"
 _NEXT_BUTTON_SELECTOR = ".vui_pagenation--btns button:has-text('下一页')"
+_PAGE_BUTTONS_SELECTOR = ".vui_pagenation--btns button"
 
 # ── 时间与重试配置 ────────────────────────────────────────────────
 
@@ -70,8 +72,6 @@ class PlaywrightBilibiliFetcher:
         self._headless = headless
         self._playwright = None
         self._browser = None
-        self.current_page = 0
-        """fetch_new_videos 最近一次完成的页码，同步任务据此展示页级进度"""
 
     async def close(self) -> None:
         """对外暴露的资源释放入口，应用关闭时调用。"""
@@ -128,6 +128,7 @@ class PlaywrightBilibiliFetcher:
         self,
         uid: str,
         known_videos: list[FetchedVideo] | None = None,
+        on_page_progress: Callable[[int, int], Awaitable[None]] | None = None,
     ) -> list[FetchedVideo]:
         """抓取某个 up 主的视频列表
 
@@ -143,8 +144,9 @@ class PlaywrightBilibiliFetcher:
         本次未抓到的视频补回返回值——返回的是"已知 ∪ 本次新抓"的并集，
         早停只省抓取量，不损失返回完整性。
 
-        抓取过程中每完成一页会更新 self.current_page（仅观测用，供
-        同步任务展示页级进度，不影响抓取行为）。
+        on_page_progress 为可选的页级进度回调：每完成一页抓取后以
+        (当前页码, 总页数) 调用一次，供调用方及时透出进度。回调抛异常会
+        中断抓取。
         """
 
         context = await self._create_context()
@@ -159,8 +161,8 @@ class PlaywrightBilibiliFetcher:
             )
 
             videos: list[FetchedVideo] = []
-            self.current_page = 0
             known_bvids: set[str] = {v.bvid for v in known_videos} if known_videos else set()
+            total_pages = 0
 
             # 翻页抓取
             while True:
@@ -172,11 +174,18 @@ class PlaywrightBilibiliFetcher:
                 current_page_num = await self._extract_current_page_num(page)
                 _logger.info(f"抓取第 {current_page_num} 页的数据")
 
+                # 总页数只在首次（第 1 页）提取一次，翻页过程中不变
+                if total_pages == 0:
+                    total_pages = await self._extract_total_pages(page)
+
                 page_bvids: set[str] = set()
                 for video in await self._extract_videos_from_page(page):
                     videos.append(video)
                     page_bvids.add(video.bvid)
-                self.current_page = current_page_num
+
+                if on_page_progress is not None:
+                    current_num = int(current_page_num) if current_page_num.isdigit() else 0
+                    await on_page_progress(current_num, total_pages)
 
                 if page_bvids and page_bvids & known_bvids:
                     # 翻到含已知视频的页，提前停止
@@ -298,6 +307,18 @@ class PlaywrightBilibiliFetcher:
         """获取当前页数"""
         active_page_locator = page.locator(_CURRENT_PAGE_NUM_SELECTOR)
         return (await active_page_locator.text_content() or "").strip()
+
+    @staticmethod
+    async def _extract_total_pages(page) -> int:
+        """从分页按钮中取数字页码的最大值作为总页数；无分页按钮时返回 0。"""
+        buttons = page.locator(_PAGE_BUTTONS_SELECTOR)
+        count = await buttons.count()
+        max_page = 0
+        for i in range(count):
+            text = (await buttons.nth(i).text_content() or "").strip()
+            if text.isdigit():
+                max_page = max(max_page, int(text))
+        return max_page
 
 
 # ── 模块级解析函数 ──────────────────────────────────────────────────

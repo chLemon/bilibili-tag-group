@@ -43,8 +43,14 @@ class SyncService:
         creator_tag_ids = {row.tag_id for row in store.creator_tags.filter(creator_id=creator_id)}
         return bool(creator_tag_ids & immediate_tag_ids)
 
-    async def sync_creator(self, store: DataStore, creator: Creator) -> int:
-        """同步 UP 主的信息。"""
+    async def sync_creator(
+        self, store: DataStore, creator: Creator, task_id: int | None = None
+    ) -> int:
+        """同步 UP 主的信息。
+
+        task_id 非空时，抓取过程中每完成一页把页码写入对应 SyncTask，
+        供前端展示页级进度。
+        """
         if not creator.enabled:
             return 0
 
@@ -89,7 +95,16 @@ class SyncService:
             )
             for v in existing_videos_list
         ]
-        fetched_list: list[FetchedVideo] = await self._fetcher.fetch_new_videos(uid, known_videos=known)
+
+        async def _on_page_progress(current: int, total: int) -> None:
+            if task_id is not None:
+                await store.sync_tasks.update(
+                    task_id, current_creator_pages=current, current_creator_total_pages=total
+                )
+
+        fetched_list: list[FetchedVideo] = await self._fetcher.fetch_new_videos(
+            uid, known_videos=known, on_page_progress=_on_page_progress
+        )
 
         new_count = 0
         for fv in fetched_list:
@@ -200,17 +215,13 @@ class SyncService:
                     task_id,
                     current_creator_name=creator.name,
                     current_creator_pages=0,
+                    current_creator_total_pages=0,
                 )
 
                 try:
-                    # 抓取期间每 2 秒把 fetcher 的页进度写进任务，供前端展示
-                    fetch = asyncio.create_task(self.sync_creator(store, creator))
-                    while not fetch.done():
-                        await asyncio.sleep(2)
-                        await store.sync_tasks.update(
-                            task_id, current_creator_pages=self._fetcher.current_page
-                        )
-                    total_new += fetch.result()
+                    # 页级进度由 sync_creator 通过回调直接写 SyncTask，无需轮询
+                    new_count = await self.sync_creator(store, creator, task_id=task_id)
+                    total_new += new_count
                 except Exception as exc:
                     errors.append(f"{creator.name}: {exc}")
 
@@ -223,6 +234,7 @@ class SyncService:
                     new_videos=total_new,
                     current_creator_name=None,
                     current_creator_pages=0,
+                    current_creator_total_pages=0,
                 )
 
             task = store.sync_tasks.get(task_id)

@@ -23,7 +23,7 @@ B 站的 WBI 签名接口有风控，直接调 API 容易被拦。抓取层用 P
 
 `known_videos` 由调用方（`sync_creator`）传入本地已存的该 UP 主视频集合。早停只省抓取量——返回前会把 `known_videos` 中本次未抓到的视频补回，返回值始终是"已知 ∪ 本次新抓"的并集，不因早停而缺失。
 
-观测性：`fetch_new_videos` 每抓完一页更新 `fetcher.current_page` 属性；`run_sync_task` 在抓取期间每 2 秒把它写入 `SyncTask.current_creator_pages`，供前端展示页级进度。
+观测性：`fetch_new_videos` 接受可选的 `on_page_progress` 回调，每完成一页以 `(当前页码, 总页数)` 调用一次。总页数从分页按钮 `.vui_pagenation--btns button` 中数字页码的最大值取得，首次抓取第 1 页时提取一次。`sync_creator` 传入回调把页码与总页数写入 `SyncTask.current_creator_pages` / `current_creator_total_pages`，供前端展示页级进度。
 
 ## 卡片字段提取
 

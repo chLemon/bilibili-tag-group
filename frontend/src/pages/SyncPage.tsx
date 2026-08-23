@@ -110,7 +110,7 @@ export default function SyncPage() {
             <div className="text-sm text-secondary">
               当前：{task.current_creator_name}
               {task.current_creator_pages > 0 &&
-                `（已抓 ${task.current_creator_pages} 页）`}
+                `（已抓 ${task.current_creator_pages}/${task.current_creator_total_pages} 页）`}
             </div>
           )}
           {isDead && (
