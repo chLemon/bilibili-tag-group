@@ -3037,3 +3037,48 @@ INFO:     127.0.0.1:53128 - "GET /api/tags HTTP/1.1" 200 OK
 INFO:     127.0.0.1:53129 - "GET /api/creators HTTP/1.1" 200 OK
 INFO:     127.0.0.1:53133 - "GET /api/creators HTTP/1.1" 200 OK
 INFO:     127.0.0.1:53132 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [80154]
+INFO:     Started server process [95824]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:3333 (Press CTRL+C to quit)
+INFO:     127.0.0.1:54600 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54602 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54604 - "GET /api/tags/untagged/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54609 - "GET /api/creators/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54611 - "GET /api/tags/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54613 - "GET /api/videos/ HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54620 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54622 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54625 - "GET /api/sync/tasks HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54634 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54640 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54642 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54646 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54661 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54660 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54663 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54666 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54665 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54678 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54682 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54681 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54685 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54686 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54691 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54694 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54700 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54702 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54719 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54724 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54720 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54718 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54723 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54736 - "GET /api/sync/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54740 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54739 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54743 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54744 - "GET /api/sync/immediate-tags HTTP/1.1" 200 OK

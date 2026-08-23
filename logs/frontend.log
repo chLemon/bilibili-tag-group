@@ -516,3 +516,11 @@ AggregateError [ECONNREFUSED]:
 00:26:12 [vite] hmr update /src/pages/TagsPage.tsx
 00:26:17 [vite] hmr update /src/pages/TagsPage.tsx
 00:26:29 [vite] hmr update /src/pages/TagsPage.tsx
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 131 ms
+
+  ➜  Local:   http://127.0.0.1:2222/

@@ -10,6 +10,7 @@
 | `start.sh` / `start.bat` | POSIX / Windows | `manage.py start` 入口，双击可运行 |
 | `stop.sh` / `stop.bat` | POSIX / Windows | `manage.py stop` 入口 |
 | `restart.sh` / `restart.bat` | POSIX / Windows | `manage.py restart` 入口（= stop + start） |
+| `reset-data.sh` / `reset-data.bat` | POSIX / Windows | 清空 `private-data/bilibili-tag-group/` 下所有业务数据，回到初始状态（类似 truncate） |
 | `ensure-uv.bat` | Windows only | 启停前确保 `uv` 可用，缺失则 `pip --user` 装并补进会话 PATH |
 
 ## manage.py
@@ -93,6 +94,23 @@ exec uv run python scripts/manage.py <command>
 - 末尾 `pause` 保持窗口。
 
 所有 `.bat` 保持纯 ASCII：cmd 用系统 ANSI 代码页（zh-CN 下是 GBK）解析批处理，`chcp 65001` 不能可靠修复非 ASCII 行，所以中文输出都在 `manage.py` 里。
+
+## reset-data.sh / reset-data.bat
+
+清空本地数据仓库的脚本，作用类似数据库 truncate：让项目回到首次启动前的状态。`JsonRepo` 是按需 IO（读时文件不存在返回 `[]`，写时才创建），所以启动后 API 直接返回空列表，数据文件在首次写入时由 `JsonRepo` 重建。
+
+**删除范围**（在 `private-data/bilibili-tag-group/` 下）：
+
+- 7 个业务数据 JSON：`creators.json` / `tags.json` / `creator_tags.json` / `videos.json` / `video_statuses.json` / `sync_tasks.json` / `tag_sync_configs.json`
+- 所有 `*.bak-*` 备份文件（如 `videos.json.bak-20260731`）
+- 所有 `*.lock` 跨进程锁文件（空文件，进程未运行时安全删除）
+- `.DS_Store`
+
+**保留**：`cookies.json`（B 站登录态，删了要重新登录；如需一并清理手动 `rm` / `del` 即可）。
+
+**运行前先 `stop.sh` / `stop.bat`** 停止服务，避免后端写盘与清理冲突。脚本会先列出删除范围并要求确认（`y/N`），确认后执行。`.bat` 保持纯 ASCII，输出英文（中文在 cmd 的 GBK 代码页下会乱码，参见 `ensure-uv.bat` 的说明）；`.sh` 输出中文。
+
+数据目录定位：脚本从自身所在 `scripts/` 上溯到项目根，再拼 `../private-data/bilibili-tag-group`，与 `app/config.py` 的 `DEFAULT_DATA_DIR` 一致。目录不存在则报错退出。
 
 ## ensure-uv.bat
 
