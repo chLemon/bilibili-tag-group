@@ -7,6 +7,7 @@ import { Hash, AlertCircle, Inbox, Loader2, RefreshCw, Tag, CheckCheck, EyeOff, 
 import { useTags, useTagVideos, useScrollSpy, UNTAGGED_ID } from "../hooks/useTags";
 import VideoCard from "../components/VideoCard";
 import CreatorAnchorNav from "../components/CreatorAnchorNav";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function TagsPage() {
   const { tags, loading: loadingTags, error: tagsError, refresh: refreshTags } = useTags();
@@ -48,6 +49,9 @@ export default function TagsPage() {
 
   const [expandedCreators, setExpandedCreators] = useState<Set<number>>(new Set());
   const [batchLoadingId, setBatchLoadingId] = useState<number | null>(null);
+  const [batchConfirm, setBatchConfirm] = useState<
+    { type: "watched" | "ignored"; creatorId: number } | null
+  >(null);
 
   const toggleExpand = (creatorId: number) => {
     setExpandedCreators((prev) => {
@@ -61,25 +65,28 @@ export default function TagsPage() {
     });
   };
 
-  const handleMarkAllWatched = async (creatorId: number) => {
-    if (!window.confirm("确定将该 UP 主的所有未看视频标记为已看？")) return;
-    setBatchLoadingId(creatorId);
-    try {
-      if (await markAllWatched(creatorId)) refreshTags();
-    } finally {
-      setBatchLoadingId(null);
-    }
+  const handleMarkAllWatched = (creatorId: number) => {
+    setBatchConfirm({ type: "watched", creatorId });
   };
 
-  const handleMarkAllIgnored = async (creatorId: number) => {
-    if (!window.confirm("确定将该 UP 主的所有未看视频标记为不看？")) return;
+  const handleMarkAllIgnored = (creatorId: number) => {
+    setBatchConfirm({ type: "ignored", creatorId });
+  };
+
+  async function runBatchConfirm() {
+    if (!batchConfirm) return;
+    const { type, creatorId } = batchConfirm;
     setBatchLoadingId(creatorId);
     try {
-      if (await markAllIgnored(creatorId)) refreshTags();
+      const ok =
+        type === "watched"
+          ? await markAllWatched(creatorId)
+          : await markAllIgnored(creatorId);
+      if (ok) refreshTags();
     } finally {
       setBatchLoadingId(null);
     }
-  };
+  }
 
   // ── 标签加载态 ──
   if (loadingTags) {
@@ -280,6 +287,24 @@ export default function TagsPage() {
         activeCreatorId={activeCreatorId}
         onSelect={scrollToCreator}
       />
+
+      {batchConfirm && (
+        <ConfirmDialog
+          title="批量标记"
+          message={
+            batchConfirm.type === "watched"
+              ? "确定将该 UP 主的所有未看视频标记为已看？"
+              : "确定将该 UP 主的所有未看视频标记为不看？"
+          }
+          confirmText={batchConfirm.type === "watched" ? "标记已看" : "标记不看"}
+          danger={batchConfirm.type === "ignored"}
+          onConfirm={async () => {
+            await runBatchConfirm();
+            setBatchConfirm(null);
+          }}
+          onClose={() => setBatchConfirm(null)}
+        />
+      )}
     </div>
   );
 }

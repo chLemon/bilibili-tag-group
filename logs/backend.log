@@ -2956,3 +2956,84 @@ INFO:     127.0.0.1:51925 - "GET /api/sync/task/current HTTP/1.1" 200 OK
 2026-08-24 00:22:08 [INFO] app.fetcher.playwright_fetcher: 抓取第 16 页的数据
 2026-08-24 00:22:09 [INFO] app.fetcher.playwright_fetcher: 437979218 第 16 页抓到 42 个视频
 INFO:     127.0.0.1:51944 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:13 [INFO] app.fetcher.playwright_fetcher: 抓取第 17 页的数据
+INFO:     127.0.0.1:51961 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:13 [INFO] app.fetcher.playwright_fetcher: 437979218 第 17 页抓到 42 个视频
+INFO:     127.0.0.1:51981 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:17 [INFO] app.fetcher.playwright_fetcher: 抓取第 18 页的数据
+2026-08-24 00:22:17 [INFO] app.fetcher.playwright_fetcher: 437979218 第 18 页抓到 42 个视频
+INFO:     127.0.0.1:51999 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:20 [INFO] app.fetcher.playwright_fetcher: 抓取第 19 页的数据
+2026-08-24 00:22:21 [INFO] app.fetcher.playwright_fetcher: 437979218 第 19 页抓到 42 个视频
+INFO:     127.0.0.1:52025 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:25 [INFO] app.fetcher.playwright_fetcher: 抓取第 20 页的数据
+INFO:     127.0.0.1:52042 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:25 [INFO] app.fetcher.playwright_fetcher: 437979218 第 20 页抓到 42 个视频
+INFO:     127.0.0.1:52060 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:30 [INFO] app.fetcher.playwright_fetcher: 抓取第 21 页的数据
+2026-08-24 00:22:30 [INFO] app.fetcher.playwright_fetcher: 437979218 第 21 页抓到 42 个视频
+INFO:     127.0.0.1:52076 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52093 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:35 [INFO] app.fetcher.playwright_fetcher: 抓取第 22 页的数据
+2026-08-24 00:22:35 [INFO] app.fetcher.playwright_fetcher: 437979218 第 22 页抓到 42 个视频
+INFO:     127.0.0.1:52110 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:40 [INFO] app.fetcher.playwright_fetcher: 抓取第 23 页的数据
+2026-08-24 00:22:40 [INFO] app.fetcher.playwright_fetcher: 437979218 第 23 页抓到 42 个视频
+INFO:     127.0.0.1:52126 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52142 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:44 [INFO] app.fetcher.playwright_fetcher: 抓取第 24 页的数据
+2026-08-24 00:22:44 [INFO] app.fetcher.playwright_fetcher: 437979218 第 24 页抓到 42 个视频
+INFO:     127.0.0.1:52159 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:49 [INFO] app.fetcher.playwright_fetcher: 抓取第 25 页的数据
+INFO:     127.0.0.1:52175 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:50 [INFO] app.fetcher.playwright_fetcher: 437979218 第 25 页抓到 42 个视频
+INFO:     127.0.0.1:52196 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:54 [INFO] app.fetcher.playwright_fetcher: 抓取第 26 页的数据
+2026-08-24 00:22:55 [INFO] app.fetcher.playwright_fetcher: 437979218 第 26 页抓到 42 个视频
+INFO:     127.0.0.1:52221 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+2026-08-24 00:22:58 [INFO] app.fetcher.playwright_fetcher: 抓取第 27 页的数据
+2026-08-24 00:22:58 [INFO] app.fetcher.playwright_fetcher: 437979218 第 27 页抓到 23 个视频
+2026-08-24 00:22:58 [INFO] app.fetcher.playwright_fetcher: 437979218 抓取到 1115 个视频，最终返回 1115 个
+INFO:     127.0.0.1:52239 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52272 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52278 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52280 - "GET /api/sync/task/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52284 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52288 - "GET /api/sync/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52591 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52595 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52599 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52625 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52624 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52631 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52633 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52679 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52683 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52687 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52695 - "GET /api/tags/2/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52699 - "GET /api/tags/untagged/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52782 - "PATCH /api/creators/1/videos/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52790 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52811 - "PATCH /api/creators/2/videos/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52815 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52834 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52836 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52844 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52843 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52873 - "GET /api/creators/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52877 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52875 - "GET /api/creators/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52889 - "GET /api/creators/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52888 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52885 - "GET /api/creators/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52921 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52925 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52929 - "GET /api/tags/1/videos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52941 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52942 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52949 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52950 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53128 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53129 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53133 - "GET /api/creators HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53132 - "GET /api/tags HTTP/1.1" 200 OK

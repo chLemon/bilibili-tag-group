@@ -2,6 +2,7 @@
  * CreatorDetailPage：UP 主视频详情页。
  * 展示该 UP 主的所有视频，支持单个/一键标记已看、不看、未看。
  */
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Loader2,
@@ -24,6 +25,7 @@ import {
 } from "lucide-react";
 import { useCreatorDetail } from "../hooks/useCreatorDetail";
 import { displayName, formatDate, formatDuration } from "../utils/format";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 /** 视频状态元信息：状态值 -> 文案与图标 */
 const STATUS_META: Record<number, { label: string; Icon: typeof Play }> = {
@@ -48,9 +50,12 @@ export default function CreatorDetailPage() {
     batchSetStatus,
   } = useCreatorDetail(id);
 
-  async function handleBatchUpdate(status: number, label: string) {
-    if (!window.confirm(`确定将该 UP 主的所有视频标记为${label}？`)) return;
-    await batchSetStatus(status);
+  const [batchConfirm, setBatchConfirm] = useState<
+    { status: number; label: string } | null
+  >(null);
+
+  function handleBatchUpdate(status: number, label: string) {
+    setBatchConfirm({ status, label });
   }
 
   if (loading) {
@@ -298,6 +303,20 @@ export default function CreatorDetailPage() {
             );
           })}
         </div>
+      )}
+
+      {batchConfirm && (
+        <ConfirmDialog
+          title="批量标记"
+          message={`确定将该 UP 主的所有视频标记为${batchConfirm.label}？`}
+          confirmText={batchConfirm.label}
+          danger={batchConfirm.status === 2}
+          onConfirm={async () => {
+            await batchSetStatus(batchConfirm.status);
+            setBatchConfirm(null);
+          }}
+          onClose={() => setBatchConfirm(null)}
+        />
       )}
     </div>
   );
