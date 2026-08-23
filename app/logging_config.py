@@ -13,8 +13,7 @@ def setup_logging() -> None:
     """配置全局日志（幂等，lifespan 中调用）。
 
     只挂 stderr handler：服务固定由 manage.py 启动，stderr 会被重定向到
-    backend.log（含 uvicorn 自身输出，是排障的唯一日志文件），因此不再
-    单独写 app.log。
+    backend.log（含 uvicorn 自身输出，是排障的唯一日志文件）。
     """
     global _configured
     if _configured:

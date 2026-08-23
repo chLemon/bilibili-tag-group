@@ -25,10 +25,6 @@ class FetchError(Exception):
     """抓取失败时抛出此异常。"""
 
 
-class CanRetryError(Exception):
-    """可以重试的异常"""
-
-
 # ── CSS 选择器 ────────────────────────────────────────────────────
 
 _CARD_CLASS = ".bili-video-card"
@@ -37,7 +33,6 @@ _SUBTITLE_CLASS = ".bili-video-card__subtitle"
 _DURATION_CLASS = ".bili-cover-card__stat"
 _NEXT_PAGE_SELECTOR = ".vui_pagenation--btn-side"
 _VIDEO_COUNT_SELECTOR = ".side-nav__item.active .side-nav__item__sub-text"
-_PAGE_COUNT_CSS_SELECTOR = ".vui_pagenation-go__count"
 _CURRENT_PAGE_NUM_SELECTOR = ".vui_pagenation--btns .vui_button--active"
 _NEXT_BUTTON_SELECTOR = ".vui_pagenation--btns button:has-text('下一页')"
 
@@ -48,8 +43,6 @@ _DELAY_MAX = 2.5
 _PAGE_TIMEOUT = 30_000
 _CARD_WAIT_TIMEOUT = 10_000
 _MAX_PAGES = 1000
-_RETRY_COUNT = 4
-_RETRY_BACKOFF = 2
 
 # ── 缓存 TTL ──────────────────────────────────────────────────────
 
@@ -219,8 +212,6 @@ class PlaywrightBilibiliFetcher:
                 await asyncio.sleep(delay)
 
             return videos
-        except Exception as exc:
-            raise exc
         finally:
             await page.close()
             await context.close()
@@ -284,10 +275,6 @@ class PlaywrightBilibiliFetcher:
         finally:
             await page.close()
             await context.close()
-
-    async def fetch_creator_name(self, uid: str) -> str:
-        info = await self.fetch_creator_info(uid)
-        return info["name"]
 
     # ── 页面交互 ────────────────────────────────────────────────
 

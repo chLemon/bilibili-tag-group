@@ -1,6 +1,5 @@
 """视频路由：标记视频状态。"""
 
-import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,8 +8,6 @@ from app.dependencies import get_store
 from app.schemas.video import VideoStatusUpdate
 from app.services.video_service import VideoService
 from app.store.store import DataStore
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/videos", tags=["videos"])
 _video_svc = VideoService()
