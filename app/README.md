@@ -27,7 +27,7 @@ app/
 │   └── sync/                #   同步领域
 │       ├── models.py        #     SyncTask
 │       ├── schemas.py       #     SyncTaskRead（含 BeijingDateTime）
-│       └── service.py       #     SyncService：抓取 → 写入 JSON 文件
+│       └── service.py       #     SyncService：全量/单 UP 主同步、心跳、TTL 节流、全局互斥
 ├── shared/                  # 跨领域共享的基础设施
 │   ├── repo.py              #   JsonRepo[T] 泛型仓库
 │   ├── store.py             #   DataStore 聚合所有 repo
@@ -65,7 +65,7 @@ private-data/bilibili-tag-group/
 Creator ──many-to-many── Tag    （通过 CreatorTag 记录手动关联）
 Creator ──one-to-many─── Video  （通过 Video.creator_id 关联）
 Video   ──one-to-one──── VideoStatus（通过 VideoStatus.video_id 关联）
-SyncTask（scope="all" 的全量同步记录，含进度追踪与探活心跳）
+SyncTask（scope="all" 全量 / scope="creator" 单 UP 主，含进度追踪与探活心跳）
 ```
 
 - **标签挂在 UP 主上**，不挂在视频上
@@ -93,8 +93,9 @@ SyncTask（scope="all" 的全量同步记录，含进度追踪与探活心跳）
 | `GET` | `/api/tags/untagged/videos` | 所有无标签 UP 主的未看视频 |
 | `GET` | `/api/tags/{id}/videos` | 指定标签下所有 UP 主的未看视频 |
 | `PATCH` | `/api/videos/{id}/status` | 标记单个视频已看/未看/不看 |
-| `GET` | `/api/sync/latest` | 最近同步任务 |
+| `GET` | `/api/sync/latest` | 最近同步任务（默认 3 条，上限 20，含全量与单 UP 主） |
 | `POST` | `/api/sync/run` | 手动全量同步 |
+| `POST` | `/api/sync/creators/{creator_id}` | 手动同步单个 UP 主（绕过 TTL 节流） |
 | `GET` | `/api/sync/task/current` | 当前同步任务进度 |
 | `GET` | `/api/sync/settings` | 定时同步配置 |
 | `GET` | `/api/sync/immediate-tags` | 查询所有"立即同步"标签 |

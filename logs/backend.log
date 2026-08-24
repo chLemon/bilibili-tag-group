@@ -3777,3 +3777,7 @@ INFO:     127.0.0.1:56313 - "GET /api/tags HTTP/1.1" 200 OK
 2026-08-24 17:00:36 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
 2026-08-24 17:00:36 [INFO] app.fetcher.playwright_fetcher: 3546897128098300 第 1 页抓到 1 个视频
 2026-08-24 17:00:36 [INFO] app.fetcher.playwright_fetcher: 3546897128098300 抓取到 1 个视频，最终返回 1 个
+2026-08-24 18:00:40 [INFO] app.fetcher.playwright_fetcher: 开始抓取 3546897128098300 的视频
+2026-08-24 18:00:41 [INFO] app.fetcher.playwright_fetcher: 抓取第 1 页的数据
+2026-08-24 18:00:41 [INFO] app.fetcher.playwright_fetcher: 3546897128098300 第 1 页抓到 0 个视频
+2026-08-24 18:00:41 [INFO] app.fetcher.playwright_fetcher: 3546897128098300 抓取到 0 个视频，最终返回 1 个

@@ -23,22 +23,28 @@ src/
 │   └── client.ts                 # API 请求封装与 TypeScript 类型（复用后端 snake_case 字段）
 ├── hooks/
 │   ├── useTags.ts                # 标签列表加载
-│   └── useSync.ts                # 同步任务轮询（3s）、调度配置、立即同步标签管理
+│   ├── useCreators.ts            # UP 主列表加载、增删改、enabled 切换
+│   ├── useCreatorDetail.ts       # 单个 UP 主详情与视频列表
+│   └── useSync.ts                # 同步任务轮询（3s）、最近记录、单 UP 主同步、立即同步标签管理
 ├── pages/
 │   ├── TagsPage.tsx              # 标签视图：标签切换、未看视频列表、逐条/批量标记
-│   ├── CreatorsPage.tsx          # UP 主管理：列表统计、添加/编辑、批量导入
+│   ├── CreatorsPage.tsx          # UP 主管理：列表统计、添加/编辑、批量导入、单 UP 主同步、enabled 切换
 │   ├── CreatorDetailPage.tsx     # UP 主详情：视频列表、观看状态标记
-│   └── SyncPage.tsx              # 同步状态：进度轮询、手动同步、立即同步标签配置
+│   └── SyncPage.tsx              # 同步状态：进度轮询、手动同步、最近 3 条记录、立即同步标签配置
 ├── components/
 │   ├── VideoCard.tsx             # 视频卡片（封面、标题、状态操作）
 │   ├── CreatorForm.tsx           # UP 主添加/编辑表单（含昵称解析预填）
-│   ├── BatchImportModal.tsx      # 批量导入弹窗
+│   ├── BatchImportModal.tsx      # 批量导入弹窗（仅 X/取消可关闭）
+│   ├── ConfirmDialog.tsx         # 自定义确认弹窗（替代 window.confirm）
 │   ├── CreatorAnchorNav.tsx      # UP 主锚点导航
 │   ├── ImmediateTagsSection.tsx  # 立即同步标签配置区
-│   └── SyncLogCard.tsx           # 同步任务日志卡片
+│   └── SyncLogCard.tsx           # 最近同步记录列表（含全量/单 UP 主 scope 徽标）
+├── utils/
+│   ├── format.ts                 # 视频/时间等展示格式化
+│   └── time.ts                   # 时间解析与展示
 └── styles/
     └── index.css                 # 全局样式
-tests/                            # vitest + Testing Library（jsdom）
+tests/                            # vitest + Testing Library（jsdom），含 setup.ts 与 format.test.ts
 ```
 
 ## 路由
