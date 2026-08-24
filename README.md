@@ -6,7 +6,7 @@
 
 - **标签视图**：按标签分组展示 UP 主的未看视频，支持逐条/批量标记已看、不看
 - **UP 主管理**：单个/批量添加 UP 主，编辑名称、别名、标签、启用状态，查看每个 UP 主的视频列表
-- **视频同步**：定时 + 手动从 B 站抓取 UP 主公开视频，异步后台执行，前端轮询进度
+- **视频同步**：定时 + 手动全量同步 + 手动单 UP 主同步，异步后台执行，前端轮询进度
 - **观看状态**：本地记录每条视频的未看/已看/不看状态
 - **立即同步标签**：将标签设为"立即同步"后，其下 UP 主使用更短的同步间隔
 
@@ -43,12 +43,20 @@ cd frontend && npm run dev
 ### 一键启停
 
 ```bash
-uv run python scripts/manage.py start    # 幂等启动前后端并打开主页（已运行则只开浏览器）
-uv run python scripts/manage.py stop     # 停止服务并提交、推送 ../private-data 数据仓库
-uv run python scripts/manage.py restart  # 先 stop 再 start
+uv run python scripts/manage.py start           # 幂等启动前后端并打开主页（已运行则只开浏览器）
+uv run python scripts/manage.py start --no-pull  # 跳过 private-data 的 git pull（本地开发用）
+uv run python scripts/manage.py stop              # 停止服务并提交、推送 ../private-data 数据仓库
+uv run python scripts/manage.py restart           # 先 stop 再 start
 ```
 
 Windows 可双击 `scripts/start.bat` / `scripts/stop.bat` / `scripts/restart.bat`，macOS 可用 `./scripts/start.sh` / `./scripts/stop.sh`（均为一行转发）。PID 写入 `logs/*.pid`。
+
+清空本地数据（类似数据库 truncate，保留 `cookies.json`）：
+
+```bash
+./scripts/reset-data.sh        # macOS / Linux
+scripts\\reset-data.bat         # Windows
+```
 
 行为说明：
 
@@ -78,6 +86,7 @@ Windows 可双击 `scripts/start.bat` / `scripts/stop.bat` / `scripts/restart.ba
 | GET | `/api/creators/resolve-name` | 根据空间 URL 抓取昵称和头像 |
 | GET | `/api/creators/{id}` | 单个 UP 主详情 |
 | PATCH | `/api/creators/{id}` | 编辑 UP 主（名称/别名/enabled/标签） |
+| DELETE | `/api/creators/{id}` | 删除 UP 主（级联删除标签关联、视频与观看状态） |
 | GET | `/api/creators/{id}/videos` | 该 UP 主的视频列表（含观看状态） |
 | PATCH | `/api/creators/{id}/videos/status` | 将该 UP 主所有未看视频批量置为指定状态 |
 
@@ -100,13 +109,16 @@ Windows 可双击 `scripts/start.bat` / `scripts/stop.bat` / `scripts/restart.ba
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/sync/latest` | 最近一次全量同步任务 |
+| GET | `/api/sync/latest?limit=N` | 最近 N 条同步任务（默认 3，上限 20，含全量与单 UP 主） |
 | POST | `/api/sync/run` | 手动触发全量同步（幂等：运行中则返回现有任务） |
+| POST | `/api/sync/creators/{creator_id}` | 手动同步单个 UP 主（绕过 TTL 节流，同 UP 主幂等） |
 | GET | `/api/sync/task/current` | 当前（或最近一次）任务进度（前端每 3 秒轮询） |
 | GET | `/api/sync/settings` | 定时同步调度配置 |
 | GET | `/api/sync/immediate-tags` | 立即同步标签列表 |
 | POST | `/api/sync/immediate-tags?tag_id=N` | 将标签设为立即同步 |
 | DELETE | `/api/sync/immediate-tags/{tag_id}` | 取消标签的立即同步 |
+
+全局只有一个同步任务能 running：全量与单 UP 主、单 UP 主之间互斥，冲突返回 409。
 
 ## 核心数据模型
 
@@ -115,15 +127,15 @@ Windows 可双击 `scripts/start.bat` / `scripts/stop.bat` / `scripts/restart.ba
 - **CreatorTag**：UP 主与标签的多对多关联
 - **Video**：视频（bvid、标题、发布时间、时长、封面）
 - **VideoStatus**：观看状态（video_id、状态、标记时间）
-- **SyncTask**：全量同步任务（进度、当前 UP 主、心跳、错误信息）
+- **SyncTask**：同步任务（`scope="all"` 全量 / `scope="creator"` 单 UP 主，进度、当前 UP 主、心跳、错误信息）
 - **TagSyncConfig**：立即同步标签配置
 
 ## 同步行为
 
 - 定时同步由 asyncio 调度循环按 `SYNC_INTERVAL_MINUTES`（默认 60 分钟）触发；`POST /api/sync/run` 手动触发，二者共用同一入口且幂等（运行中不重复启动）
-- 单个 UP 主的抓取频率由 `last_synced_at` 控制：普通 UP 主约 50 分钟内不重复抓取，立即同步标签下的 UP 主约 5 分钟
+- 单个 UP 主的抓取频率由 `last_synced_at` 控制：普通 UP 主约 50 分钟内不重复抓取，立即同步标签下的 UP 主约 5 分钟；`POST /api/sync/creators/{id}` 手动同步绕过节流（`force=True`）
 - `enabled=false` 的 UP 主不参与同步
-- 抓取层有内存缓存（视频 1 小时、昵称 24 小时）
+- B 站侧 `video_count=0` 的 UP 主跳过卡片抓取，避免无投稿触发 `FetchError`
 
 ## 运行测试
 
@@ -160,14 +172,14 @@ cd frontend && npm test
 │   ├── src/
 │   │   ├── App.tsx            # 路由（/ → /tags、/creators、/creators/:id、/sync）
 │   │   ├── api/client.ts      # API 请求封装与类型
-│   │   ├── components/        # VideoCard、CreatorForm、BatchImportModal 等
-│   │   ├── hooks/             # useTags、useSync
+│   │   ├── components/        # VideoCard、CreatorForm、BatchImportModal、ConfirmDialog、SyncLogCard 等
+│   │   ├── hooks/             # useTags、useCreators、useCreatorDetail、useSync
 │   │   └── pages/             # TagsPage、CreatorsPage、CreatorDetailPage、SyncPage
 │   └── tests/                 # vitest 测试
 ├── tests/                     # 后端 pytest
 ├── docs/                      # 项目文档（见下方"文档索引"）
 ├── logs/                      # 运行日志（有意入库，见上文）
-├── scripts/                   # 一键启停：manage.py（跨平台，纯标准库）+ bat/sh 入口
+├── scripts/                   # 一键启停：manage.py（跨平台，纯标准库）+ bat/sh 入口 + reset-data 脚本
 ├── pyproject.toml             # Python 项目配置（uv）
 └── uv.lock
 ```
@@ -176,6 +188,8 @@ cd frontend && npm test
 
 - [app/README.md](app/README.md) — 后端架构、目录结构、数据模型、端点概览
 - [frontend/README.md](frontend/README.md) — 前端结构、路由、约定、测试
+- [docs/requirements.md](docs/requirements.md) — 需求基准
 - [docs/api.md](docs/api.md) — 全部接口的请求/响应字段详细说明
 - [docs/fetcher.md](docs/fetcher.md) — 抓取层基准行为（已冻结，改动前必读）
-- [docs/docs.md](docs/docs.md) — 原始需求草稿（历史留存）
+- [docs/logging.md](docs/logging.md) — 日志文件与轮替策略
+- [docs/dev/](docs/dev/) — 代码层面的设计说明（如 `scripts/README.md`）
