@@ -26,7 +26,24 @@ uv run python scripts/manage.py stop     # 停止服务并提交、推送 ../pri
 uv run python scripts/manage.py restart  # 先 stop 再 start
 ```
 
-首次 `start` 会自动 `uv sync --extra dev` + `npm install` + `playwright install chromium`，之后只启动未运行的服务。Windows 可双击 `scripts/start.bat` / `scripts/stop.bat` / `scripts/restart.bat`，macOS 可用 `./scripts/start.sh` / `./scripts/stop.sh`（均为一行转发）。PID 写入 `logs/*.pid`。
+首次 `start` 会自动 `uv sync --extra dev` + `npm install` + `playwright install chromium`，之后只启动未运行的服务。Windows 可双击 `scripts/start.bat` / `scripts/stop.bat` / `scripts/restart.bat`，macOS 可用 `./scripts/start.sh` / `./scripts/stop.sh`（均为一行转发）。
+
+### 手动启动（开发用）
+
+```bash
+# 后端（首次启动自动创建数据目录与 logs/）
+uv sync --extra dev
+uv run playwright install chromium   # 首次需要装浏览器，manage.py start 会自动装
+uv run uvicorn app.main:app --reload
+
+# 前端（另开终端）
+cd frontend && npm install
+cd frontend && npm run dev
+```
+
+开发环境下前端 `/api` 请求由 Vite 代理到 `http://localhost:3333`，需先启动后端。
+
+## 数据仓库与重置
 
 `start` 默认会先 `git pull` 同步 `../private-data` 数据仓库；该仓库无 remote 时改用 `--no-pull` 跳过：
 
@@ -41,21 +58,7 @@ uv run python scripts/manage.py start --no-pull
 scripts\\reset-data.bat         # Windows
 ```
 
-### 手动启动（开发用）
-
-```bash
-# 后端（首次启动自动创建数据目录与 logs/）
-uv sync --extra dev
-uv run uvicorn app.main:app --reload
-
-# 前端（另开终端）
-cd frontend && npm install
-cd frontend && npm run dev
-```
-
-开发环境下前端 `/api` 请求由 Vite 代理到 `http://localhost:3333`，需先启动后端。
-
-### 启停行为说明
+## 启停行为说明
 
 - `start` 按服务幂等：前后端分别用端口探测检查，只启动未运行的那个；都在运行则只打开浏览器
 - 端口等待：后端 15 秒、前端 30 秒
@@ -68,68 +71,22 @@ cd frontend && npm run dev
 
 - 数据以 JSON 文件存储在 `../private-data/bilibili-tag-group/`（可用 `DATA_DIR` 环境变量覆盖），用户自行在该目录用 git 管理数据版本
 - 时间字段统一使用 naive UTC 存储，API 响应序列化为北京时间
-- **`logs/*.log` 有意纳入本仓库 git 管理**：作为系统的有效运行日志，便于跨机器排查问题；`logs/*.pid` 不入库
-
-## API 接口
-
-### UP 主
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/creators` | UP 主列表（含未看数等统计） |
-| POST | `/api/creators` | 添加 UP 主（可关联标签） |
-| POST | `/api/creators/batch` | 批量添加（按 uid，自动抓取昵称头像、按名建标签） |
-| GET | `/api/creators/resolve-name` | 根据空间 URL 抓取昵称和头像 |
-| GET | `/api/creators/{id}` | 单个 UP 主详情 |
-| PATCH | `/api/creators/{id}` | 编辑 UP 主（名称/别名/enabled/标签） |
-| DELETE | `/api/creators/{id}` | 删除 UP 主（级联删除标签关联、视频与观看状态） |
-| GET | `/api/creators/{id}/videos` | 该 UP 主的视频列表（含观看状态） |
-| PATCH | `/api/creators/{id}/videos/status` | 将该 UP 主所有未看视频批量置为指定状态 |
-
-### 标签
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/tags` | 标签列表 |
-| POST | `/api/tags` | 创建标签 |
-| GET | `/api/tags/{id}/videos` | 该标签下 UP 主的未看视频 |
-| GET | `/api/tags/untagged/videos` | 无标签 UP 主的未看视频 |
-
-### 视频
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| PATCH | `/api/videos/{id}/status` | 更新观看状态（0=未看, 1=已看, 2=不看） |
-
-### 同步
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/sync/latest?limit=N` | 最近 N 条同步任务（默认 3，上限 20，含全量与单 UP 主） |
-| POST | `/api/sync/run` | 手动触发全量同步（幂等：运行中则返回现有任务） |
-| POST | `/api/sync/creators/{creator_id}` | 手动同步单个 UP 主（绕过 TTL 节流，同 UP 主幂等） |
-| GET | `/api/sync/task/current` | 当前（或最近一次）任务进度（前端每 3 秒轮询） |
-| GET | `/api/sync/settings` | 定时同步调度配置 |
-| GET | `/api/sync/immediate-tags` | 立即同步标签列表 |
-| POST | `/api/sync/immediate-tags?tag_id=N` | 将标签设为立即同步 |
-| DELETE | `/api/sync/immediate-tags/{tag_id}` | 取消标签的立即同步 |
-
-全局只有一个同步任务能 running：全量与单 UP 主、单 UP 主之间互斥，冲突返回 409。
+- **`logs/*.log` 有意纳入本仓库 git 管理**：作为系统的有效运行日志，便于跨机器排查问题
 
 ## 核心数据模型
 
 - **Creator**：UP 主（名称、别名、空间 URL、头像、enabled、最近同步时间）
-- **Tag**：标签（挂在 UP 主上，不挂在视频上）
+- **Tag**：UP 主分类标签
 - **CreatorTag**：UP 主与标签的多对多关联
 - **Video**：视频（bvid、标题、发布时间、时长、封面）
 - **VideoStatus**：观看状态（video_id、状态、标记时间）
 - **SyncTask**：同步任务（`scope="all"` 全量 / `scope="creator"` 单 UP 主，进度、当前 UP 主、心跳、错误信息）
-- **TagSyncConfig**：立即同步标签配置
+- **TagSyncConfig**：标签同步情况设置
 
 ## 同步行为
 
 - 定时同步由 asyncio 调度循环按 `SYNC_INTERVAL_MINUTES`（默认 60 分钟）触发；`POST /api/sync/run` 手动触发，二者共用同一入口且幂等（运行中不重复启动）
-- 单个 UP 主的抓取频率由 `last_synced_at` 控制：普通 UP 主约 50 分钟内不重复抓取，立即同步标签下的 UP 主约 5 分钟；`POST /api/sync/creators/{id}` 手动同步绕过节流（`force=True`）
+- 单个 UP 主的抓取频率由 `last_synced_at` 控制：普通 UP 主约 50 分钟内不重复抓取，立即同步标签下的 UP 主约 5 分钟；`POST /api/sync/creators/{id}` 手动同步跳过这个间隔限制（`force=True`）
 - `enabled=false` 的 UP 主不参与同步
 - B 站侧 `video_count=0` 的 UP 主跳过卡片抓取，避免无投稿触发 `FetchError`
 
