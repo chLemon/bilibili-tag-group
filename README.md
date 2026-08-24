@@ -18,38 +18,21 @@
 
 ## 快速开始
 
-### 后端
+一键启停（推荐，跨平台）：
 
 ```bash
-# 安装依赖（需要 uv）
-uv sync --extra dev
-
-# 首次使用安装 Playwright 浏览器
-uv run playwright install chromium
-
-# 启动 API（首次启动自动创建数据目录与 logs/）
-uv run uvicorn app.main:app --reload
+uv run python scripts/manage.py start    # 幂等启动前后端并打开主页（已运行则只开浏览器）
+uv run python scripts/manage.py stop     # 停止服务并提交、推送 ../private-data 数据仓库
+uv run python scripts/manage.py restart  # 先 stop 再 start
 ```
 
-### 前端
+首次 `start` 会自动 `uv sync --extra dev` + `npm install` + `playwright install chromium`，之后只启动未运行的服务。Windows 可双击 `scripts/start.bat` / `scripts/stop.bat` / `scripts/restart.bat`，macOS 可用 `./scripts/start.sh` / `./scripts/stop.sh`（均为一行转发）。PID 写入 `logs/*.pid`。
+
+`start` 默认会先 `git pull` 同步 `../private-data` 数据仓库；该仓库无 remote 时改用 `--no-pull` 跳过：
 
 ```bash
-cd frontend && npm install
-cd frontend && npm run dev
+uv run python scripts/manage.py start --no-pull
 ```
-
-开发环境下前端 `/api` 请求由 Vite 代理到 `http://localhost:3333`，需先启动后端。
-
-### 一键启停
-
-```bash
-uv run python scripts/manage.py start           # 幂等启动前后端并打开主页（已运行则只开浏览器）
-uv run python scripts/manage.py start --no-pull  # 跳过 private-data 的 git pull（本地开发用）
-uv run python scripts/manage.py stop              # 停止服务并提交、推送 ../private-data 数据仓库
-uv run python scripts/manage.py restart           # 先 stop 再 start
-```
-
-Windows 可双击 `scripts/start.bat` / `scripts/stop.bat` / `scripts/restart.bat`，macOS 可用 `./scripts/start.sh` / `./scripts/stop.sh`（均为一行转发）。PID 写入 `logs/*.pid`。
 
 清空本地数据（类似数据库 truncate，保留 `cookies.json`）：
 
@@ -58,10 +41,23 @@ Windows 可双击 `scripts/start.bat` / `scripts/stop.bat` / `scripts/restart.ba
 scripts\\reset-data.bat         # Windows
 ```
 
-行为说明：
+### 手动启动（开发用）
+
+```bash
+# 后端（首次启动自动创建数据目录与 logs/）
+uv sync --extra dev
+uv run uvicorn app.main:app --reload
+
+# 前端（另开终端）
+cd frontend && npm install
+cd frontend && npm run dev
+```
+
+开发环境下前端 `/api` 请求由 Vite 代理到 `http://localhost:3333`，需先启动后端。
+
+### 启停行为说明
 
 - `start` 按服务幂等：前后端分别用端口探测检查，只启动未运行的那个；都在运行则只打开浏览器
-- `.venv` 缺失时自动 `uv sync --extra dev`，`frontend/node_modules` 缺失时自动 `npm install`，每次启动自动 `playwright install chromium`
 - 端口等待：后端 15 秒、前端 30 秒
 - `stop` 按端口查 PID（`lsof` / `netstat`），先 SIGTERM 终止整棵进程树，5 秒未退出则 SIGKILL 强杀；kill 前打印 PID + 端口供用户确认
 - `stop` 的备份前置条件：`../private-data` 需已 `git init` 并配置 remote；不满足则打印警告并跳过备份。备份失败（如 push 失败）只警告、不影响停止，退出码仍为 0
