@@ -32,6 +32,7 @@ class VideoService:
                 published_at=video.published_at,
                 duration_seconds=video.duration_seconds,
                 cover_url=video.cover_url,
+                mark=video.mark,
                 status=status_map.get(video.id, 0),
             )
             for video in videos_list

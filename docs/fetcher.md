@@ -55,6 +55,9 @@ B 站 SPA 跳页后，前端发 XHR 请求目标页 cards 数据；触发安全�
 | published_at | `.bili-video-card__subtitle span` | 见下方日期解析，解析失败抛 `FetchError` |
 | duration_seconds | `.bili-cover-card__stat span` 最后一个 | `分:秒` 或 `时:分:秒` 冒号拆分 |
 | cover_url | `.bili-video-card__cover img` src | `//` 开头补 `https:`；提取不到抛 `FetchError` |
+| mark | `.bili-cover-card__tags .bili-cover-card__tag span` 文本 | 按 `mark_text_mapping`（来自 `config.json`，默认 `{"抢先看": "充电视频"}`）映射；多 tag 取第一个匹配，无匹配为空字符串（不拼接） |
+
+B 站 card 上"抢先看"与"限时免费"两个 tag 的 class 与图标完全一致（`charge-tag` + `sic-BDC-battery_charge_simple_fill`），**无法通过 CSS 选择器区分**，只能按 `<span>` 文本内容映射。映射表做成 `config.json` 的 `mark_text_mapping` 字段，B 站改文案时只动配置不改代码。"限时免费"暂不映射为 mark 值（用户说目前标记只有一个值"充电视频"），未来扩展只需在映射表里加一行。
 
 日期解析（`_parse_date`）依次尝试：
 

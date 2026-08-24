@@ -50,6 +50,9 @@ class TestPlaywrightBilibiliFetcher:
                 f"cover_url 应是 https 开头: {v.cover_url}"
             assert isinstance(v.published_at, datetime)
             assert v.duration_seconds >= 0
+            assert isinstance(v.mark, str), f"mark 应是 str: {v.bvid}"
+            assert v.mark in ("", "充电视频"), \
+                f"mark 值域异常: {v.bvid} mark={v.mark!r}"
         logging.info(videos[0])
         logging.info(len(videos))
 

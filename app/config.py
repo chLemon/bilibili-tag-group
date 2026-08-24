@@ -20,6 +20,8 @@ class Settings(BaseModel):
     backend_port: int = 3333
     frontend_port: int = 2222
     sync_interval_minutes: int = 60
+    # 抓取层 card tag 文本到 mark 值的映射，可配置以防 B 站改文案
+    mark_text_mapping: dict[str, str] = {"抢先看": "充电视频"}
     # B 站登录态 cookie，从 data_dir/cookies.json 读取；文件缺失则空 dict，匿名抓取
     cookies: dict[str, str] = {}
 

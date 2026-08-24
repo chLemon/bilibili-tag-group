@@ -19,6 +19,7 @@ const sampleVideo: Video = {
   cover_url: null,
   published_at: "2024-06-01T12:00:00",
   duration_seconds: 185,
+  mark: "",
 };
 
 describe("VideoCard", () => {
@@ -61,5 +62,16 @@ describe("VideoCard", () => {
     await waitFor(() => {
       expect(onMarkIgnored).toHaveBeenCalledWith(sampleVideo.id);
     });
+  });
+
+  it("mark 非空时展示标记文字", () => {
+    const v: Video = { ...sampleVideo, mark: "充电视频" };
+    render(<VideoCard video={v} onMarkWatched={vi.fn()} onMarkIgnored={vi.fn()} />);
+    expect(screen.getByText("充电视频")).toBeInTheDocument();
+  });
+
+  it("mark 为空时不渲染标记节点", () => {
+    render(<VideoCard video={sampleVideo} onMarkWatched={vi.fn()} onMarkIgnored={vi.fn()} />);
+    expect(screen.queryByText("充电视频")).not.toBeInTheDocument();
   });
 });

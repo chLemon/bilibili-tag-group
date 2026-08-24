@@ -672,3 +672,6 @@ AggregateError [ECONNREFUSED]:
   VITE v5.4.21  ready in 138 ms
 
   ➜  Local:   http://127.0.0.1:2222/
+23:17:12 [vite] hmr update /src/pages/CreatorsPage.tsx, /src/pages/CreatorDetailPage.tsx, /src/pages/TagsPage.tsx, /src/pages/SyncPage.tsx, /src/components/BatchImportModal.tsx, /src/components/CreatorForm.tsx
+23:17:18 [vite] hmr update /src/components/VideoCard.tsx
+23:17:35 [vite] hmr update /src/styles/index.css

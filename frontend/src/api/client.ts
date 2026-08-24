@@ -61,6 +61,7 @@ export interface Video {
   cover_url: string | null;
   published_at: string;
   duration_seconds: number;
+  mark: string;
 }
 
 /** 视频详情（含已看状态） */
@@ -76,6 +77,7 @@ export interface VideoDetail {
   cover_url: string | null;
   published_at: string;
   duration_seconds: number;
+  mark: string;
   status: number; // 0=未看, 1=已看, 2=不看
 }
 

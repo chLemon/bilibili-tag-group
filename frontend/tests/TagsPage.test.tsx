@@ -29,6 +29,7 @@ const mockVideos: client.Video[] = [
     cover_url: null,
     published_at: "2024-01-01T00:00:00",
     duration_seconds: 60,
+    mark: "",
   },
 ];
 

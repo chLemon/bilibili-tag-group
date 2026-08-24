@@ -28,6 +28,7 @@ class VideoRead(BaseModel):
     cover_url: str | None = None
     published_at: BeijingDateTime
     duration_seconds: int
+    mark: str = ""
 
     model_config = {"from_attributes": True}
 
@@ -46,6 +47,7 @@ class VideoDetail(BaseModel):
     cover_url: str | None = None
     published_at: BeijingDateTime
     duration_seconds: int
+    mark: str = ""
     status: int = 0
 
     model_config = {"from_attributes": True}

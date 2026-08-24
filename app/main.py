@@ -29,7 +29,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """初始化日志与全局实例，管理调度器与浏览器生命周期。"""
     setup_logging()
     store = DataStore(settings.data_dir)
-    fetcher = PlaywrightBilibiliFetcher(cookies=settings.cookies)
+    fetcher = PlaywrightBilibiliFetcher(
+        cookies=settings.cookies,
+        mark_text_mapping=settings.mark_text_mapping,
+    )
     sync_service = SyncService(fetcher=fetcher)
     init_app(store, fetcher, sync_service)
 

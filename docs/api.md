@@ -189,7 +189,7 @@ tag_id 通过查询参数传递。已配置时返回现有配置（幂等）。
 
 ### `VideoRead`（标签视图）
 
-`id`、`bvid`、`title`、`creator_id`、`creator_name`、`creator_alias`、`creator_avatar_url`、`video_url`、`cover_url`、`published_at`（北京时间）、`duration_seconds`。
+`id`、`bvid`、`title`、`creator_id`、`creator_name`、`creator_alias`、`creator_avatar_url`、`video_url`、`cover_url`、`published_at`（北京时间）、`duration_seconds`、`mark`（B 站侧标记，目前只有"充电视频"，无标记为空字符串）。
 
 ### `VideoDetail`（UP 主详情）
 

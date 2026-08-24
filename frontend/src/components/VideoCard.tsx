@@ -87,7 +87,8 @@ export default function VideoCard({ video, onMarkWatched, onMarkIgnored }: Video
             </span>
           </div>
         </div>
-        <div className="video-card-actions" style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+        <div className="video-card-actions" style={{ display: "flex", gap: 6, flexShrink: 0, alignItems: "center" }}>
+          {video.mark && <span className="video-card-mark">{video.mark}</span>}
           <button
             onClick={() => handleAction(onMarkWatched)}
             className="btn btn-sm btn-primary"

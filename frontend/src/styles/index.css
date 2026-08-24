@@ -737,6 +737,15 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   color: var(--color-text-muted);
 }
 
+.video-card-mark {
+  margin-right: auto;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-warning);
+  user-select: none;
+  cursor: default;
+}
+
 .video-card-removing {
   opacity: 0;
   transform: translateX(8px);

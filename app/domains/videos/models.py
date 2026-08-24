@@ -16,6 +16,7 @@ class Video(BaseModel):
     published_at: datetime  # naive UTC
     duration_seconds: int
     cover_url: str | None = None
+    mark: str = ""  # B 站侧标记，目前只有"充电视频"
 
 
 class VideoStatus(BaseModel):

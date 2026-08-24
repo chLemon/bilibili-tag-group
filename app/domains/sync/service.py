@@ -97,7 +97,9 @@ class SyncService:
 
         existing_videos_list = store.videos.filter(creator_id=creator.id)
         existing_videos: dict[str, Video] = {v.bvid: v for v in existing_videos_list}
-        # 传给 fetcher 用于早停判定；早停时 fetcher 会把本地已有但本次未抓到的补回返回值
+        # 传给 fetcher 用于早停判定；早停时 fetcher 会把本地已有但本次未抓到的补回返回值。
+        # mark 必须带，否则 fetcher 补回的 known 视频 mark 会丢成默认空字符串，
+        # 覆盖掉本地真实值——数据丢失风险
         known = [
             FetchedVideo(
                 bvid=v.bvid,
@@ -106,6 +108,7 @@ class SyncService:
                 published_at=v.published_at,
                 duration_seconds=v.duration_seconds,
                 cover_url=v.cover_url,
+                mark=v.mark,
             )
             for v in existing_videos_list
         ]
@@ -131,6 +134,7 @@ class SyncService:
                     published_at=fv.published_at,
                     duration_seconds=fv.duration_seconds,
                     cover_url=fv.cover_url,
+                    mark=fv.mark,
                 )
             else:
                 video = Video(
@@ -141,6 +145,7 @@ class SyncService:
                     published_at=fv.published_at,
                     duration_seconds=fv.duration_seconds,
                     cover_url=fv.cover_url,
+                    mark=fv.mark,
                 )
                 await store.videos.add(video)
                 status = VideoStatus(video_id=video.id)

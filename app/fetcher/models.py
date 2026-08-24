@@ -24,3 +24,6 @@ class FetchedVideo:
 
     cover_url: str
     """视频封面图 URL"""
+
+    mark: str = ""
+    """B 站侧的标记，目前只有"充电视频"（来自 card 上"抢先看" tag）"""

@@ -20,10 +20,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 配置文件
 
-- 项目根目录 `config.json`（入 git）是前后端共享的唯一配置源，字段：`backend_host` / `backend_port` / `frontend_port` / `sync_interval_minutes`。改端口只动这一处。
+- 项目根目录 `config.json`（入 git）是前后端共享的唯一配置源，字段：`backend_host` / `backend_port` / `frontend_port` / `sync_interval_minutes` / `mark_text_mapping`。改端口只动这一处。
 - `app/config.py` 读 `config.json` 并暴露 `settings`（`data_dir` 是 Python 专属路径，不放 JSON，留在 `config.py` 里默认推导）。`scripts/manage.py` 通过 `from app.config import settings` 用。
 - `frontend/vite.config.ts` 直接 `JSON.parse(fs.readFileSync(...))` 读项目根 `config.json`，与后端共用同一份端口。
-- `config.json` 缺失或非法时，`app/config.py` 用代码里的默认值兜底（3333/2222/60），不崩。
+- `config.json` 缺失或非法时，`app/config.py` 用代码里的默认值兜底（3333/2222/60/`{"抢先看": "充电视频"}`），不崩。
+- `mark_text_mapping` 是抓取层 card tag 文本到 mark 值的映射，B 站改文案时只动配置不改代码。
 
 ## 一键启停
 

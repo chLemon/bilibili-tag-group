@@ -62,6 +62,9 @@ _BROWSER_ARGS = [
 _BVID_RE = re.compile(r"/video/(BV\w+)")
 _RELATIVE_RE = re.compile(r"(\d+)\s*(分钟|小时|天|个月)前")
 
+# card tag 文本到 mark 值的默认映射；可由 config.json 的 mark_text_mapping 覆盖
+_DEFAULT_MARK_TEXT_MAPPING = {"抢先看": "充电视频"}
+
 
 class PlaywrightBilibiliFetcher:
     """使用 Playwright 无头浏览器从 B 站空间页抓取视频列表和 UP 主信息。
@@ -71,10 +74,14 @@ class PlaywrightBilibiliFetcher:
     """
 
     def __init__(
-        self, headless: bool = True, cookies: dict[str, str] | None = None
+        self,
+        headless: bool = True,
+        cookies: dict[str, str] | None = None,
+        mark_text_mapping: dict[str, str] | None = None,
     ) -> None:
         self._headless = headless
         self._cookies = cookies or {}
+        self._mark_text_mapping = mark_text_mapping or _DEFAULT_MARK_TEXT_MAPPING
         self._playwright = None
         self._browser = None
 
@@ -370,14 +377,13 @@ class PlaywrightBilibiliFetcher:
 
     # ── 数据提取 ────────────────────────────────────────────────
 
-    @staticmethod
-    async def _extract_videos_from_page(page) -> list[FetchedVideo]:
+    async def _extract_videos_from_page(self, page) -> list[FetchedVideo]:
         videos: list[FetchedVideo] = []
         cards = page.locator(_CARD_CLASS)
         count = await cards.count()
         for i in range(count):
             try:
-                video = await _parse_card(cards.nth(i))
+                video = await _parse_card(cards.nth(i), self._mark_text_mapping)
                 if video is not None:
                     videos.append(video)
             except Exception:
@@ -439,7 +445,7 @@ class PlaywrightBilibiliFetcher:
 # ── 模块级解析函数 ──────────────────────────────────────────────────
 
 
-async def _parse_card(card) -> FetchedVideo | None:
+async def _parse_card(card, mark_text_mapping: dict[str, str]) -> FetchedVideo | None:
     cover_link = card.locator("a").first
     href = await cover_link.get_attribute("href") or ""
     m = _BVID_RE.search(href)
@@ -476,6 +482,18 @@ async def _parse_card(card) -> FetchedVideo | None:
         raise FetchError(f"视频卡片封面 img src 为空，bvid={bvid}")
     cover_url = f"https:{raw}" if raw.startswith("//") else raw
 
+    # card 上可能有多个 tag，取第一个文本命中映射表的作为 mark；无匹配则空
+    mark = ""
+    tags_loc = card.locator(".bili-cover-card__tags .bili-cover-card__tag")
+    for i in range(await tags_loc.count()):
+        span = tags_loc.nth(i).locator("span")
+        if await span.count() == 0:
+            continue
+        text = (await span.text_content() or "").strip()
+        if text in mark_text_mapping:
+            mark = mark_text_mapping[text]
+            break
+
     return FetchedVideo(
         bvid=bvid,
         title=title,
@@ -483,6 +501,7 @@ async def _parse_card(card) -> FetchedVideo | None:
         published_at=published_at,
         duration_seconds=duration_seconds,
         cover_url=cover_url,
+        mark=mark,
     )
 
 

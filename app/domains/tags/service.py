@@ -73,6 +73,7 @@ class TagService:
                     cover_url=video.cover_url,
                     published_at=video.published_at,
                     duration_seconds=video.duration_seconds,
+                    mark=video.mark,
                 )
             )
 
