@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Creator } from "../api/client";
+import { Creator, syncSingleCreator } from "../api/client";
 import {
   Plus,
   ListPlus,
@@ -23,6 +23,7 @@ import {
   Video,
   Play,
   Film,
+  Power,
 } from "lucide-react";
 import CreatorForm from "../components/CreatorForm";
 import BatchImportModal from "../components/BatchImportModal";
@@ -51,6 +52,7 @@ export default function CreatorsPage() {
     addCreator,
     editCreator,
     removeCreator,
+    toggleCreatorEnabled,
     appendCreators,
     clearSubmitError,
   } = useCreators();
@@ -58,6 +60,40 @@ export default function CreatorsPage() {
   const [formMode, setFormMode] = useState<FormMode>({ type: "none" });
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Creator | null>(null);
+  const [toggleTarget, setToggleTarget] = useState<Creator | null>(null);
+  const [syncingIds, setSyncingIds] = useState<Set<number>>(new Set());
+  const [syncedIds, setSyncedIds] = useState<Set<number>>(new Set());
+
+  async function handleSyncCreator(c: Creator) {
+    if (syncingIds.has(c.id)) return;
+    setSyncingIds((prev) => new Set(prev).add(c.id));
+    setSyncedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(c.id);
+      return next;
+    });
+    try {
+      await syncSingleCreator(c.id);
+      setSyncedIds((prev) => new Set(prev).add(c.id));
+      window.setTimeout(() => {
+        setSyncedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(c.id);
+          return next;
+        });
+      }, 3000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const friendly = msg.replace(/^HTTP \d+:\s*/, "");
+      window.alert(friendly);
+    } finally {
+      setSyncingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(c.id);
+        return next;
+      });
+    }
+  }
 
   if (loading) {
     return (
@@ -291,24 +327,72 @@ export default function CreatorsPage() {
 
               {/* 操作按钮 */}
               <div className="creator-card-actions">
-                <Link to={`/creators/${c.id}`} className="btn-edit">
-                  <Film size={12} />
-                  视频
-                </Link>
-                <button
-                  className="btn-edit"
-                  onClick={() => setFormMode({ type: "edit", creator: c })}
-                >
-                  <Pencil size={12} />
-                  编辑
-                </button>
-                <button
-                  className="btn-edit"
-                  onClick={() => setDeleteTarget(c)}
-                >
-                  <Trash2 size={12} />
-                  删除
-                </button>
+                <div className="creator-card-actions-row">
+                  <Link to={`/creators/${c.id}`} className="btn-edit btn-edit-primary">
+                    <Film size={12} />
+                    视频
+                  </Link>
+                  <button
+                    className="btn-edit btn-edit-primary"
+                    onClick={() => setFormMode({ type: "edit", creator: c })}
+                  >
+                    <Pencil size={12} />
+                    编辑
+                  </button>
+                  <button
+                    className="btn-edit"
+                    onClick={() => setDeleteTarget(c)}
+                  >
+                    <Trash2 size={12} />
+                    删除
+                  </button>
+                </div>
+                <div className="creator-card-actions-row">
+                  <button
+                    className={`btn-edit ${
+                      syncedIds.has(c.id)
+                        ? ""
+                        : "btn-edit-primary"
+                    }`}
+                    onClick={() => handleSyncCreator(c)}
+                    disabled={
+                      syncingIds.has(c.id) || syncedIds.has(c.id) || !c.enabled
+                    }
+                    title={
+                      !c.enabled
+                        ? "已停用，请先启用"
+                        : syncedIds.has(c.id)
+                          ? "已触发同步"
+                          : "同步此 UP 主的视频"
+                    }
+                    style={
+                      syncedIds.has(c.id)
+                        ? { borderColor: "var(--color-success)", color: "var(--color-success)" }
+                        : undefined
+                    }
+                  >
+                    {syncingIds.has(c.id) ? (
+                      <Loader2 size={12} className="spinner" />
+                    ) : (
+                      <RefreshCw size={12} />
+                    )}
+                    {syncingIds.has(c.id)
+                      ? "同步中"
+                      : syncedIds.has(c.id)
+                        ? "已触发"
+                        : "同步"}
+                  </button>
+                  <button
+                    className={`btn-edit ${
+                      c.enabled ? "" : "btn-edit-primary"
+                    }`}
+                    onClick={() => setToggleTarget(c)}
+                    title={c.enabled ? "停用同步" : "启用同步"}
+                  >
+                    <Power size={12} />
+                    {c.enabled ? "停用" : "启用"}
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -388,6 +472,25 @@ export default function CreatorsPage() {
             setDeleteTarget(null);
           }}
           onClose={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {/* 启用/停用确认弹窗 */}
+      {toggleTarget && (
+        <ConfirmDialog
+          title={toggleTarget.enabled ? "停用 UP 主" : "启用 UP 主"}
+          message={
+            toggleTarget.enabled
+              ? `停用 UP 主「${displayName(toggleTarget)}」？\n停用后不再同步其新视频，已看记录与标签关系保留。`
+              : `启用 UP 主「${displayName(toggleTarget)}」？\n启用后将参与下次定时同步。`
+          }
+          confirmText={toggleTarget.enabled ? "停用" : "启用"}
+          danger={toggleTarget.enabled}
+          onConfirm={async () => {
+            const ok = await toggleCreatorEnabled(toggleTarget);
+            if (ok) setToggleTarget(null);
+          }}
+          onClose={() => setToggleTarget(null)}
         />
       )}
     </div>

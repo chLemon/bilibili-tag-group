@@ -524,3 +524,135 @@ AggregateError [ECONNREFUSED]:
   VITE v5.4.21  ready in 131 ms
 
   ➜  Local:   http://127.0.0.1:2222/
+01:10:12 [vite] hmr update /src/components/BatchImportModal.tsx
+13:09:38 [vite] hmr update /src/pages/CreatorDetailPage.tsx, /src/pages/CreatorsPage.tsx, /src/pages/SyncPage.tsx, /src/pages/TagsPage.tsx, /src/components/CreatorForm.tsx, /src/components/BatchImportModal.tsx
+13:09:45 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:09:46 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:09:52 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:09:54 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:10:02 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:10:10 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:10:33 [vite] hmr update /src/pages/CreatorDetailPage.tsx, /src/pages/CreatorsPage.tsx, /src/pages/SyncPage.tsx, /src/pages/TagsPage.tsx, /src/components/CreatorForm.tsx, /src/components/BatchImportModal.tsx
+13:11:35 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:11:36 [vite] hmr update /src/styles/index.css
+13:15:19 [vite] hmr update /src/pages/CreatorDetailPage.tsx, /src/pages/CreatorsPage.tsx, /src/pages/SyncPage.tsx, /src/pages/TagsPage.tsx, /src/components/CreatorForm.tsx, /src/components/BatchImportModal.tsx
+13:15:21 [vite] hmr update /src/pages/CreatorDetailPage.tsx, /src/pages/CreatorsPage.tsx, /src/pages/SyncPage.tsx, /src/pages/TagsPage.tsx, /src/components/CreatorForm.tsx, /src/components/BatchImportModal.tsx
+13:15:34 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:15:38 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:15:47 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:19:26 [vite] hmr update /src/pages/CreatorDetailPage.tsx, /src/pages/CreatorsPage.tsx, /src/pages/SyncPage.tsx, /src/pages/TagsPage.tsx, /src/components/CreatorForm.tsx, /src/components/BatchImportModal.tsx
+13:19:43 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:23:08 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:23:08 [vite] Internal server error: /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/src/pages/CreatorsPage.tsx: Unexpected token, expected "," (404:7)
+
+  402 |           ))}
+  403 |         </div>
+> 404 |       )}
+      |        ^
+  405 |
+  406 |       {/* Modal：添加/编辑 UP 主 */}
+  407 |       {isModalOpen && (
+  Plugin: vite:react-babel
+  File: /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/src/pages/CreatorsPage.tsx:404:7
+  402|            ))}
+  403|          </div>
+  404|        )}
+     |         ^
+  405|  
+  406|        {/* Modal：添加/编辑 UP 主 */}
+      at constructor (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:365:19)
+      at TypeScriptParserMixin.raise (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:6599:19)
+      at TypeScriptParserMixin.unexpected (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:6619:16)
+      at TypeScriptParserMixin.expect (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:6899:12)
+      at TypeScriptParserMixin.parseCallExpressionArguments (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11243:14)
+      at TypeScriptParserMixin.parseCoverCallAndAsyncArrowHead (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11186:29)
+      at TypeScriptParserMixin.parseSubscript (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11120:19)
+      at TypeScriptParserMixin.parseSubscript (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:9272:18)
+      at TypeScriptParserMixin.parseSubscripts (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11094:19)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11085:17)
+      at TypeScriptParserMixin.parseUpdate (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:9786:20)
+      at TypeScriptParserMixin.parseExpressionBase (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10784:23)
+      at /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:12426:12)
+      at TypeScriptParserMixin.parseExpression (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10780:17)
+      at TypeScriptParserMixin.jsxParseExpressionContainer (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:4632:31)
+      at TypeScriptParserMixin.jsxParseElementAt (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:4711:36)
+      at TypeScriptParserMixin.jsxParseElement (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:4749:17)
+      at TypeScriptParserMixin.parseExprAtom (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:4759:19)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10831:21)
+      at /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:9775:39
+      at TypeScriptParserMixin.tryParse (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:6907:20)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:9775:18)
+      at /Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:12426:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10800:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:12493:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11675:28)
+      at TypeScriptParserMixin.parseExprAtom (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/chen/Documents/chen/ai/personal/bilibili-tag-group/frontend/node_modules/@babel/parser/lib/index.js:10904:23)
+13:23:23 [vite] hmr update /src/styles/index.css
+13:24:22 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:25:12 [vite] hmr update /src/styles/index.css
+13:25:39 [vite] hmr update /src/pages/CreatorsPage.tsx
+13:28:00 [vite] hmr update /src/pages/CreatorsPage.tsx
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 109 ms
+
+  ➜  Local:   http://127.0.0.1:2222/
+13:33:06 [vite] hmr update /src/pages/CreatorsPage.tsx, /src/pages/CreatorDetailPage.tsx, /src/pages/SyncPage.tsx, /src/components/CreatorForm.tsx, /src/components/BatchImportModal.tsx, /src/pages/TagsPage.tsx
+13:33:09 [vite] hmr update /src/pages/SyncPage.tsx
+13:33:16 [vite] hmr update /src/pages/SyncPage.tsx
+13:33:17 [vite] hmr update /src/pages/SyncPage.tsx
+13:33:53 [vite] hmr update /src/pages/CreatorsPage.tsx, /src/pages/CreatorDetailPage.tsx, /src/pages/SyncPage.tsx, /src/components/CreatorForm.tsx, /src/components/BatchImportModal.tsx, /src/pages/TagsPage.tsx
+13:34:04 [vite] hmr update /src/components/SyncLogCard.tsx
+13:34:22 [vite] hmr update /src/styles/index.css
+13:34:36 [vite] hmr update /src/styles/index.css
+13:35:46 [vite] hmr update /src/components/SyncLogCard.tsx
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 99 ms
+
+  ➜  Local:   http://127.0.0.1:2222/
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 104 ms
+
+  ➜  Local:   http://127.0.0.1:2222/
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 107 ms
+
+  ➜  Local:   http://127.0.0.1:2222/

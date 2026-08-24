@@ -103,6 +103,26 @@ class TestSyncCreatorGuards:
         mock_fetcher.fetch_new_videos.assert_not_called()
         mock_fetcher.fetch_creator_info.assert_not_called()
 
+    async def test_zero_video_count_skips_fetch_new_videos(self, store):
+        """B 站侧 video_count=0 时跳过卡片抓取，避免无投稿 UP 主触发 FetchError。"""
+        creator = await _make_creator_async(store)
+        mock_fetcher = _make_mock_fetcher(
+            fetch_creator_info={
+                "name": "测试UP主",
+                "avatar_url": "https://example.com/avatar.png",
+                "video_count": 0,
+            }
+        )
+        service = SyncService(fetcher=mock_fetcher)
+        count = await service.sync_creator(store, creator, force=True)
+        assert count == 0
+        mock_fetcher.fetch_new_videos.assert_not_called()
+        # last_synced_at 应被更新，避免下次重复进入
+        updated = store.creators.get(creator.id)
+        assert updated is not None
+        assert updated.last_synced_at is not None
+        assert updated.video_count == 0
+
 
 class TestSyncCreatorExistingVideos:
     async def test_existing_video_fields_are_updated(self, store):

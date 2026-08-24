@@ -43,30 +43,39 @@ class SyncService:
         return bool(creator_tag_ids & immediate_tag_ids)
 
     async def sync_creator(
-        self, store: DataStore, creator: Creator, task_id: int | None = None
+        self,
+        store: DataStore,
+        creator: Creator,
+        task_id: int | None = None,
+        force: bool = False,
     ) -> int:
         """同步 UP 主的信息。
 
         task_id 非空时，抓取过程中每完成一页把页码写入对应 SyncTask，
         供前端展示页级进度。
+
+        force=True 时跳过 TTL 节流，用于手动触发的单 UP 主同步；
+        enabled=False 仍然跳过（停用语义优先于手动触发）。
         """
         if not creator.enabled:
             return 0
 
-        immediate_tag_ids = self._get_immediate_tag_ids(store)
-        if self._creator_has_immediate_tag(store, creator.id, immediate_tag_ids):
-            if creator.last_synced_at and (_now_utc() - creator.last_synced_at) < timedelta(
-                minutes=5
-            ):
-                return 0
-        else:
-            if creator.last_synced_at and (_now_utc() - creator.last_synced_at) < timedelta(
-                minutes=50
-            ):
-                return 0
+        if not force:
+            immediate_tag_ids = self._get_immediate_tag_ids(store)
+            if self._creator_has_immediate_tag(store, creator.id, immediate_tag_ids):
+                if creator.last_synced_at and (_now_utc() - creator.last_synced_at) < timedelta(
+                    minutes=5
+                ):
+                    return 0
+            else:
+                if creator.last_synced_at and (_now_utc() - creator.last_synced_at) < timedelta(
+                    minutes=50
+                ):
+                    return 0
 
         uid = CreatorService.uid_from_profile_url(creator.profile_url)
 
+        info: dict | None = None
         try:
             info = await self._fetcher.fetch_creator_info(uid)
             await store.creators.update(
@@ -79,6 +88,12 @@ class SyncService:
             # 信息更新失败不阻断视频同步，但必须留痕：风控时段若静默跳过，
             # 表象会误成"无新视频"
             logger.warning("获取 UP 主信息失败，跳过信息更新 uid=%s", uid, exc_info=True)
+
+        # B 站侧视频总数为 0 时无投稿，fetch_new_videos 会等不到卡片抛 FetchError；
+        # 信息更新成功且 video_count=0 时直接返回，跳过无意义的卡片抓取
+        if info is not None and info.get("video_count") == 0:
+            await store.creators.update(creator.id, last_synced_at=_now_utc())
+            return 0
 
         existing_videos_list = store.videos.filter(creator_id=creator.id)
         existing_videos: dict[str, Video] = {v.bvid: v for v in existing_videos_list}
@@ -140,8 +155,10 @@ class SyncService:
     async def start_sync(self, store: DataStore) -> tuple[SyncTask, bool]:
         """创建全量同步任务并返回 (task, created)。
 
-        已有 running 任务时：心跳超时则标记失败并新建；否则返回 (existing, False)，
-        调用方不得再启动执行协程。
+        全局只有一个同步任务能 running：
+        - 已有全量 running：心跳超时则标记失败并新建；否则返回 (existing, False)，
+          调用方不得再启动执行协程（幂等）。
+        - 已有单 UP 主 running：抛 ValueError，调用方应返回 409。
 
         check-then-create 整体放在 sync_tasks 的跨进程临界区内，
         防止多实例同时通过 running 检查而各建一个任务。
@@ -150,6 +167,10 @@ class SyncService:
             running = [t for t in repo.all() if t.status == "running"]
             if running:
                 existing = max(running, key=lambda t: t.started_at)
+                if existing.scope == "creator":
+                    raise ValueError(
+                        f"已有单 UP 主同步任务在跑 (id={existing.id})，请等其完成后再触发全量同步"
+                    )
                 if existing.heartbeat_at is not None:
                     age_sec = (_now_utc() - existing.heartbeat_at).total_seconds()
                     if age_sec >= self._HEARTBEAT_DEAD_SEC:
@@ -255,6 +276,118 @@ class SyncService:
                     new_videos=total_new,
                     finished_at=finished_at,
                 )
+
+        except Exception as exc:
+            try:
+                await store.sync_tasks.update(
+                    task_id,
+                    status="failed",
+                    error_message=str(exc),
+                    finished_at=_now_utc(),
+                )
+            except Exception:
+                pass
+        finally:
+            heartbeat_stop.set()
+            if hb_task is not None:
+                hb_task.cancel()
+                try:
+                    await hb_task
+                except asyncio.CancelledError:
+                    pass
+
+    # ── 单 UP 主同步（后台协程） ────────────────────────────────
+
+    async def start_single_creator_sync(
+        self, store: DataStore, creator: Creator
+    ) -> tuple[SyncTask, bool]:
+        """创建单 UP 主同步任务并返回 (task, created)。
+
+        全局只有一个同步任务能 running：
+        - 同 UP 主已有 running 的单 UP 主任务 → 返回 (existing, False)，幂等。
+        - 其他任何 running 任务（全量或不同 UP 主的单 UP 主）→ 抛 ValueError，
+          调用方应返回 409。
+        """
+        async with store.sync_tasks.locked() as repo:
+            for t in repo.all():
+                if t.status != "running":
+                    continue
+                if t.scope == "creator" and t.creator_id == creator.id:
+                    return t, False
+                raise ValueError(
+                    f"已有同步任务在跑 (id={t.id}, scope={t.scope})，请等其完成后再触发"
+                )
+
+            task = SyncTask(
+                scope="creator",
+                creator_id=creator.id,
+                status="running",
+                total_creators=1,
+                completed_creators=0,
+                new_videos=0,
+                started_at=_now_utc(),
+                heartbeat_at=_now_utc(),
+            )
+            repo.add_nolock(task)
+            return task, True
+
+    async def run_single_creator_sync(
+        self, task_id: int, store: DataStore, creator_id: int
+    ) -> None:
+        """后台协程：同步单个 UP 主并更新任务进度。"""
+        heartbeat_stop = asyncio.Event()
+        hb_task = None
+        try:
+            task = store.sync_tasks.get(task_id)
+            if task is None:
+                return
+
+            creator = store.creators.get(creator_id)
+            if creator is None:
+                await store.sync_tasks.update(
+                    task_id,
+                    status="failed",
+                    error_message=f"UP 主 id={creator_id} 不存在",
+                    finished_at=_now_utc(),
+                )
+                return
+
+            hb_task = asyncio.create_task(self._heartbeat_loop(task_id, store, heartbeat_stop))
+
+            await store.sync_tasks.update(
+                task_id,
+                current_creator_name=creator.name,
+                current_creator_progress=None,
+            )
+
+            try:
+                new_count = await self.sync_creator(
+                    store, creator, task_id=task_id, force=True
+                )
+            except Exception as exc:
+                logger.exception(
+                    "单 UP 主同步失败 task_id=%s creator_id=%s", task_id, creator_id
+                )
+                await store.sync_tasks.update(
+                    task_id,
+                    status="failed",
+                    completed_creators=1,
+                    current_creator_name=None,
+                    current_creator_progress=None,
+                    error_message=str(exc) or repr(exc),
+                    finished_at=_now_utc(),
+                )
+                return
+
+            await store.sync_tasks.update(
+                task_id,
+                status="completed",
+                completed_creators=1,
+                new_videos=new_count,
+                current_creator_name=None,
+                current_creator_progress=None,
+                finished_at=_now_utc(),
+            )
 
         except Exception as exc:
             try:

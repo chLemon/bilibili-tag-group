@@ -138,15 +138,15 @@ export function useSyncPolling(
  */
 export function useSyncSettings() {
   const [settings, setSettings] = useState<SyncSettings | null>(null);
-  const [latestTask, setLatestTask] = useState<SyncTask | null>(null);
+  const [latestTasks, setLatestTasks] = useState<SyncTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([fetchSyncSettings(), fetchLatestSync()])
-      .then(([cfg, task]) => {
+      .then(([cfg, tasks]) => {
         setSettings(cfg);
-        setLatestTask(task);
+        setLatestTasks(tasks);
       })
       .catch((err) => setError(formatError(err)))
       .finally(() => setIsLoading(false));
@@ -154,14 +154,14 @@ export function useSyncSettings() {
 
   const refreshLatestTask = useCallback(async () => {
     try {
-      const task = await fetchLatestSync();
-      setLatestTask(task);
+      const tasks = await fetchLatestSync();
+      setLatestTasks(tasks);
     } catch {
       // 静默失败
     }
   }, []);
 
-  return { settings, latestTask, isLoading, error, refreshLatestTask };
+  return { settings, latestTasks, isLoading, error, refreshLatestTask };
 }
 
 // ── useImmediateTags ───────────────────────────────────────────────

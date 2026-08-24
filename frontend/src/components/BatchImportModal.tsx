@@ -129,12 +129,7 @@ export default function BatchImportModal({ onClose, onSuccess }: Props) {
   const canSubmit = resolvedCount > 0 && !submitting;
 
   return (
-    <div
-      className="modal-overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <div className="modal-overlay">
       <div className="modal-content" style={{ maxWidth: 600 }}>
         <div className="modal-header">
           <h3>批量添加 UP 主</h3>

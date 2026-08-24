@@ -43,15 +43,27 @@ def set_sync_context(loop_running: bool, interval_minutes: int) -> None:
     _sync_interval_minutes = interval_minutes
 
 
-@router.get("/latest", response_model=SyncTaskRead | None)
+@router.get("/latest", response_model=list[SyncTaskRead])
 def get_latest_sync(
     store: Annotated[DataStore, Depends(get_store)],
-) -> SyncTaskRead | None:
-    """查询最近一次全量同步任务。"""
-    tasks = store.sync_tasks.filter(scope="all")
-    if not tasks:
-        return None
-    return max(tasks, key=lambda t: t.started_at)
+    limit: int = 3,
+) -> list[SyncTaskRead]:
+    """查询最近若干条同步任务（不限 scope，按开始时间倒序）。
+
+    默认返回 3 条，包含全量与单 UP 主任务。limit 上限 20。
+    单 UP 主任务 (scope=creator) 会附带 creator_name 便于前端展示。
+    """
+    limit = max(1, min(limit, 20))
+    tasks = sorted(store.sync_tasks.all(), key=lambda t: t.started_at, reverse=True)
+    result: list[SyncTaskRead] = []
+    for t in tasks[:limit]:
+        read = SyncTaskRead.model_validate(t)
+        if read.scope == "creator" and read.creator_id is not None:
+            creator = store.creators.get(read.creator_id)
+            if creator is not None:
+                read.creator_name = creator.name
+        result.append(read)
+    return result
 
 
 @router.post("/run", response_model=SyncTaskRead)
@@ -59,10 +71,51 @@ async def run_sync(
     store: Annotated[DataStore, Depends(get_store)],
     sync_svc: Annotated[SyncService, Depends(get_sync_service)],
 ) -> SyncTaskRead:
-    """手动触发全量同步：幂等创建任务，后台协程执行，立即返回任务进度。"""
-    task, created = await sync_svc.start_sync(store)
+    """手动触发全量同步：幂等创建任务，后台协程执行，立即返回任务进度。
+
+    已有全量任务在跑时返回现有任务（幂等）；已有单 UP 主任务在跑时返回 409。
+    """
+    try:
+        task, created = await sync_svc.start_sync(store)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        ) from exc
     if created:
         _spawn_background(sync_svc.run_sync_task(task.id, store))
+    return task
+
+
+@router.post("/creators/{creator_id}", response_model=SyncTaskRead)
+async def sync_single_creator(
+    creator_id: int,
+    store: Annotated[DataStore, Depends(get_store)],
+    sync_svc: Annotated[SyncService, Depends(get_sync_service)],
+) -> SyncTaskRead:
+    """手动触发单个 UP 主同步：绕过 TTL 节流，后台协程执行。
+
+    同 UP 主已有 running 的单 UP 主任务时返回现有任务（幂等）；
+    其他任何同步任务在跑时返回 409；enabled=False 的 UP 主返回 400，需先启用。
+    """
+    creator = store.creators.get(creator_id)
+    if creator is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"UP 主 id={creator_id} 不存在",
+        )
+    if not creator.enabled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="UP 主已停用，请先启用再同步",
+        )
+    try:
+        task, created = await sync_svc.start_single_creator_sync(store, creator)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        ) from exc
+    if created:
+        _spawn_background(sync_svc.run_single_creator_sync(task.id, store, creator_id))
     return task
 
 

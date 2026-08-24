@@ -13,6 +13,8 @@ vi.mock("../src/api/client");
 const mockLatestTask: client.SyncTask = {
   id: 1,
   scope: "all",
+  creator_id: null,
+  creator_name: null,
   status: "completed",
   total_creators: 2,
   completed_creators: 2,
@@ -43,6 +45,8 @@ const mockImmediateTags: client.ImmediateTag[] = [
 const completedTask: client.SyncTask = {
   id: 1,
   scope: "all",
+  creator_id: null,
+  creator_name: null,
   status: "completed",
   total_creators: 2,
   completed_creators: 2,
@@ -56,7 +60,7 @@ const completedTask: client.SyncTask = {
 };
 
 beforeEach(() => {
-  vi.mocked(client.fetchLatestSync).mockResolvedValue(mockLatestTask);
+  vi.mocked(client.fetchLatestSync).mockResolvedValue([mockLatestTask]);
   vi.mocked(client.fetchSyncSettings).mockResolvedValue(mockSettings);
   vi.mocked(client.fetchImmediateTags).mockResolvedValue(mockImmediateTags);
   vi.mocked(client.fetchTags).mockResolvedValue(mockTags);
@@ -88,7 +92,7 @@ describe("SyncPage", () => {
     );
     await waitFor(() => {
       expect(screen.getByText(/最近同步记录/)).toBeInTheDocument();
-      expect(screen.getByText("5 条")).toBeInTheDocument();
+      expect(screen.getByText(/新增 5 条/)).toBeInTheDocument();
     });
   });
 

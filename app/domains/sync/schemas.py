@@ -10,6 +10,9 @@ class SyncTaskRead(BaseModel):
 
     id: int
     scope: str
+    creator_id: int | None = None
+    creator_name: str | None = None
+    """scope=creator 时为对应 UP 主的当前名称；scope=all 时为 None"""
     status: str
     total_creators: int
     completed_creators: int

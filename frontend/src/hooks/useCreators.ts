@@ -122,6 +122,29 @@ export function useCreators() {
     []
   );
 
+  /** 切换 UP 主 启用/停用，成功返回 true（调用方据此关闭确认弹窗） */
+  const toggleCreatorEnabled = useCallback(
+    async (creator: Creator): Promise<boolean> => {
+      setSubmitting(true);
+      setSubmitError(null);
+      try {
+        const updated = await updateCreator(creator.id, {
+          enabled: !creator.enabled,
+        });
+        setCreators((prev) =>
+          prev.map((c) => (c.id === creator.id ? updated : c))
+        );
+        return true;
+      } catch (err) {
+        setSubmitError(formatError(err));
+        return false;
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    []
+  );
+
   /** 批量导入成功后追加新 UP 主 */
   const appendCreators = useCallback(
     (newCreators: Creator[]) => {
@@ -147,6 +170,7 @@ export function useCreators() {
     addCreator,
     editCreator,
     removeCreator,
+    toggleCreatorEnabled,
     appendCreators,
     clearSubmitError,
   };

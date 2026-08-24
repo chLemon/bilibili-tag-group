@@ -346,16 +346,16 @@ class TestUpdateStatus:
 class TestSyncLatest:
     """GET /api/sync/latest 测试。"""
 
-    def test_returns_null_when_no_sync_records(self, client):
+    def test_returns_empty_list_when_no_sync_records(self, client):
         response = client.get("/api/sync/latest")
         assert response.status_code == 200
-        assert response.json() is None
+        assert response.json() == []
 
-    async def test_returns_latest_sync_log(self, client, store, seeded_data):
-        """有同步记录时返回最近一条。"""
+    async def test_returns_latest_sync_logs(self, client, store, seeded_data):
+        """返回最近若干条任务，按开始时间倒序，含全量与单 UP 主。"""
         from app.domains.sync.models import SyncTask
 
-        task = SyncTask(
+        all_task = SyncTask(
             scope="all",
             status="completed",
             new_videos=2,
@@ -365,17 +365,51 @@ class TestSyncLatest:
             finished_at=datetime(2026, 1, 1, 10, 1, 0),
             heartbeat_at=datetime(2026, 1, 1, 10, 1, 0),
         )
-        await store.sync_tasks.add(task)
+        creator_task = SyncTask(
+            scope="creator",
+            creator_id=seeded_data.creator_id,
+            status="completed",
+            new_videos=3,
+            total_creators=1,
+            completed_creators=1,
+            started_at=datetime(2026, 1, 1, 11, 0, 0),
+            finished_at=datetime(2026, 1, 1, 11, 0, 30),
+            heartbeat_at=datetime(2026, 1, 1, 11, 0, 30),
+        )
+        await store.sync_tasks.add(all_task)
+        await store.sync_tasks.add(creator_task)
 
         response = client.get("/api/sync/latest")
         assert response.status_code == 200
         body = response.json()
-        assert body["scope"] == "all"
-        assert body["status"] == "completed"
-        assert body["new_videos"] == 2
-        assert body["started_at"] == "2026-01-01T18:00:00"
-        assert body["finished_at"] == "2026-01-01T18:01:00"
-        assert body["heartbeat_at"] == "2026-01-01T18:01:00"
+        assert len(body) == 2
+        # 倒序：creator_task 在前
+        assert body[0]["scope"] == "creator"
+        assert body[0]["creator_id"] == seeded_data.creator_id
+        assert body[0]["creator_name"] == "测试UP主"
+        assert body[1]["scope"] == "all"
+        assert body[1]["creator_name"] is None
+
+    async def test_limit_param_caps_at_20(self, client, store):
+        """limit 超过 20 时上限 20，少于 1 时下限 1。"""
+        from app.domains.sync.models import SyncTask
+
+        for i in range(25):
+            await store.sync_tasks.add(
+                SyncTask(
+                    scope="all",
+                    status="completed",
+                    started_at=datetime(2026, 1, 1, 10, i, 0),
+                )
+            )
+
+        response = client.get("/api/sync/latest?limit=100")
+        assert response.status_code == 200
+        assert len(response.json()) == 20
+
+        response = client.get("/api/sync/latest?limit=0")
+        assert response.status_code == 200
+        assert len(response.json()) == 1
 
 
 class TestSyncRun:
@@ -394,6 +428,107 @@ class TestSyncRun:
         assert response.status_code == 200
         body = response.json()
         assert body["total_creators"] == 0
+
+
+class TestSyncSingleCreator:
+    """POST /api/sync/creators/{id} 测试。"""
+
+    async def test_sync_single_creator_returns_task(self, client, store, seeded_data):
+        """触发单 UP 主同步返回 scope=creator 的任务。"""
+        response = client.post(f"/api/sync/creators/{seeded_data.creator_id}")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["scope"] == "creator"
+        assert body["creator_id"] == seeded_data.creator_id
+        assert body["status"] in ("running", "completed")
+
+    async def test_sync_single_creator_not_found(self, client):
+        """UP 主不存在返回 404。"""
+        response = client.post("/api/sync/creators/99999")
+        assert response.status_code == 404
+
+    async def test_sync_single_creator_disabled_returns_400(
+        self, client, store, seeded_data
+    ):
+        """停用 UP 主返回 400。"""
+        await store.creators.update(seeded_data.creator_id, enabled=False)
+        response = client.post(f"/api/sync/creators/{seeded_data.creator_id}")
+        assert response.status_code == 400
+
+    async def test_sync_single_creator_idempotent(self, client, store, seeded_data):
+        """同 UP 主已有 running 的单 UP 主任务时幂等返回现有。"""
+        from datetime import datetime
+
+        from app.domains.sync.models import SyncTask
+
+        existing = SyncTask(
+            scope="creator",
+            creator_id=seeded_data.creator_id,
+            status="running",
+            total_creators=1,
+            started_at=datetime(2026, 1, 1, 10, 0, 0),
+            heartbeat_at=datetime(2026, 1, 1, 10, 0, 0),
+        )
+        await store.sync_tasks.add(existing)
+
+        response = client.post(f"/api/sync/creators/{seeded_data.creator_id}")
+        assert response.status_code == 200
+        assert response.json()["id"] == existing.id
+
+
+class TestSyncConflict:
+    """全局只有一个同步任务能 running 的冲突测试。"""
+
+    async def _seed_running(
+        self, store, *, scope: str, creator_id: int | None = None
+    ):
+        """插入一条 running 任务，绕过 service 层直接造状态。"""
+        from app.domains.sync.models import SyncTask
+
+        task = SyncTask(
+            scope=scope,
+            creator_id=creator_id,
+            status="running",
+            total_creators=1 if scope == "creator" else 0,
+            started_at=datetime(2026, 1, 1, 10, 0, 0),
+            heartbeat_at=datetime(2026, 1, 1, 10, 0, 0),
+        )
+        await store.sync_tasks.add(task)
+        return task
+
+    async def test_full_sync_conflicts_with_running_single_creator(
+        self, client, store, seeded_data
+    ):
+        """单 UP 主任务在跑时，触发全量同步返回 409。"""
+        await self._seed_running(store, scope="creator", creator_id=seeded_data.creator_id)
+        response = client.post("/api/sync/run")
+        assert response.status_code == 409
+
+    async def test_single_creator_conflicts_with_running_full_sync(
+        self, client, store, seeded_data
+    ):
+        """全量任务在跑时，触发单 UP 主同步返回 409。"""
+        await self._seed_running(store, scope="all")
+        response = client.post(f"/api/sync/creators/{seeded_data.creator_id}")
+        assert response.status_code == 409
+
+    async def test_single_creator_conflicts_with_other_running_single_creator(
+        self, client, store, seeded_data
+    ):
+        """UP 主 A 的单 UP 主任务在跑时，触发 UP 主 B 的同步返回 409。"""
+        from app.domains.creators.models import Creator
+
+        other = Creator(
+            name="其他UP主",
+            profile_url="https://space.bilibili.com/99999",
+            avatar_url="https://example.com/avatar2.png",
+            video_count=0,
+        )
+        await store.creators.add(other)
+
+        await self._seed_running(store, scope="creator", creator_id=seeded_data.creator_id)
+        response = client.post(f"/api/sync/creators/{other.id}")
+        assert response.status_code == 409
 
 
 class TestSyncSettings:

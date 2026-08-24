@@ -10,6 +10,9 @@ from app.shared.time import now_utc
 class SyncTask(BaseModel):
     id: int = Field(default=0)
     scope: str = "all"
+    """all=全量同步，creator=单 UP 主同步"""
+    creator_id: int | None = None
+    """scope=creator 时指向被同步的 UP 主；scope=all 时为 None"""
     status: str = "running"
     """running / completed / failed"""
     total_creators: int = 0

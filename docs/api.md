@@ -125,15 +125,23 @@ FastAPI 后端全部接口。基础路径 `/api`，开发环境由前端 Vite �
 
 ## 同步 `/api/sync`
 
-### `GET /api/sync/latest` — 最近一次全量同步
+### `GET /api/sync/latest?limit=N` — 最近同步记录
 
-响应 `200`：`SyncTaskRead` 或 `null`（从未同步过）。
+返回最近 N 条同步任务（不限 scope，按开始时间倒序），含全量与单 UP 主任务。`limit` 默认 3，上限 20。单 UP 主任务（`scope=creator`）会附带 `creator_name` 便于前端展示。
+
+响应 `200`：`SyncTaskRead[]`（无记录时为空数组 `[]`）。
 
 ### `POST /api/sync/run` — 手动触发全量同步
 
-幂等：已有运行中任务时直接返回现有任务，不重复启动。任务后台执行，接口立即返回。
+全局只有一个同步任务能 running（全量或单 UP 主）。已有全量任务在跑时返回现有任务（幂等）；已有单 UP 主任务在跑时返回 409。任务后台执行，接口立即返回。
 
-响应 `200`：`SyncTaskRead`（刚创建或现有的运行中任务）。
+响应 `200`：`SyncTaskRead`（刚创建或现有的运行中任务）。错误：`409` 已有其他同步任务在跑。
+
+### `POST /api/sync/creators/{creator_id}` — 手动同步单个 UP 主
+
+绕过 TTL 节流（`sync_creator` 的 `force=True`），后台协程执行，接口立即返回。同 UP 主已有 running 的单 UP 主任务时返回现有任务（幂等）；其他任何同步任务在跑时返回 409。
+
+响应 `200`：`SyncTaskRead`（`scope="creator"`，`creator_id` 指向被同步的 UP 主）。错误：`404` UP 主不存在；`400` UP 主已停用（需先启用）；`409` 已有其他同步任务在跑。
 
 ### `GET /api/sync/task/current` — 当前任务进度
 
@@ -192,9 +200,11 @@ tag_id 通过查询参数传递。已配置时返回现有配置（幂等）。
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `id` | int | |
-| `scope` | string | 目前恒为 `"all"` |
+| `scope` | string | `"all"` 全量同步 / `"creator"` 单 UP 主同步 |
+| `creator_id` | int \| null | `scope="creator"` 时指向被同步的 UP 主；`scope="all"` 时为 `null` |
+| `creator_name` | string \| null | `scope="creator"` 时为对应 UP 主的当前名称；`scope="all"` 时为 `null`。仅 `/api/sync/latest` 填充 |
 | `status` | string | `running` / `completed` / `failed` |
-| `total_creators` | int | UP 主总数 |
+| `total_creators` | int | UP 主总数（单 UP 主同步为 1） |
 | `completed_creators` | int | 已完成数 |
 | `current_creator_name` | string \| null | 正在同步的 UP 主 |
 | `new_videos` | int | 本轮新视频数 |

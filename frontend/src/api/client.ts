@@ -24,6 +24,7 @@ export interface Creator {
   profile_url: string;
   avatar_url: string | null;
   tag_ids: number[];
+  enabled: boolean;
   video_count: number;
   synced_video_count: number;
   unwatched_count: number;
@@ -43,6 +44,7 @@ export interface CreatorCreate {
 export interface CreatorUpdate {
   name?: string;
   alias?: string;
+  enabled?: boolean;
   tag_ids?: number[];
 }
 
@@ -81,6 +83,8 @@ export interface VideoDetail {
 export interface SyncTask {
   id: number;
   scope: string;
+  creator_id: number | null;
+  creator_name: string | null;
   status: string;
   total_creators: number;
   completed_creators: number;
@@ -109,7 +113,15 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`HTTP ${res.status}: ${text}`);
+    // FastAPI 错误响应体形如 {"detail": "..."}，提取 detail 让消息更友好
+    let detail = text;
+    try {
+      const json = JSON.parse(text);
+      if (typeof json.detail === "string") detail = json.detail;
+    } catch {
+      // 非 JSON，保留原文
+    }
+    throw new Error(`HTTP ${res.status}: ${detail}`);
   }
   // 204 No Content 无响应体，直接返回 null
   if (res.status === 204) {
@@ -259,14 +271,21 @@ export function batchUpdateCreatorVideos(
 
 // ---- 同步 API ----
 
-/** 获取最近一次全量同步任务（无记录时返回 null） */
-export function fetchLatestSync(): Promise<SyncTask | null> {
-  return request<SyncTask | null>("/api/sync/latest");
+/** 获取最近若干条同步任务（默认 3 条，含全量与单 UP 主） */
+export function fetchLatestSync(limit: number = 3): Promise<SyncTask[]> {
+  return request<SyncTask[]>(`/api/sync/latest?limit=${limit}`);
 }
 
 /** 手动触发全量同步（异步，立即返回 SyncTask） */
 export function runSync(): Promise<SyncTask> {
   return request<SyncTask>("/api/sync/run", { method: "POST" });
+}
+
+/** 手动触发单个 UP 主同步（异步，立即返回 SyncTask） */
+export function syncSingleCreator(creatorId: number): Promise<SyncTask> {
+  return request<SyncTask>(`/api/sync/creators/${creatorId}`, {
+    method: "POST",
+  });
 }
 
 /** 查询当前（或最近一次）同步任务进度 */

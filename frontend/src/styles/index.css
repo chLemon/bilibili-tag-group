@@ -308,6 +308,11 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   color: #1D4ED8;
 }
 
+.badge-warning {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
 /* 状态信息条 */
 .status-banner {
   display: flex;
@@ -1215,6 +1220,59 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   font-weight: 600;
 }
 
+.sync-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sync-log-row {
+  padding: var(--space-3);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.sync-log-row-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.sync-log-creator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  color: var(--color-text);
+  font-size: 13px;
+}
+
+.sync-log-time {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.sync-log-row-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.sync-log-row-body .sync-log-stat {
+  font-size: 12px;
+}
+
+.sync-log-error {
+  color: var(--color-error);
+  word-break: break-all;
+}
+
 /* ===== 同步进度条 ===== */
 .sync-progress {
   padding: var(--space-4);
@@ -1508,9 +1566,29 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 
 .creator-card-actions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
   gap: var(--space-1);
   flex-shrink: 0;
+}
+
+.creator-card-actions-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* 粉色实心变体：视频 / 编辑 / 同步 / 停用（启用态） */
+.btn-edit.btn-edit-primary {
+  border-color: var(--color-primary);
+  color: #fff;
+  background: var(--color-primary);
+}
+
+.btn-edit.btn-edit-primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  color: #fff;
 }
 
 .creator-card-action {
