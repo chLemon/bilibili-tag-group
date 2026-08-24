@@ -386,8 +386,10 @@ class PlaywrightBilibiliFetcher:
 
     @staticmethod
     async def _extract_current_page_num(page) -> str:
-        """获取当前页数"""
+        """获取当前页数；无分页 UI（≤1 页）时返回 '1' 避免等待 30s 超时。"""
         active_page_locator = page.locator(_CURRENT_PAGE_NUM_SELECTOR)
+        if await active_page_locator.count() == 0:
+            return "1"
         return (await active_page_locator.text_content() or "").strip()
 
     @staticmethod

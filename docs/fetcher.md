@@ -29,7 +29,7 @@ Cookie 有效期：`SESSDATA`/`bili_jct` 一般 1-2 年（B 站策略），失�
 
 1. 打开投稿页，`wait_until="domcontentloaded"`，页面超时 30s
 2. `_wait_for_cards` 等待视频卡片出现（`.bili-video-card__title`，单次等待 10s）；等不到则随机延迟 1.0–2.5s 后刷新重试，最多刷新 4 次，仍失败则 `raise FetchError`（整页失败即整个 UP 主失败）
-3. 首页提取总页数（`_extract_total_pages`：`.vui_pagenation--btns button` 中数字页码最大值）；无分页按钮时当作 1 页
+3. 首页提取总页数（`_extract_total_pages`：`.vui_pagenation--btns button` 中数字页码最大值）与当前页码（`_extract_current_page_num`：`.vui_pagenation--btns .vui_button--active`）；无分页 UI（视频 ≤30 个）时两者均兜底为 1 页/第 1 页，避免 30s 超时
 4. 按 `target_page = 1..total_pages` 顺序抓取：
    - 第 1 页已在，直接走步骤 5；后续页用 `_jump_to_page` 跳页：填 `.vui_pagenation-go input` + 按 Enter，等激活页码变 `target_page` 确认跳页生效（30s 超时）
    - 跳页后 `_wait_for_new_bvid` 等 DOM 中最后一张卡的 bvid 未抓过——仅页码变化不足以确认 cards 真切换（B 站 SPA 风控时只改页码 UI 不刷新 cards）。超时则触发风控重试（见下节）
