@@ -123,6 +123,14 @@ FastAPI 后端全部接口。基础路径 `/api`，开发环境由前端 Vite �
 
 响应 `200`：`{"video_id": 1, "status": 1}`。错误：`404` 视频不存在。
 
+### `PATCH /api/videos/batch/status` — 按 video_ids 批量更新状态
+
+按可见范围批量标记——隐藏充电视频时前端只传当前可见视频的 id，被过滤的充电视频不受影响。
+
+请求体（`VideoBatchStatusUpdate`）：`{"video_ids": [1, 2, 3], "status": 1}`。
+
+响应 `200`：`{"status": 1, "updated_count": 3}`。
+
 ## 同步 `/api/sync`
 
 ### `GET /api/sync/latest?limit=N` — 最近同步记录

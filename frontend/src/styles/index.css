@@ -738,9 +738,11 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 }
 
 .video-card-mark {
-  margin-right: auto;
-  font-size: 14px;
-  font-weight: 600;
+  margin-right: 48px;
+  margin-left: -12px;
+  font-size: 17px;
+  font-weight: 700;
+  font-style: italic;
   color: var(--color-warning);
   user-select: none;
   cursor: default;

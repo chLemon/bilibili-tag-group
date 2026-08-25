@@ -2,8 +2,8 @@
  * TagsPage：标签视图页面。
  * 左侧标签列表 + UP 主目录锚点，右侧按 UP 主分组的未看视频列表。
  */
-import { useEffect, useState } from "react";
-import { Hash, AlertCircle, Inbox, Loader2, RefreshCw, Tag, CheckCheck, EyeOff, ChevronsRight, ChevronsLeft } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Hash, AlertCircle, Inbox, Loader2, RefreshCw, Tag, CheckCheck, EyeOff, ChevronsRight, ChevronsLeft, Zap } from "lucide-react";
 import { useTags, useTagVideos, useScrollSpy, UNTAGGED_ID } from "../hooks/useTags";
 import VideoCard from "../components/VideoCard";
 import CreatorAnchorNav from "../components/CreatorAnchorNav";
@@ -42,8 +42,20 @@ export default function TagsPage() {
     if (await markIgnored(videoId)) refreshTags();
   };
 
+  const [showChargeVideos, setShowChargeVideos] = useState(false);
+  const visibleGroups = useMemo(() => {
+    if (showChargeVideos) return groupedVideos;
+    return groupedVideos
+      .map((g) => ({
+        ...g,
+        videos: g.videos.filter((v) => v.mark !== "充电视频"),
+      }))
+      .filter((g) => g.videos.length > 0);
+  }, [groupedVideos, showChargeVideos]);
+  const visibleCount = visibleGroups.reduce((sum, g) => sum + g.videos.length, 0);
+
   const { activeCreatorId, scrollToCreator } = useScrollSpy(
-    groupedVideos,
+    visibleGroups,
     !loadingVideos,
   );
 
@@ -76,12 +88,18 @@ export default function TagsPage() {
   async function runBatchConfirm() {
     if (!batchConfirm) return;
     const { type, creatorId } = batchConfirm;
+    const group = visibleGroups.find((g) => g.creatorId === creatorId);
+    const videoIds = group ? group.videos.map((v) => v.id) : [];
+    if (videoIds.length === 0) {
+      setBatchConfirm(null);
+      return;
+    }
     setBatchLoadingId(creatorId);
     try {
       const ok =
         type === "watched"
-          ? await markAllWatched(creatorId)
-          : await markAllIgnored(creatorId);
+          ? await markAllWatched(videoIds)
+          : await markAllIgnored(videoIds);
       if (ok) refreshTags();
     } finally {
       setBatchLoadingId(null);
@@ -150,13 +168,21 @@ export default function TagsPage() {
       <div className="video-panel">
         <h3 className="video-panel-title">
           {selectedTagId === UNTAGGED_ID ? "无标签 UP 主" : selectedTag?.name ?? ""}
-          <span className="badge badge-muted">{videos.length} 个未看</span>
+          <span className="badge badge-muted">{visibleCount} 个未看</span>
+          <button
+            className={`btn btn-sm ${showChargeVideos ? "btn-primary" : "btn-outline"}`}
+            onClick={() => setShowChargeVideos((s) => !s)}
+            title={showChargeVideos ? "当前显示充电视频，点击隐藏" : "当前隐藏充电视频，点击显示"}
+            style={{ marginLeft: "auto" }}
+          >
+            <Zap size={13} />
+            {showChargeVideos ? "不显示充电视频" : "显示充电视频"}
+          </button>
           <button
             className="btn btn-ghost btn-sm"
             onClick={reload}
             disabled={loadingVideos}
             title="重新加载视频列表"
-            style={{ marginLeft: "auto" }}
           >
             <RefreshCw size={14} className={loadingVideos ? "spinner" : ""} />
           </button>
@@ -184,19 +210,23 @@ export default function TagsPage() {
               <RefreshCw size={12} /> 重试
             </button>
           </div>
-        ) : videos.length === 0 ? (
+        ) : visibleCount === 0 ? (
           <div className="empty-state">
             <Inbox size={36} />
             <p>
-              {selectedTagId === UNTAGGED_ID
-                ? "暂无无标签 UP 主的未看视频"
-                : "该标签下暂无未看视频"}
+              {videos.length > 0
+                ? "未看视频均为充电视频（右上角可切换显示）"
+                : selectedTagId === UNTAGGED_ID
+                  ? "暂无无标签 UP 主的未看视频"
+                  : "该标签下暂无未看视频"}
             </p>
-            <p className="empty-hint">新视频同步后会展示在这里</p>
+            {videos.length === 0 && (
+              <p className="empty-hint">新视频同步后会展示在这里</p>
+            )}
           </div>
         ) : (
           <div key={selectedTagId}>
-            {groupedVideos.map((group, i) => (
+            {visibleGroups.map((group, i) => (
               <section
                 key={group.creatorId}
                 id={`creator-${group.creatorId}`}
@@ -283,7 +313,7 @@ export default function TagsPage() {
 
       {/* 右侧：UP 主列表 */}
       <CreatorAnchorNav
-        groups={groupedVideos}
+        groups={visibleGroups}
         activeCreatorId={activeCreatorId}
         onSelect={scrollToCreator}
       />

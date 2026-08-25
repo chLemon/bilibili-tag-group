@@ -675,3 +675,27 @@ AggregateError [ECONNREFUSED]:
 23:17:12 [vite] hmr update /src/pages/CreatorsPage.tsx, /src/pages/CreatorDetailPage.tsx, /src/pages/TagsPage.tsx, /src/pages/SyncPage.tsx, /src/components/BatchImportModal.tsx, /src/components/CreatorForm.tsx
 23:17:18 [vite] hmr update /src/components/VideoCard.tsx
 23:17:35 [vite] hmr update /src/styles/index.css
+
+> my-bilibili-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 109 ms
+
+  ➜  Local:   http://127.0.0.1:2222/
+23:24:33 [vite] hmr update /src/styles/index.css
+23:24:44 [vite] hmr update /src/styles/index.css
+23:25:27 [vite] hmr update /src/styles/index.css
+23:26:23 [vite] hmr update /src/pages/CreatorDetailPage.tsx
+23:28:14 [vite] hmr update /src/pages/TagsPage.tsx
+23:28:18 [vite] hmr update /src/pages/TagsPage.tsx
+23:28:25 [vite] hmr update /src/pages/TagsPage.tsx
+23:28:32 [vite] hmr update /src/pages/TagsPage.tsx
+23:28:38 [vite] hmr update /src/pages/TagsPage.tsx
+23:28:42 [vite] hmr update /src/pages/TagsPage.tsx
+23:30:19 [vite] hmr update /src/pages/TagsPage.tsx
+23:33:21 [vite] hmr update /src/pages/CreatorsPage.tsx, /src/pages/CreatorDetailPage.tsx, /src/pages/SyncPage.tsx, /src/pages/TagsPage.tsx, /src/components/CreatorForm.tsx, /src/components/BatchImportModal.tsx
+23:33:25 [vite] hmr update /src/pages/TagsPage.tsx
+23:33:31 [vite] hmr update /src/pages/TagsPage.tsx
+23:33:43 [vite] hmr update /src/pages/TagsPage.tsx
+23:33:50 [vite] hmr update /src/pages/TagsPage.tsx

@@ -7,7 +7,7 @@ import {
   fetchTagVideos,
   fetchUntaggedVideos,
   updateStatus,
-  batchUpdateCreatorVideos,
+  batchUpdateVideoStatus,
   Tag,
   Video,
 } from "../api/client";
@@ -132,27 +132,35 @@ export function useTagVideos(selectedTagId: number | null) {
     }
   }, []);
 
-  const markAllWatched = useCallback(async (creatorId: number): Promise<boolean> => {
-    try {
-      await batchUpdateCreatorVideos(creatorId, 1);
-      setVideos((prev) => prev.filter((v) => v.creator_id !== creatorId));
-      return true;
-    } catch (err) {
-      setActionError(formatError(err));
-      return false;
-    }
-  }, []);
+  const markAllWatched = useCallback(
+    async (videoIds: number[]): Promise<boolean> => {
+      try {
+        await batchUpdateVideoStatus(videoIds, 1);
+        const idSet = new Set(videoIds);
+        setVideos((prev) => prev.filter((v) => !idSet.has(v.id)));
+        return true;
+      } catch (err) {
+        setActionError(formatError(err));
+        return false;
+      }
+    },
+    []
+  );
 
-  const markAllIgnored = useCallback(async (creatorId: number): Promise<boolean> => {
-    try {
-      await batchUpdateCreatorVideos(creatorId, 2);
-      setVideos((prev) => prev.filter((v) => v.creator_id !== creatorId));
-      return true;
-    } catch (err) {
-      setActionError(formatError(err));
-      return false;
-    }
-  }, []);
+  const markAllIgnored = useCallback(
+    async (videoIds: number[]): Promise<boolean> => {
+      try {
+        await batchUpdateVideoStatus(videoIds, 2);
+        const idSet = new Set(videoIds);
+        setVideos((prev) => prev.filter((v) => !idSet.has(v.id)));
+        return true;
+      } catch (err) {
+        setActionError(formatError(err));
+        return false;
+      }
+    },
+    []
+  );
 
   return {
     videos,

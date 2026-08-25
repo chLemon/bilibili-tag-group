@@ -271,6 +271,17 @@ export function batchUpdateCreatorVideos(
   });
 }
 
+/** 按 video_ids 批量更新视频状态（用于按可见范围批量标记） */
+export function batchUpdateVideoStatus(
+  videoIds: number[],
+  status: number
+): Promise<{ status: number; updated_count: number }> {
+  return request(`/api/videos/batch/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ video_ids: videoIds, status }),
+  });
+}
+
 // ---- 同步 API ----
 
 /** 获取最近若干条同步任务（默认 3 条，含全量与单 UP 主） */

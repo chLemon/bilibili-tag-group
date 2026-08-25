@@ -255,7 +255,8 @@ export default function CreatorDetailPage() {
                   </span>
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+              <div style={{ display: "flex", gap: 4, flexShrink: 0, alignItems: "center" }}>
+                {v.mark && <span className="video-card-mark">{v.mark}</span>}
                 {v.status !== 1 && (
                   <button
                     className="btn btn-sm btn-primary"

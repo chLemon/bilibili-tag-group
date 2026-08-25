@@ -71,3 +71,20 @@ class VideoService:
         return await store.video_statuses.bulk_update(
             target_ids, status=status_value, watched_at=watched_at
         )
+
+    async def batch_set_status_by_ids(
+        self, store: DataStore, video_ids: list[int], status_value: int
+    ) -> int:
+        """按 video_ids 批量标记视频状态，返回更新行数。
+
+        供标签视图"一键已看/不看"按可见范围批量标记——隐藏充电视频时
+        只作用于当前可见的非充电视频，不影响被过滤的视频。
+        """
+        watched_at = _now_utc() if status_value == 1 else None
+        video_id_set = set(video_ids)
+        target_ids = {
+            vs.id for vs in store.video_statuses.all() if vs.video_id in video_id_set
+        }
+        return await store.video_statuses.bulk_update(
+            target_ids, status=status_value, watched_at=watched_at
+        )

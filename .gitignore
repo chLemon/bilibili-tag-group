@@ -43,6 +43,7 @@ htmlcov/
 
 # Node.js
 frontend/node_modules/
+/node_modules/
 
 # IDE
 .idea/
